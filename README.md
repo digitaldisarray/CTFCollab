@@ -28,7 +28,7 @@ You can preview the production build with `npm run preview`.
 
 ## Backend
 
-# Development
+### Development
 Golang is required to compile and run the backend code on your computer
 
 For working on the database schema, sqlc is required https://docs.sqlc.dev/en/stable/overview/install.html
