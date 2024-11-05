@@ -14,6 +14,8 @@ npm run dev
 npm run dev -- --open
 ```
 
+It is also recommended to get the svelte extension for vscode. If you use another editor there is likely a svelte extension/plugin for it.
+
 ### Building
 
 To create a production version of your app:
