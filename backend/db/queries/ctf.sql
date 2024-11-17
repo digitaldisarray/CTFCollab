@@ -2,15 +2,14 @@
 SELECT * FROM ctfs
 ORDER BY start_date;
 
--- name: CreateCTF :one
+-- name: CreateCTF :execresult
 INSERT INTO ctfs (
     name, description, start_date, end_date, author_id
 ) VALUES (
     ?, ?, ?, ?, ?
-)
-RETURNING *;
+);
 
--- name: UpdateCTF :exec
+-- name: UpdateCTF :execresult
 UPDATE ctfs
 SET
     name = COALESCE(sqlc.narg('name'), name),

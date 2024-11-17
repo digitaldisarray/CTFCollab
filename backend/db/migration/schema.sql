@@ -1,38 +1,38 @@
 -- Users Table (Admins only for now)
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255)  -- Adjust size based on your hash algorithm
 );
 
 -- Sessions Table (Anonymous users w/ nicknames)
 CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cookie TEXT UNIQUE NOT NULL,
-    nickname TEXT NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cookie VARCHAR(255) UNIQUE NOT NULL,
+    nickname VARCHAR(255) NOT NULL,
     last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CTFs Table
 CREATE TABLE IF NOT EXISTS ctfs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     description TEXT,
     start_date DATETIME,
     end_date DATETIME,
-    author_id INTEGER,  -- Admin user who created the CTF
+    author_id INT,  -- Admin user who created the CTF
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
 
 -- Challenges Table
 CREATE TABLE IF NOT EXISTS challenges (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ctf_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ctf_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
     description TEXT,
     flag TEXT,
-    note_id INTEGER,  -- One-to-one relationship with notes
+    note_id INT,  -- One-to-one relationship with notes
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id),
     FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE
@@ -40,14 +40,14 @@ CREATE TABLE IF NOT EXISTS challenges (
 
 -- Tags Table: Stores the different tags (categories) users can assign to challenges
 CREATE TABLE IF NOT EXISTS tags (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL  -- Name of the tag (e.g., "cryptography", "web", "forensics")
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL  -- Name of the tag (e.g., "cryptography", "web", "forensics")
 );
 
 -- Challenge Tags Table: Many-to-many relationship between challenges and tags
 CREATE TABLE IF NOT EXISTS challenge_tags (
-    challenge_id INTEGER NOT NULL,
-    tag_id INTEGER NOT NULL,
+    challenge_id INT NOT NULL,
+    tag_id INT NOT NULL,
     FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (challenge_id, tag_id)  -- Ensures uniqueness of challenge-tag pairs
@@ -55,9 +55,9 @@ CREATE TABLE IF NOT EXISTS challenge_tags (
 
 -- Notes Table
 CREATE TABLE IF NOT EXISTS notes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    challenge_id INTEGER NOT NULL,  -- Foreign key to challenge
-    -- More data needed, maybe peers or a link to embed an editor
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    challenge_id INT NOT NULL,  -- Foreign key to challenge
+    created_by INT,             -- Foreign key to users (created by)
     FOREIGN KEY (challenge_id) REFERENCES challenges(id),
     FOREIGN KEY (created_by) REFERENCES users(id)
 );

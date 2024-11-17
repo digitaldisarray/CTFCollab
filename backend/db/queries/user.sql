@@ -1,21 +1,20 @@
--- name: CreateUser :one
+-- name: CreateUser :execresult
 INSERT INTO users (
     username, password_hash
 ) VALUES (
     ?, ?
-)
-RETURNING *;
+);
 
--- name: DeleteUser :exec
+-- name: DeleteUser :execresult
 DELETE from users
 WHERE id = ?;
 
--- name: ChangePassword :exec
+-- name: ChangePassword :execresult
 UPDATE users
 SET password_hash = ?
 WHERE id = ?;
 
--- name: ChangeUsername :exec
+-- name: ChangeUsername :execresult
 UPDATE users
 SET username = ?
 WHERE id = ?;

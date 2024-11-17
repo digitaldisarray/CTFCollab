@@ -1,12 +1,11 @@
--- name: CreateSession :one
+-- name: CreateSession :execresult
 INSERT INTO sessions (
     cookie, nickname
 ) VALUES (
     ?, ?
-)
-RETURNING *;
+);
 
--- name: SeenSession :exec
+-- name: SeenSession :execresult
 UPDATE sessions
 SET last_seen = CURRENT_TIMESTAMP
 WHERE cookie = ?;
@@ -15,7 +14,6 @@ WHERE cookie = ?;
 SELECT * FROM sessions
 WHERE cookie = ? LIMIT 1;
 
--- name: DeleteOldSessions :one
+-- name: PruneOldSessions :execresult
 DELETE FROM sessions
-WHERE last_seen < DATETIME('now', '-3 months')
-RETURNING *;
+WHERE last_seen < DATE_SUB(NOW(), INTERVAL 3 MONTH);

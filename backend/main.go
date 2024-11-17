@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 
@@ -9,8 +10,8 @@ import (
 )
 
 func main() {
-	// Setup handlers (eventually specify db info too)
-	h, err := handler.LoadHandler()
+	// Setup handlers
+	h, err := handler.LoadHandler("root:FakePassword@/ctfcollab")
 	if err != nil {
 		log.Panic(err)
 	}
