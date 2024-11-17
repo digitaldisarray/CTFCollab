@@ -37,5 +37,5 @@ For working on the database schema, sqlc is required https://docs.sqlc.dev/en/st
 
 Running code: `go run .` while in the backend directory
 
-
-
+#### Modifying queries or schema
+You can modify the queries and schema in `backend/db/`. Once you modify them, use `sqlc generate` to generate the corresponding go code. You will need to [install sqlc](https://docs.sqlc.dev/en/stable/overview/install.html) to do so. 

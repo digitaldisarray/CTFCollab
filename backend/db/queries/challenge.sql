@@ -1,78 +1,3 @@
--- name: CreateUser :one
-INSERT INTO users (
-    username, password_hash
-) VALUES (
-    ?, ?
-)
-RETURNING *;
-
--- name: DeleteUser :exec
-DELETE from users
-WHERE id = ?;
-
--- name: ChangePassword :exec
-UPDATE users
-SET password_hash = ?
-WHERE id = ?;
-
--- name: ChangeUsername :exec
-UPDATE users
-SET username = ?
-WHERE id = ?;
-
-
-
--- name: CreateSession :one
-INSERT INTO sessions (
-    cookie, nickname
-) VALUES (
-    ?, ?
-)
-RETURNING *;
-
--- name: SeenSession :exec
-UPDATE sessions
-SET last_seen = CURRENT_TIMESTAMP
-WHERE cookie = ?;
-
--- name: GetSession :one
-SELECT * FROM sessions
-WHERE cookie = ? LIMIT 1;
-
--- name: DeleteOldSessions :one
-DELETE FROM sessions
-WHERE last_seen < DATETIME('now', '-3 months')
-RETURNING *;
-
-
-
--- name: ListCTFs :many
-SELECT * FROM ctfs
-ORDER BY start_date;
-
--- name: CreateCTF :one
-INSERT INTO ctfs (
-    name, description, start_date, end_date, author_id
-) VALUES (
-    ?, ?, ?, ?, ?
-)
-RETURNING *;
-
--- name: UpdateCTF :exec
-UPDATE ctfs
-SET
-    name = COALESCE(sqlc.narg('name'), name),
-    description = COALESCE(sqlc.narg('description'), description),
-    start_date = COALESCE(sqlc.narg('start_date'), start_date),
-    end_date = COALESCE(sqlc.narg('end_date'), end_date)
-WHERE id = ?;
-
--- name: DeleteCTF :exec
-DELETE FROM ctfs
-WHERE id = ?;
-
-
-
 -- name: ListChallenges :many
 SELECT * FROM challenges
 ORDER BY created_at;
@@ -116,13 +41,7 @@ SET
     flag = COALESCE(sqlc.narg('flag'), flag)
 WHERE id = ?;
 
--- name: GetChallengeCategories :many
-SELECT t.id, t.name
-FROM tags t
-JOIN challenge_tags ct ON t.id = ct.tag_id
-WHERE ct.challenge_id = ?;
-
--- name: AddTag :exec
+-- name: AddChallengeTag :exec
 BEGIN TRANSACTION;
 -- Step 1: Insert the tag if it doesn't already exist
 INSERT INTO tags (name)
@@ -136,7 +55,7 @@ SELECT ?, id FROM tags WHERE name = ?
 ON CONFLICT(challenge_id, tag_id) DO NOTHING;
 COMMIT;
 
--- name: DeleteTag :exec
+-- name: DeleteChallengeTag :exec
 BEGIN TRANSACTION;
 -- Step 1: Delete challenge-tag relationships for the given tag
 DELETE FROM challenge_tags WHERE tag_id = ?;
@@ -145,3 +64,9 @@ DELETE FROM tags WHERE id = ? AND NOT EXISTS (
     SELECT 1 FROM challenge_tags WHERE tag_id = tags.id
 );
 COMMIT;
+
+-- name: GetChallengeTags :many
+SELECT t.id, t.name
+FROM tags t
+JOIN challenge_tags ct ON t.id = ct.tag_id
+WHERE ct.challenge_id = ?;
