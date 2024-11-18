@@ -9,6 +9,8 @@
         border:1px solid black;
         width: 50%;
         height: 80vh;
+        margin: 10px;
+        padding: 5px;
     }
 </style>
 <div>

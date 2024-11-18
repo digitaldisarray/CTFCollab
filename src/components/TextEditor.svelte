@@ -14,6 +14,7 @@
         width: 50%;
         height: 100%;
         margin: 10px;
+        padding: 5px;
     }
 </style>
 <textarea
