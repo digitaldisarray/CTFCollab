@@ -1,6 +1,14 @@
 
 <script>
-   let roomcode = $state('')
+    import { goto } from "$app/navigation";
+    import { redirect } from "@sveltejs/kit";
+
+    let roomcode = $state('')
+
+    function roomInput(e){
+        roomcode = e.target.value;
+        goto('/rooms')
+    }
 </script>
 <style>
     div {
@@ -27,8 +35,8 @@
     }
 </style>
 <div>
-    <input onchange={(e)=> {roomcode = e.target.value}} type="text" placeholder="Type room key..." >
-    <button >Enter Room</button>
+    <input onchange={roomInput} type="text" placeholder="Type room key..." >
+    <button>Enter Room</button>
     {#if roomcode === null}
         <p>Invalid roomcode</p>
     {:else if roomcode !== '' }
