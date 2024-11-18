@@ -1,15 +1,14 @@
 
 <script>
-    import Roomselect from "./roomselect.svelte";
+    import JoinRoom from "../components/JoinRoom.svelte";
 </script>
+<style>
+    a {
+        float: right;
+    }
+</style>
 <h1>CTFCollab</h1>
 
-    <style>
-        a {
-            float: right;
-        }
-    </style>
+<a href='/login'>login</a>
+<JoinRoom/>
 
-    <a href='/login'>login</a>
-    <Roomselect/>
-    
