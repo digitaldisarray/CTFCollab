@@ -3,11 +3,11 @@
     import { goto } from "$app/navigation";
     import { redirect } from "@sveltejs/kit";
 
-    let roomcode = $state('')
+    let roomcode = $state('');
 
     function roomInput(e){
         roomcode = e.target.value;
-        goto('/rooms')
+        goto('/rooms');
     }
 </script>
 <style>
