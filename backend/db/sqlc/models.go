@@ -6,53 +6,47 @@ package db
 
 import (
 	"database/sql"
+	"time"
 )
 
 type Challenge struct {
-	ID          int32
-	CtfID       int32
-	Name        string
-	Description sql.NullString
-	Flag        sql.NullString
-	NoteID      sql.NullInt32
-	CreatedAt   sql.NullTime
+	ID          int32        `json:"id"`
+	CtfID       int32        `json:"ctf_id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Flag        string       `json:"flag"`
+	CreatedAt   sql.NullTime `json:"created_at"`
 }
 
 type ChallengeTag struct {
-	ChallengeID int32
-	TagID       int32
+	ChallengeID int32 `json:"challenge_id"`
+	TagID       int32 `json:"tag_id"`
 }
 
 type Ctf struct {
-	ID          int32
-	Name        string
-	Description sql.NullString
-	StartDate   sql.NullTime
-	EndDate     sql.NullTime
-	AuthorID    sql.NullInt32
-}
-
-type Note struct {
-	ID          int32
-	ChallengeID int32
-	CreatedBy   sql.NullInt32
+	ID          int32     `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	AuthorID    int32     `json:"author_id"`
 }
 
 type Session struct {
-	ID        int32
-	Cookie    string
-	Nickname  string
-	LastSeen  sql.NullTime
-	CreatedAt sql.NullTime
+	ID        int32        `json:"id"`
+	Cookie    string       `json:"cookie"`
+	Nickname  string       `json:"nickname"`
+	LastSeen  sql.NullTime `json:"last_seen"`
+	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type Tag struct {
-	ID   int32
-	Name string
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
 }
 
 type User struct {
-	ID           int32
-	Username     string
-	PasswordHash sql.NullString
+	ID           int32  `json:"id"`
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
 }

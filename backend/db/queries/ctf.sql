@@ -12,10 +12,10 @@ INSERT INTO ctfs (
 -- name: UpdateCTF :execresult
 UPDATE ctfs
 SET
-    name = COALESCE(sqlc.narg('name'), name),
-    description = COALESCE(sqlc.narg('description'), description),
-    start_date = COALESCE(sqlc.narg('start_date'), start_date),
-    end_date = COALESCE(sqlc.narg('end_date'), end_date)
+    name = ?,
+    description = ?,
+    start_date = ?,
+    end_date = ?
 WHERE id = ?;
 
 -- name: DeleteCTF :exec

@@ -17,6 +17,9 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// Routes
 	e.GET("/hello", handler.HelloWorld)
+	e.GET("/ctfs", handler.GetCTFs)
+	e.POST("/ctfs", handler.CreateCTF)
+	e.POST("/user", handler.CreateUser)
 
 	return e
 }

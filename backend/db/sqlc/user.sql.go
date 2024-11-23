@@ -17,8 +17,8 @@ WHERE id = ?
 `
 
 type ChangePasswordParams struct {
-	PasswordHash sql.NullString
-	ID           int32
+	PasswordHash string `json:"password_hash"`
+	ID           int32  `json:"id"`
 }
 
 func (q *Queries) ChangePassword(ctx context.Context, arg ChangePasswordParams) (sql.Result, error) {
@@ -32,8 +32,8 @@ WHERE id = ?
 `
 
 type ChangeUsernameParams struct {
-	Username string
-	ID       int32
+	Username string `json:"username"`
+	ID       int32  `json:"id"`
 }
 
 func (q *Queries) ChangeUsername(ctx context.Context, arg ChangeUsernameParams) (sql.Result, error) {
@@ -49,8 +49,8 @@ INSERT INTO users (
 `
 
 type CreateUserParams struct {
-	Username     string
-	PasswordHash sql.NullString
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error) {

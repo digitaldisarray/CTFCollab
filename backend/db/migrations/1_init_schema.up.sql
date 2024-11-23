@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255)  -- Adjust size based on your hash algorithm
+    password_hash VARCHAR(255) NOT NULL  -- Adjust size based on your hash algorithm
 );
 
 -- Sessions Table (Anonymous users w/ nicknames)
@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS ctfs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
-    start_date DATETIME,
-    end_date DATETIME,
-    author_id INT,  -- Admin user who created the CTF
+    description TEXT NOT NULL DEFAULT "",
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    author_id INT NOT NULL,  -- Admin user who created the CTF
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
 
@@ -30,15 +30,13 @@ CREATE TABLE IF NOT EXISTS challenges (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ctf_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
-    flag TEXT,
-    note_id INT,  -- One-to-one relationship with notes
+    description TEXT NOT NULL DEFAULT "",
+    flag TEXT NOT NULL DEFAULT "",
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ctf_id) REFERENCES ctfs(id),
-    FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE
+    FOREIGN KEY (ctf_id) REFERENCES ctfs(id)
 );
 
--- Tags Table: Stores the different tags (categories) users can assign to challenges
+-- Tags Table: Stores the different tags/categories users can assign to challenges
 CREATE TABLE IF NOT EXISTS tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL  -- Name of the tag (e.g., "cryptography", "web", "forensics")
@@ -54,10 +52,11 @@ CREATE TABLE IF NOT EXISTS challenge_tags (
 );
 
 -- Notes Table
-CREATE TABLE IF NOT EXISTS notes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    challenge_id INT NOT NULL,  -- Foreign key to challenge
-    created_by INT,             -- Foreign key to users (created by)
-    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
-    FOREIGN KEY (created_by) REFERENCES users(id)
-);
+-- Might not need this if we use a pre existing tool for notes
+-- CREATE TABLE IF NOT EXISTS notes (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     challenge_id INT NOT NULL,  -- Foreign key to challenge
+--     created_by INT,             -- Foreign key to users (created by)
+--     FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+--     FOREIGN KEY (created_by) REFERENCES users(id)
+-- );

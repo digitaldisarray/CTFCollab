@@ -19,8 +19,8 @@ INSERT INTO sessions (
 `
 
 type CreateSessionParams struct {
-	Cookie   string
-	Nickname string
+	Cookie   string `json:"cookie"`
+	Nickname string `json:"nickname"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (sql.Result, error) {

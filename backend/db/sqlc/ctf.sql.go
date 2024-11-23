@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const createCTF = `-- name: CreateCTF :execresult
@@ -19,11 +20,11 @@ INSERT INTO ctfs (
 `
 
 type CreateCTFParams struct {
-	Name        string
-	Description sql.NullString
-	StartDate   sql.NullTime
-	EndDate     sql.NullTime
-	AuthorID    sql.NullInt32
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	AuthorID    int32     `json:"author_id"`
 }
 
 func (q *Queries) CreateCTF(ctx context.Context, arg CreateCTFParams) (sql.Result, error) {
@@ -84,19 +85,19 @@ func (q *Queries) ListCTFs(ctx context.Context) ([]Ctf, error) {
 const updateCTF = `-- name: UpdateCTF :execresult
 UPDATE ctfs
 SET
-    name = COALESCE(?, name),
-    description = COALESCE(?, description),
-    start_date = COALESCE(?, start_date),
-    end_date = COALESCE(?, end_date)
+    name = ?,
+    description = ?,
+    start_date = ?,
+    end_date = ?
 WHERE id = ?
 `
 
 type UpdateCTFParams struct {
-	Name        sql.NullString
-	Description sql.NullString
-	StartDate   sql.NullTime
-	EndDate     sql.NullTime
-	ID          int32
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	ID          int32     `json:"id"`
 }
 
 func (q *Queries) UpdateCTF(ctx context.Context, arg UpdateCTFParams) (sql.Result, error) {

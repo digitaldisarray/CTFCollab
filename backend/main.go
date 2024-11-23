@@ -4,14 +4,26 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/digitaldisarray/ctfcollab/handler"
 	"github.com/digitaldisarray/ctfcollab/router"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Get ready to read environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Panic("Could not load environment")
+	}
+
 	// Setup handlers
-	h, err := handler.LoadHandler("root:FakePassword@/ctfcollab")
+	dbUrl, found := os.LookupEnv("MYSQL_URL")
+	if !found {
+		log.Panic("MYSQL_URL environment variable not set")
+	}
+	h, err := handler.LoadHandler(dbUrl)
 	if err != nil {
 		log.Panic(err)
 	}

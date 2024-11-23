@@ -19,9 +19,9 @@ INSERT INTO challenges (
 `
 
 type CreateChallengeParams struct {
-	CtfID       int32
-	Name        string
-	Description sql.NullString
+	CtfID       int32  `json:"ctf_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) (sql.Result, error) {
@@ -29,7 +29,7 @@ func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams
 }
 
 const getChallenge = `-- name: GetChallenge :one
-SELECT id, ctf_id, name, description, flag, note_id, created_at FROM challenges
+SELECT id, ctf_id, name, description, flag, created_at FROM challenges
 WHERE id = ? LIMIT 1
 `
 
@@ -42,7 +42,6 @@ func (q *Queries) GetChallenge(ctx context.Context, id int32) (Challenge, error)
 		&i.Name,
 		&i.Description,
 		&i.Flag,
-		&i.NoteID,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -83,15 +82,15 @@ SELECT flag FROM challenges
 WHERE id = ? LIMIT 1
 `
 
-func (q *Queries) GetFlag(ctx context.Context, id int32) (sql.NullString, error) {
+func (q *Queries) GetFlag(ctx context.Context, id int32) (string, error) {
 	row := q.db.QueryRowContext(ctx, getFlag, id)
-	var flag sql.NullString
+	var flag string
 	err := row.Scan(&flag)
 	return flag, err
 }
 
 const listChallenges = `-- name: ListChallenges :many
-SELECT id, ctf_id, name, description, flag, note_id, created_at FROM challenges
+SELECT id, ctf_id, name, description, flag, created_at FROM challenges
 ORDER BY created_at
 `
 
@@ -110,7 +109,6 @@ func (q *Queries) ListChallenges(ctx context.Context) ([]Challenge, error) {
 			&i.Name,
 			&i.Description,
 			&i.Flag,
-			&i.NoteID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -133,8 +131,8 @@ WHERE id = ?
 `
 
 type SetFlagParams struct {
-	Flag sql.NullString
-	ID   int32
+	Flag string `json:"flag"`
+	ID   int32  `json:"id"`
 }
 
 func (q *Queries) SetFlag(ctx context.Context, arg SetFlagParams) (sql.Result, error) {
@@ -151,10 +149,10 @@ WHERE id = ?
 `
 
 type UpdateChallengeParams struct {
-	Name        sql.NullString
-	Description sql.NullString
-	Flag        sql.NullString
-	ID          int32
+	Name        sql.NullString `json:"name"`
+	Description sql.NullString `json:"description"`
+	Flag        sql.NullString `json:"flag"`
+	ID          int32          `json:"id"`
 }
 
 func (q *Queries) UpdateChallenge(ctx context.Context, arg UpdateChallengeParams) (sql.Result, error) {
