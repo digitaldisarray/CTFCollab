@@ -37,7 +37,7 @@ MYSQL_ROOT_PASSWORD=CHANGE_ME
 MYSQL_DATABASE=ctfcollab
 MYSQL_USER=ctfuser
 MYSQL_PASSWORD=CHANGE_ME
-MYSQL_URL=root:${MYSQL_ROOT_PASSWORD}@tcp(db:3306)/${MYSQL_DATABASE}?multiStatements=true
+MYSQL_URL=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(db:3306)/${MYSQL_DATABASE}?multiStatements=true&parseTime=true
 ```
 
 Starting
