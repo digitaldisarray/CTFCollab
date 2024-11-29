@@ -30,6 +30,32 @@ You can preview the production build with `npm run preview`.
 
 ## Backend
 
+### Running
+Create a `.env` file in the root dirtory of ctfcollab. Here is a template:
+```
+MYSQL_ROOT_PASSWORD=CHANGE_ME
+MYSQL_DATABASE=ctfcollab
+MYSQL_USER=ctfuser
+MYSQL_PASSWORD=CHANGE_ME
+MYSQL_URL=root:${MYSQL_ROOT_PASSWORD}@tcp(db:3306)/${MYSQL_DATABASE}?multiStatements=true
+```
+
+Starting
+```
+docker compose up --build
+```
+
+Stopping
+```
+docker compose down
+```
+
+Removing database
+```
+docker volume rm ctfcollab_db-data
+```
+
+
 ### Development
 Golang is required to compile and run the backend code on your computer
 

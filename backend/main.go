@@ -15,12 +15,12 @@ func main() {
 	// Get ready to read environment variables
 	err := godotenv.Load()
 	if err != nil {
-		log.Panic("Could not load environment")
+		log.Print("Could not load environment from .env, assuming they are already set in environment")
 	}
 
 	// Setup handlers
 	dbUrl, found := os.LookupEnv("MYSQL_URL")
-	if !found {
+	if !found || dbUrl == "" {
 		log.Panic("MYSQL_URL environment variable not set")
 	}
 	h, err := handler.LoadHandler(dbUrl)

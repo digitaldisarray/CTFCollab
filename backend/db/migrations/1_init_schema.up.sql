@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS ctfs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL DEFAULT "",
+    description TEXT NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     author_id INT NOT NULL,  -- Admin user who created the CTF
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS challenges (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ctf_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL DEFAULT "",
-    flag TEXT NOT NULL DEFAULT "",
+    description TEXT NOT NULL,
+    flag TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id)
 );
