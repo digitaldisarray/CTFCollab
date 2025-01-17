@@ -5,8 +5,8 @@ INSERT INTO users (
     ?, ?
 );
 
--- name: LoginUser :one
-SELECT password_hash FROM users
+-- name: GetUser :one
+SELECT * FROM users
 WHERE username = ? LIMIT 1;
 
 -- name: DeleteUser :execresult

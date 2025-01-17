@@ -33,7 +33,8 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	if err := c.Bind(user); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-
+	// TODO update for more passes, currently does only 1
+	// automatically formats w/ random salt
 	hash, err := argon2id.CreateHash(user.PasswordHash, argon2id.DefaultParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -52,4 +53,26 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "User created")
+}
+
+func (h *Handler) LoginUser(c echo.Context) error {
+	user := new(db.CreateUserParams)
+	if err := c.Bind(user); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	ctx := context.Background()
+	dbu, err := h.Queries.GetUser(ctx, user.Username)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, user)
+	}
+	res, err := argon2id.ComparePasswordAndHash(user.PasswordHash, dbu.PasswordHash)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	if !res {
+		return c.JSON(http.StatusBadRequest, "Invalid login credentials.")
+	}
+	// probably attach auth here
+	return c.JSON(http.StatusOK, user)
 }
