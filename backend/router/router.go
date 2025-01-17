@@ -17,9 +17,44 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// Routes
 	e.GET("/hello", handler.HelloWorld)
+
+	/* CTFS */
 	e.GET("/ctfs", handler.GetCTFs)
+	e.GET("/ctfs/:id", handler.GetCTF)
+	e.DELETE("/ctfs/:id", handler.DeleteCTF)
+	e.PATCH("/ctfs/:id", handler.UpdateCTF)
 	e.POST("/ctfs", handler.CreateCTF)
+
+	/* USERS */
 	e.POST("/user", handler.CreateUser)
+	// e.POST("/user/login", handler.UserLogin)
+	/*
+		GET user/:id
+		DELETE user/:id
+		UPDATE user/:id
+
+		GET sessions/:id
+		PATCH sessions
+		DELETE sessions
+
+		---- maybe?----
+		GET document
+		POST document
+		UPDATE document
+		DELETE document
+		-----------------
+
+		GET challenges
+		POST challenges
+
+
+		GET rooms
+		GET room/:id
+		POST room
+		UPDATE room/:id
+		DELETE room/:id
+
+	*/
 
 	return e
 }

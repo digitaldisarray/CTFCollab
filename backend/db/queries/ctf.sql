@@ -2,6 +2,10 @@
 SELECT * FROM ctfs
 ORDER BY start_date;
 
+-- name: GetCTF :one
+SELECT * FROM ctfs
+WHERE id = ? LIMIT 1;
+
 -- name: CreateCTF :execresult
 INSERT INTO ctfs (
     name, description, start_date, end_date, author_id

@@ -4,9 +4,28 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/alexedwards/argon2id"
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
 	"github.com/labstack/echo/v4"
 )
+
+type Params struct {
+	// The amount of memory used by the algorithm (in kibibytes).
+	Memory uint32
+
+	// The number of iterations over the memory.
+	Iterations uint32
+
+	// The number of threads (or lanes) used by the algorithm.
+	// Recommended value is between 1 and runtime.NumCPU().
+	Parallelism uint8
+
+	// Length of the random salt. 16 bytes is recommended for password hashing.
+	SaltLength uint32
+
+	// Length of the generated key. 16 bytes or more is recommended.
+	KeyLength uint32
+}
 
 func (h *Handler) CreateUser(c echo.Context) error {
 	// Parse request
@@ -15,8 +34,11 @@ func (h *Handler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	// TODO: hash password with argon2id (at least 2-3 passes) + salt
-
+	hash, err := argon2id.CreateHash(user.PasswordHash, argon2id.DefaultParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	user.PasswordHash = hash
 	// Insert data into db
 	ctx := context.Background()
 	result, err := h.Queries.CreateUser(ctx, *user)

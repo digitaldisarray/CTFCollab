@@ -47,6 +47,25 @@ func (q *Queries) DeleteCTF(ctx context.Context, id int32) error {
 	return err
 }
 
+const getCTF = `-- name: GetCTF :one
+SELECT id, name, description, start_date, end_date, author_id FROM ctfs
+WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetCTF(ctx context.Context, id int32) (Ctf, error) {
+	row := q.db.QueryRowContext(ctx, getCTF, id)
+	var i Ctf
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.StartDate,
+		&i.EndDate,
+		&i.AuthorID,
+	)
+	return i, err
+}
+
 const listCTFs = `-- name: ListCTFs :many
 SELECT id, name, description, start_date, end_date, author_id FROM ctfs
 ORDER BY start_date

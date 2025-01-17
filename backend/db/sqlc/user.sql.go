@@ -65,3 +65,15 @@ WHERE id = ?
 func (q *Queries) DeleteUser(ctx context.Context, id int32) (sql.Result, error) {
 	return q.db.ExecContext(ctx, deleteUser, id)
 }
+
+const loginUser = `-- name: LoginUser :one
+SELECT password_hash FROM users
+WHERE username = ? LIMIT 1
+`
+
+func (q *Queries) LoginUser(ctx context.Context, username string) (string, error) {
+	row := q.db.QueryRowContext(ctx, loginUser, username)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
+}

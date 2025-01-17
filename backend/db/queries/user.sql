@@ -5,6 +5,10 @@ INSERT INTO users (
     ?, ?
 );
 
+-- name: LoginUser :one
+SELECT password_hash FROM users
+WHERE username = ? LIMIT 1;
+
 -- name: DeleteUser :execresult
 DELETE from users
 WHERE id = ?;
