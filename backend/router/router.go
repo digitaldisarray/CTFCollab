@@ -28,6 +28,14 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	/* USERS */
 	e.POST("/user", handler.CreateUser)
 	e.POST("/user/login", handler.LoginUser)
+
+	/* ROOMS */
+	e.POST("/room", handler.CreateRoom)
+	e.GET("/room", handler.GetRooms)
+	e.GET("/room/:id", handler.GetRoom)
+	//e.PUT("/room/:id", handler.UpdateRoom)
+	e.DELETE("/room/:id", handler.DeleteRoom)
+
 	/*
 		GET user/:id
 		DELETE user/:id

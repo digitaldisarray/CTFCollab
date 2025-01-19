@@ -32,6 +32,15 @@ type Ctf struct {
 	AuthorID    int32     `json:"author_id"`
 }
 
+type Room struct {
+	ID          uint64         `json:"id"`
+	RoomID      int32          `json:"room_id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
+}
+
 type Session struct {
 	ID        int32        `json:"id"`
 	Cookie    string       `json:"cookie"`

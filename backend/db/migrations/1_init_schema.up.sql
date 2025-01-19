@@ -51,6 +51,14 @@ CREATE TABLE IF NOT EXISTS challenge_tags (
     PRIMARY KEY (challenge_id, tag_id)  -- Ensures uniqueness of challenge-tag pairs
 );
 
+CREATE TABLE IF NOT EXISTS rooms (
+    id SERIAL PRIMARY KEY, -- Optional unique ID for internal use
+    room_id INT NOT NULL UNIQUE, -- The unique room identifier for users
+    name VARCHAR(255) NOT NULL, -- Room name
+    description TEXT, -- Description of the room
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP -- Optional for tracking creation
+);
+
 -- Notes Table
 -- Might not need this if we use a pre existing tool for notes
 -- CREATE TABLE IF NOT EXISTS notes (
