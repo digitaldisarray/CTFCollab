@@ -86,7 +86,14 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 
 	// TODO: Add authentication and authorization logic here
 
-	_, err := h.Queries.ChangePassword(c.Request().Context(), req)
+	// Hash the new password before updating it in the database
+	hash, err := argon2id.CreateHash(req.PasswordHash, argon2id.DefaultParams)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Password hashing failed")
+	}
+	req.PasswordHash = hash
+
+	_, err = h.Queries.ChangePassword(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update password")
 	}
