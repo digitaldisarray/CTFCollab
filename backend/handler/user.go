@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/alexedwards/argon2id"
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
@@ -75,4 +76,36 @@ func (h *Handler) LoginUser(c echo.Context) error {
 	}
 	// probably attach auth here
 	return c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) ChangePassword(c echo.Context) error {
+	var req db.ChangePasswordParams
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
+	}
+
+	// TODO: Add authentication and authorization logic here
+
+	_, err := h.Queries.ChangePassword(c.Request().Context(), req)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update password")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *Handler) DeleteUser(c echo.Context) error {
+	userID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
+	}
+
+	// TODO: Add authentication and authorization checks here
+
+	_, err = h.Queries.DeleteUser(c.Request().Context(), int32(userID))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user")
+	}
+
+	return c.NoContent(http.StatusOK)
 }
