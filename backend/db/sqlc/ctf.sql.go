@@ -13,14 +13,15 @@ import (
 
 const createCTF = `-- name: CreateCTF :execresult
 INSERT INTO ctfs (
-    name, description, start_date, end_date, author_id
+    name, phrase, description, start_date, end_date, author_id
 ) VALUES (
-    ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?
 )
 `
 
 type CreateCTFParams struct {
 	Name        string    `json:"name"`
+	Phrase      string    `json:"phrase"`
 	Description string    `json:"description"`
 	StartDate   time.Time `json:"start_date"`
 	EndDate     time.Time `json:"end_date"`
@@ -30,6 +31,7 @@ type CreateCTFParams struct {
 func (q *Queries) CreateCTF(ctx context.Context, arg CreateCTFParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createCTF,
 		arg.Name,
+		arg.Phrase,
 		arg.Description,
 		arg.StartDate,
 		arg.EndDate,
@@ -37,26 +39,27 @@ func (q *Queries) CreateCTF(ctx context.Context, arg CreateCTFParams) (sql.Resul
 	)
 }
 
-const deleteCTF = `-- name: DeleteCTF :exec
+const deleteCTFByPhrase = `-- name: DeleteCTFByPhrase :exec
 DELETE FROM ctfs
-WHERE id = ?
+WHERE phrase = ?
 `
 
-func (q *Queries) DeleteCTF(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteCTF, id)
+func (q *Queries) DeleteCTFByPhrase(ctx context.Context, phrase string) error {
+	_, err := q.db.ExecContext(ctx, deleteCTFByPhrase, phrase)
 	return err
 }
 
-const getCTF = `-- name: GetCTF :one
-SELECT id, name, description, start_date, end_date, author_id FROM ctfs
-WHERE id = ? LIMIT 1
+const getCTFByPhrase = `-- name: GetCTFByPhrase :one
+SELECT id, phrase, name, description, start_date, end_date, author_id FROM ctfs
+WHERE phrase = ? LIMIT 1
 `
 
-func (q *Queries) GetCTF(ctx context.Context, id int32) (Ctf, error) {
-	row := q.db.QueryRowContext(ctx, getCTF, id)
+func (q *Queries) GetCTFByPhrase(ctx context.Context, phrase string) (Ctf, error) {
+	row := q.db.QueryRowContext(ctx, getCTFByPhrase, phrase)
 	var i Ctf
 	err := row.Scan(
 		&i.ID,
+		&i.Phrase,
 		&i.Name,
 		&i.Description,
 		&i.StartDate,
@@ -66,13 +69,82 @@ func (q *Queries) GetCTF(ctx context.Context, id int32) (Ctf, error) {
 	return i, err
 }
 
-const listCTFs = `-- name: ListCTFs :many
-SELECT id, name, description, start_date, end_date, author_id FROM ctfs
+const getCTFChallenges = `-- name: GetCTFChallenges :many
+SELECT 
+    challenges.id AS challenge_id,
+    challenges.name AS challenge_name,
+    challenges.description AS challenge_description,
+    challenges.flag,
+    challenges.created_at AS challenge_created_at
+FROM 
+    challenges
+JOIN 
+    ctfs ON challenges.ctf_id = ctfs.id
+WHERE 
+    ctfs.phrase = ?
+`
+
+type GetCTFChallengesRow struct {
+	ChallengeID          int32        `json:"challenge_id"`
+	ChallengeName        string       `json:"challenge_name"`
+	ChallengeDescription string       `json:"challenge_description"`
+	Flag                 string       `json:"flag"`
+	ChallengeCreatedAt   sql.NullTime `json:"challenge_created_at"`
+}
+
+func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTFChallengesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCTFChallenges, phrase)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCTFChallengesRow
+	for rows.Next() {
+		var i GetCTFChallengesRow
+		if err := rows.Scan(
+			&i.ChallengeID,
+			&i.ChallengeName,
+			&i.ChallengeDescription,
+			&i.Flag,
+			&i.ChallengeCreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const joinCTF = `-- name: JoinCTF :execresult
+INSERT INTO user_ctfs (
+    user_id, ctf_id
+) VALUES (
+    ?, ?
+)
+`
+
+type JoinCTFParams struct {
+	UserID int32 `json:"user_id"`
+	CtfID  int32 `json:"ctf_id"`
+}
+
+func (q *Queries) JoinCTF(ctx context.Context, arg JoinCTFParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, joinCTF, arg.UserID, arg.CtfID)
+}
+
+const listAllCTFs = `-- name: ListAllCTFs :many
+SELECT id, phrase, name, description, start_date, end_date, author_id FROM ctfs
 ORDER BY start_date
 `
 
-func (q *Queries) ListCTFs(ctx context.Context) ([]Ctf, error) {
-	rows, err := q.db.QueryContext(ctx, listCTFs)
+func (q *Queries) ListAllCTFs(ctx context.Context) ([]Ctf, error) {
+	rows, err := q.db.QueryContext(ctx, listAllCTFs)
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +154,67 @@ func (q *Queries) ListCTFs(ctx context.Context) ([]Ctf, error) {
 		var i Ctf
 		if err := rows.Scan(
 			&i.ID,
+			&i.Phrase,
 			&i.Name,
 			&i.Description,
 			&i.StartDate,
 			&i.EndDate,
 			&i.AuthorID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersCTFs = `-- name: ListUsersCTFs :many
+SELECT 
+    ctfs.id AS ctf_id,
+    ctfs.name AS ctf_name,
+    ctfs.description AS ctf_description,
+    ctfs.start_date,
+    ctfs.end_date,
+    ctfs.author_id AS ctf_author_id
+FROM 
+    ctfs
+JOIN 
+    user_ctfs ON ctfs.id = user_ctfs.ctf_id
+WHERE 
+    user_ctfs.user_id = ?
+`
+
+type ListUsersCTFsRow struct {
+	CtfID          int32     `json:"ctf_id"`
+	CtfName        string    `json:"ctf_name"`
+	CtfDescription string    `json:"ctf_description"`
+	StartDate      time.Time `json:"start_date"`
+	EndDate        time.Time `json:"end_date"`
+	CtfAuthorID    int32     `json:"ctf_author_id"`
+}
+
+func (q *Queries) ListUsersCTFs(ctx context.Context, userID int32) ([]ListUsersCTFsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersCTFs, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUsersCTFsRow
+	for rows.Next() {
+		var i ListUsersCTFsRow
+		if err := rows.Scan(
+			&i.CtfID,
+			&i.CtfName,
+			&i.CtfDescription,
+			&i.StartDate,
+			&i.EndDate,
+			&i.CtfAuthorID,
 		); err != nil {
 			return nil, err
 		}
@@ -108,7 +236,7 @@ SET
     description = ?,
     start_date = ?,
     end_date = ?
-WHERE id = ?
+WHERE phrase = ?
 `
 
 type UpdateCTFParams struct {
@@ -116,7 +244,7 @@ type UpdateCTFParams struct {
 	Description string    `json:"description"`
 	StartDate   time.Time `json:"start_date"`
 	EndDate     time.Time `json:"end_date"`
-	ID          int32     `json:"id"`
+	Phrase      string    `json:"phrase"`
 }
 
 func (q *Queries) UpdateCTF(ctx context.Context, arg UpdateCTFParams) (sql.Result, error) {
@@ -125,6 +253,6 @@ func (q *Queries) UpdateCTF(ctx context.Context, arg UpdateCTFParams) (sql.Resul
 		arg.Description,
 		arg.StartDate,
 		arg.EndDate,
-		arg.ID,
+		arg.Phrase,
 	)
 }

@@ -1,7 +1,3 @@
--- name: ListChallenges :many
-SELECT * FROM challenges
-ORDER BY created_at;
-
 -- name: GetChallenge :one
 SELECT * FROM challenges
 WHERE id = ? LIMIT 1;
@@ -16,11 +12,17 @@ SELECT flag FROM challenges
 WHERE id = ? LIMIT 1;
 
 -- name: CreateChallenge :execresult
-INSERT INTO challenges (
-    ctf_id, name, description
-) VALUES (
-    ?, ?, ?
-);
+INSERT INTO challenges (ctf_id, name, description, flag, created_at)
+SELECT 
+    ctfs.id,
+    ? AS challenge_name,        -- Replace ? with the challenge name
+    ? AS challenge_description, -- Replace ? with the challenge description
+    ? AS challenge_flag,        -- Replace ? with the challenge flag
+    CURRENT_TIMESTAMP
+FROM 
+    ctfs
+WHERE 
+    ctfs.phrase = ?;
 
 -- name: DeleteChallenge :execresult
 START TRANSACTION;

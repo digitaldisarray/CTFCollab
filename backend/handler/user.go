@@ -62,7 +62,7 @@ func (h *Handler) LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	ctx := context.Background()
-	dbu, err := h.Queries.GetUser(ctx, user.Username)
+	dbu, err := h.Queries.GetUserByUsername(ctx, user.Username)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, user)
 	}

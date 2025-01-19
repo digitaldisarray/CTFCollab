@@ -25,6 +25,7 @@ type ChallengeTag struct {
 
 type Ctf struct {
 	ID          int32     `json:"id"`
+	Phrase      string    `json:"phrase"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	StartDate   time.Time `json:"start_date"`
@@ -49,4 +50,11 @@ type User struct {
 	ID           int32  `json:"id"`
 	Username     string `json:"username"`
 	PasswordHash string `json:"password_hash"`
+	IsAdmin      bool   `json:"is_admin"`
+}
+
+type UserCtf struct {
+	UserID   int32        `json:"user_id"`
+	CtfID    int32        `json:"ctf_id"`
+	JoinedAt sql.NullTime `json:"joined_at"`
 }

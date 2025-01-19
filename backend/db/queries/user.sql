@@ -1,11 +1,18 @@
 -- name: CreateUser :execresult
 INSERT INTO users (
-    username, password_hash
+    username, password_hash, is_admin
 ) VALUES (
-    ?, ?
+    ?, ?, 0
 );
 
--- name: GetUser :one
+-- name: CreateAdmin :execresult
+INSERT INTO users (
+    username, password_hash, is_admin
+) VALUES (
+    ?, ?, 1
+);
+
+-- name: GetUserByUsername :one
 SELECT * FROM users
 WHERE username = ? LIMIT 1;
 

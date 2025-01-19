@@ -1,8 +1,9 @@
--- Users Table (Admins only for now)
+-- Users Table
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL  -- Adjust size based on your hash algorithm
+    password_hash VARCHAR(255) NOT NULL,  -- Adjust size based on hash algorithm
+    is_admin BOOLEAN NOT NULL DEFAULT 0
 );
 
 -- Sessions Table (Anonymous users w/ nicknames)
@@ -17,12 +18,23 @@ CREATE TABLE IF NOT EXISTS sessions (
 -- CTFs Table
 CREATE TABLE IF NOT EXISTS ctfs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    phrase VARCHAR(255) NOT NULL, -- Phrase used for joining CTF
+    name TEXT NOT NULL,
     description TEXT NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    author_id INT NOT NULL,  -- Admin user who created the CTF
+    author_id INT NOT NULL,  -- User who created the CTF
     FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
+-- User CTFs Table many-to-many
+CREATE TABLE IF NOT EXISTS user_ctfs (
+    user_id INT NOT NULL,
+    ctf_id INT NOT NULL,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Timestamp of when the user joined the CTF
+    PRIMARY KEY (user_id, ctf_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
 );
 
 -- Challenges Table

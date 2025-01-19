@@ -40,11 +40,28 @@ func (q *Queries) ChangeUsername(ctx context.Context, arg ChangeUsernameParams) 
 	return q.db.ExecContext(ctx, changeUsername, arg.Username, arg.ID)
 }
 
+const createAdmin = `-- name: CreateAdmin :execresult
+INSERT INTO users (
+    username, password_hash, is_admin
+) VALUES (
+    ?, ?, 1
+)
+`
+
+type CreateAdminParams struct {
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
+}
+
+func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createAdmin, arg.Username, arg.PasswordHash)
+}
+
 const createUser = `-- name: CreateUser :execresult
 INSERT INTO users (
-    username, password_hash
+    username, password_hash, is_admin
 ) VALUES (
-    ?, ?
+    ?, ?, 0
 )
 `
 
@@ -66,14 +83,19 @@ func (q *Queries) DeleteUser(ctx context.Context, id int32) (sql.Result, error) 
 	return q.db.ExecContext(ctx, deleteUser, id)
 }
 
-const getUser = `-- name: GetUser :one
-SELECT id, username, password_hash FROM users
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, username, password_hash, is_admin FROM users
 WHERE username = ? LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, username)
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
 	var i User
-	err := row.Scan(&i.ID, &i.Username, &i.PasswordHash)
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.PasswordHash,
+		&i.IsAdmin,
+	)
 	return i, err
 }

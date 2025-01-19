@@ -11,21 +11,33 @@ import (
 )
 
 const createChallenge = `-- name: CreateChallenge :execresult
-INSERT INTO challenges (
-    ctf_id, name, description
-) VALUES (
-    ?, ?, ?
-)
+INSERT INTO challenges (ctf_id, name, description, flag, created_at)
+SELECT 
+    ctfs.id,
+    ? AS challenge_name,        -- Replace ? with the challenge name
+    ? AS challenge_description, -- Replace ? with the challenge description
+    ? AS challenge_flag,        -- Replace ? with the challenge flag
+    CURRENT_TIMESTAMP
+FROM 
+    ctfs
+WHERE 
+    ctfs.phrase = ?
 `
 
 type CreateChallengeParams struct {
-	CtfID       int32  `json:"ctf_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Flag        string `json:"flag"`
+	Phrase      string `json:"phrase"`
 }
 
 func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createChallenge, arg.CtfID, arg.Name, arg.Description)
+	return q.db.ExecContext(ctx, createChallenge,
+		arg.Name,
+		arg.Description,
+		arg.Flag,
+		arg.Phrase,
+	)
 }
 
 const getChallenge = `-- name: GetChallenge :one
@@ -87,41 +99,6 @@ func (q *Queries) GetFlag(ctx context.Context, id int32) (string, error) {
 	var flag string
 	err := row.Scan(&flag)
 	return flag, err
-}
-
-const listChallenges = `-- name: ListChallenges :many
-SELECT id, ctf_id, name, description, flag, created_at FROM challenges
-ORDER BY created_at
-`
-
-func (q *Queries) ListChallenges(ctx context.Context) ([]Challenge, error) {
-	rows, err := q.db.QueryContext(ctx, listChallenges)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Challenge
-	for rows.Next() {
-		var i Challenge
-		if err := rows.Scan(
-			&i.ID,
-			&i.CtfID,
-			&i.Name,
-			&i.Description,
-			&i.Flag,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const setFlag = `-- name: SetFlag :execresult
