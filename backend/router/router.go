@@ -26,8 +26,9 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		e.DELETE("/ctfs/:phrase", handler.DeleteCTF)
 		e.PUT("/ctfs/:phrase", handler.UpdateCTF)
 		e.POST("/ctfs/:phrase/join", handler.JoinCTF)
-		e.GET("/ctf/:phrase/challenges", handler.GetChallenges)
-		e.POST("/ctf/:phrase/challenges", handler.CreateChallenge)
+		e.GET("/ctfs/:phrase/challenges", handler.GetChallenges)
+		e.DELETE("/ctfs/:phrase/challenges", handler.DeleteChallenge)
+		e.POST("/ctfs/:phrase/challenges", handler.CreateChallenge)
 	}
 
 	// Challenge routes

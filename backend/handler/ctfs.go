@@ -59,13 +59,14 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 func (h *Handler) DeleteCTF(c echo.Context) error {
 	// TODO Make sure user is CTF owner or an admin
 	ctx := context.Background()
-	err := h.Queries.DeleteCTFByPhrase(ctx, c.Param("id"))
+	err := h.Queries.DeleteCTFByPhrase(ctx, c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "Deleted")
 }
+
 
 func (h *Handler) UpdateCTF(c echo.Context) error {
 	// TODO Make sure user is CTF owner or an admin
@@ -122,4 +123,16 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "Updated")
+}
+
+func (h *handler) DeleteChallenge(c echo.Context) error {
+
+	ctx := context.Background()
+	err := h.Queries.DeleteChallenge(ctx, c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http,statusOK, "Deleted")
+
 }
