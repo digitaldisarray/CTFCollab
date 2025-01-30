@@ -18,11 +18,6 @@ type Challenge struct {
 	CreatedAt   sql.NullTime `json:"created_at"`
 }
 
-type ChallengeTag struct {
-	ChallengeID int32 `json:"challenge_id"`
-	TagID       int32 `json:"tag_id"`
-}
-
 type Ctf struct {
 	ID          int32     `json:"id"`
 	Phrase      string    `json:"phrase"`
@@ -39,11 +34,6 @@ type Session struct {
 	Nickname  string       `json:"nickname"`
 	LastSeen  sql.NullTime `json:"last_seen"`
 	CreatedAt sql.NullTime `json:"created_at"`
-}
-
-type Tag struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
 }
 
 type User struct {

@@ -40,6 +40,16 @@ func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams
 	)
 }
 
+const deleteChallenge = `-- name: DeleteChallenge :exec
+DELETE FROM challenges
+WHERE id = ?
+`
+
+func (q *Queries) DeleteChallenge(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteChallenge, id)
+	return err
+}
+
 const getChallenge = `-- name: GetChallenge :one
 SELECT id, ctf_id, name, description, flag, created_at FROM challenges
 WHERE id = ? LIMIT 1
@@ -57,36 +67,6 @@ func (q *Queries) GetChallenge(ctx context.Context, id int32) (Challenge, error)
 		&i.CreatedAt,
 	)
 	return i, err
-}
-
-const getChallengeTags = `-- name: GetChallengeTags :many
-SELECT t.id, t.name
-FROM tags t
-JOIN challenge_tags ct ON t.id = ct.tag_id
-WHERE ct.challenge_id = ?
-`
-
-func (q *Queries) GetChallengeTags(ctx context.Context, challengeID int32) ([]Tag, error) {
-	rows, err := q.db.QueryContext(ctx, getChallengeTags, challengeID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Tag
-	for rows.Next() {
-		var i Tag
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getFlag = `-- name: GetFlag :one

@@ -27,16 +27,14 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		e.PUT("/ctfs/:phrase", handler.UpdateCTF)
 		e.POST("/ctfs/:phrase/join", handler.JoinCTF)
 		e.GET("/ctfs/:phrase/challenges", handler.GetChallenges)
-		e.DELETE("/ctfs/:phrase/challenges", handler.DeleteChallenge)
 		e.POST("/ctfs/:phrase/challenges", handler.CreateChallenge)
 	}
 
 	// Challenge routes
 	{
 		//e.GET("/challenges/:id", ) // detailed information about a challenge, session has to be in the ctf it belongs to, or admin
-		//e.DELETE("/challenges/:id", ) // session has to belong to ctf
+		e.DELETE("/challenges/:id", handler.DeleteChallenge) // session has to belong to ctf
 		//e.PUT("/challenges/:id", )
-		// TODO: Tagging endpoint(s)
 	}
 
 	// User routes

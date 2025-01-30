@@ -48,20 +48,20 @@ CREATE TABLE IF NOT EXISTS challenges (
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id)
 );
 
--- Tags Table: Stores the different tags/categories users can assign to challenges
-CREATE TABLE IF NOT EXISTS tags (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL  -- Name of the tag (e.g., "cryptography", "web", "forensics")
-);
+-- -- Tags Table: Stores the different tags/categories users can assign to challenges
+-- CREATE TABLE IF NOT EXISTS tags (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     name VARCHAR(255) UNIQUE NOT NULL  -- Name of the tag (e.g., "cryptography", "web", "forensics")
+-- );
 
--- Challenge Tags Table: Many-to-many relationship between challenges and tags
-CREATE TABLE IF NOT EXISTS challenge_tags (
-    challenge_id INT NOT NULL,
-    tag_id INT NOT NULL,
-    FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
-    PRIMARY KEY (challenge_id, tag_id)  -- Ensures uniqueness of challenge-tag pairs
-);
+-- -- Challenge Tags Table: Many-to-many relationship between challenges and tags
+-- CREATE TABLE IF NOT EXISTS challenge_tags (
+--     challenge_id INT NOT NULL,
+--     tag_id INT NOT NULL,
+--     FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
+--     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
+--     PRIMARY KEY (challenge_id, tag_id)  -- Ensures uniqueness of challenge-tag pairs
+-- );
 
 -- Notes Table
 -- Might not need this if we use a pre existing tool for notes
