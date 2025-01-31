@@ -57,3 +57,16 @@ For working on the database schema, sqlc is required https://docs.sqlc.dev/en/st
 Running code: `go run .` while in the backend directory
 
 You can modify the queries and schema in `backend/db/`. Once you modify them, use `sqlc generate` to generate the corresponding go code. You will need to [install sqlc](https://docs.sqlc.dev/en/stable/overview/install.html) to do so. 
+
+
+### Testing
+
+To run the tests, make sure your database is up to date. Run:   
+```
+docker volume rm ctfcollab_db-data   
+```
+Relaunch the server with Docker. Then, run the commands:   
+```
+cd backend   
+go test ./tests    
+```
