@@ -20,6 +20,7 @@ func (h *Handler) GetCTF(c echo.Context) error {
 
 	// Lookup CTF by phrase and return it
 	ctx := context.Background()
+
 	ctf, err := h.Queries.GetCTFByPhrase(ctx, c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -53,7 +54,7 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, ctf_id)
+	return c.JSON(http.StatusOK, map[string]interface{}{"ctf_id": ctf_id})
 }
 
 func (h *Handler) DeleteCTF(c echo.Context) error {

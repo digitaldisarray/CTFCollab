@@ -52,8 +52,9 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	if _, err = VerifyParseResult(result, 1); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+	id, _ := result.LastInsertId()
 
-	return c.JSON(http.StatusOK, "User created")
+	return c.JSON(http.StatusOK, map[string]interface{}{"user_id": id})
 }
 
 func (h *Handler) LoginUser(c echo.Context) error {
