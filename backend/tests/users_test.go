@@ -95,10 +95,7 @@ func TestChangePassword(t *testing.T) {
 	password = "abc"
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{
-			"user_id": %d,
-			"password_hash": "%s"
-		}`, user_id, password)).
+		SetBody(fmt.Sprintf(`{"user_id": "%d", "password_hash": "%s"}`, user_id, password)).
 		Put("http://localhost:1337/users/password")
 
 	if err != nil {

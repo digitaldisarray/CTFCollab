@@ -27,13 +27,36 @@ var (
 	description = "This is a test"
 	start_date  = "2025-01-31T09:00:00Z"
 	end_date    = "2025-02-01T12:00:00Z"
-	author_id   = 3
+	author_id   = 0
 )
 
 func teardownCTF() {
-	if user_id != 0 {
+	if ctf_id != 0 {
 		deleteCTF(phrase)
 	}
+}
+
+func createUser(u string, p string) int {
+	setup()
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(fmt.Sprintf(`{"username": "%s", "password_hash": "%s"}`, u, p)).
+		Post("http://localhost:1337/user")
+	if err != nil {
+		fmt.Printf("Failed to create user: %v\n", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		fmt.Printf("Failed to create user, status code: %d\n", resp.StatusCode())
+	}
+
+	var userResponse UserResponse
+	err = json.Unmarshal(resp.Body(), &userResponse)
+	if err != nil {
+		fmt.Printf("Failed to unmarshal response: %v", err)
+	}
+
+	return userResponse.UserID
 }
 
 func getCtf(ctfPhrase string) CtfGetResponse {
@@ -75,6 +98,9 @@ func deleteCTF(ctfPhrase string) {
 	}
 }
 func TestPostCtf(t *testing.T) {
+
+	author_id = createUser("ctftest", "xyz")
+
 	setup()
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
@@ -179,4 +205,6 @@ func TestDeleteCtf(t *testing.T) {
 	if resp.StatusCode() != http.StatusOK {
 		fmt.Printf("Failed to delete CTF, status code: %d\n", resp.StatusCode())
 	}
+
+	deleteUser(author_id)
 }
