@@ -1,0 +1,46 @@
+definitions:
+  db.CreateUserParams:
+    properties:
+      password_hash:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user in the database with a hashed password using
+        the Argon2id algorithm
+      parameters:
+      - description: Create User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/db.CreateUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'user_id: ID of the created user'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create a new user
+      tags:
+      - users
+swagger: "2.0"

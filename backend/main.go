@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/digitaldisarray/ctfcollab/docs"
 	"github.com/digitaldisarray/ctfcollab/handler"
 	"github.com/digitaldisarray/ctfcollab/router"
 	"github.com/joho/godotenv"
+	echoSwagger "github.com/swaggo/echo-swagger" // echo-swagger middleware
 )
 
 func main() {
@@ -30,6 +32,8 @@ func main() {
 
 	// Setup API routes
 	e := router.SetupRouter(h)
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Start the API with a specified port
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", "1337")))
