@@ -18,6 +18,8 @@ func main() {
 		log.Print("Could not load environment from .env, assuming they are already set in environment")
 	}
 
+	log.Println("MYSQL_URL:", os.Getenv("MYSQL_URL"))
+
 	// Setup handlers
 	dbUrl, found := os.LookupEnv("MYSQL_URL")
 	if !found || dbUrl == "" {

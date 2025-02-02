@@ -90,22 +90,44 @@ func TestLoginUser(t *testing.T) {
 }
 
 func TestChangePassword(t *testing.T) {
-	// Need to fix ChangePassword handler
 	setup()
-	password = "abc"
+	defer teardownUsers()
+
+	// Change the password
+	newPassword := "abc"
+
+	t.Logf("Changing password for user ID: %d, new password: %s", user_id, newPassword)
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{"user_id": "%d", "password_hash": "%s"}`, user_id, password)).
-		Put("http://localhost:1337/users/password")
+		SetBody(fmt.Sprintf(`{
+			"id": %d,
+			"password_hash": "%s"
+		}`, user_id, newPassword)).
+		Post("http://localhost:1337/users/password")
 
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode())
+		t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode(), resp.Body())
 	}
-	TestLoginUser(t)
+
+	username := "testuser"
+
+	// Verify the new password by logging in
+	resp, err = client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(fmt.Sprintf(`{"username": "%s", "password_hash": "%s"}`, username, newPassword)).
+		Post("http://localhost:1337/user/login")
+
+	if err != nil {
+		t.Fatalf("Failed to send request: %v", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode(), resp.Body()) //error affecting me
+	}
 }
 
 // TestDeleteUser deletes the user created in TestPostUser
