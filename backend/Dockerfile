@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 go build \
 FROM gcr.io/distroless/static-debian12:nonroot AS final
 COPY --from=build /app /app
 COPY db/migrations db/migrations
-ENV MYSQL_URL=${MYSQL_URL}
+ENV MYSQL_URL = ${MYSQL_URL}
 EXPOSE 1337
 
 ENTRYPOINT [ "/app" ]
