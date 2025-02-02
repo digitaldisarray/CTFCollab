@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -85,7 +86,7 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
 	}
 
-	// TODO: Add authentication and authorization logic here
+	log.Printf("ChangePassword request: %+v", req)
 
 	// Hash the new password before updating it in the database
 	hash, err := argon2id.CreateHash(req.PasswordHash, argon2id.DefaultParams)
@@ -94,6 +95,7 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 	}
 	req.PasswordHash = hash
 
+	// Update the password in the database
 	_, err = h.Queries.ChangePassword(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update password")
