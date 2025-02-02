@@ -71,7 +71,6 @@ func TestPostUser(t *testing.T) {
 // TestLoginUser tests user login
 func TestLoginUser(t *testing.T) {
 	setup()
-	defer teardownUsers()
 
 	username := "testuser"
 
