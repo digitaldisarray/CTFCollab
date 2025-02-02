@@ -1,34 +1,23 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button";
-    import { Input } from "$lib/components/ui/input/index.js";
+    import { Input } from "$lib/components/ui/input";
+    import { Label } from "$lib/components/ui/label";
+
 </script>
 
-<div class="welcome-container">
-    <div class="absolute right-4 top-4 md:right-8 md:top-8">
-        <Button
-            href="/pages/signin"
-            variant="ghost"
-        >
-            Login
-        </Button>
-        <span class="separator">|</span>
-        <Button
-            href="/pages/about"
-            variant="ghost"
-        >
-            About
-        </Button>
-    </div>
+<div class="login-container">
     <header>
-        <h1>Welcome to CTF-Collab!</h1>
-        <p>To join an event, enter room code below or login with existing account</p>
+        <h1>Login as Administrator</h1>
+        <p>Enter your email below to access existing admin account</p>
         
         <div class="form-container">
-            <form class="flex w-full max-w-sm items-center space-x-2">
-                <Input type="room-code" placeholder="enter room-code here..." />
-                <Button href="/pages/event-room" type="submit">Submit</Button>
+            <form class="flex flex-col w-full max-w-sm items-center space-y-2">
+                <Input type="email" placeholder="me@example.com..." />
+                <Input type="password" placeholder="Enter your password" />
+                <Button href="src\routes\admin-account.svelte" type="submit">Log In</Button>
             </form>
         </div>
+        
         
     </header>
 
@@ -41,7 +30,7 @@
 </div>
 
 <style>
-    .welcome-container {
+    .login-container {
         display: flex;
         flex-direction: column;
         align-items: center;
