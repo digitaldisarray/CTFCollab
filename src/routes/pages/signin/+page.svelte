@@ -49,7 +49,7 @@
 
     header p {
         font-size: 1.2rem;
-        color: #666;
+        color: #dc4405;
     }
 
     main {
