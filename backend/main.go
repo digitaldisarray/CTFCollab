@@ -33,6 +33,7 @@ func main() {
 	// Setup API routes
 	e := router.SetupRouter(h)
 
+	//http://localhost:1337/swagger/index.html#/  (to look at docs)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Start the API with a specified port

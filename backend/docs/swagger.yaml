@@ -1,4 +1,11 @@
 definitions:
+  db.ChangePasswordParams:
+    properties:
+      id:
+        type: integer
+      password_hash:
+        type: string
+    type: object
   db.CreateUserParams:
     properties:
       password_hash:
@@ -9,7 +16,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /users:
+  /user:
     post:
       consumes:
       - application/json
@@ -41,6 +48,98 @@ paths:
           schema:
             type: string
       summary: Create a new user
+      tags:
+      - users
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by comparing the submitted password to the
+        hashed password stored in the database
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/db.CreateUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged in user information
+          schema:
+            $ref: '#/definitions/db.CreateUserParams'
+        "400":
+          description: Invalid login credentials
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: User login
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a user by ID from the database, requires admin privileges
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully deleted
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete user
+      tags:
+      - users
+  /users/password:
+    post:
+      consumes:
+      - application/json
+      description: Hashes and updates the password for an existing user
+      parameters:
+      - description: Password Update Request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/db.ChangePasswordParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+        "400":
+          description: Invalid input or password criteria not met
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error during password update
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update password
       tags:
       - users
 swagger: "2.0"
