@@ -5,46 +5,48 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/digitaldisarray/ctfcollab/auth"
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
-type Params struct {
-	// The amount of memory used by the algorithm (in kibibytes).
-	Memory uint32
-
-	// The number of iterations over the memory.
-	Iterations uint32
-
-	// The number of threads (or lanes) used by the algorithm.
-	// Recommended value is between 1 and runtime.NumCPU().
-	Parallelism uint8
-
-	// Length of the random salt. 16 bytes is recommended for password hashing.
-	SaltLength uint32
-
-	// Length of the generated key. 16 bytes or more is recommended.
-	KeyLength uint32
+type UserAuthParams struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func (h *Handler) CreateUser(c echo.Context) error {
 	// Parse request
-	user := new(db.CreateUserParams)
+	user := new(UserAuthParams)
 	if err := c.Bind(user); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	// TODO update for more passes, currently does only 1
-	// automatically formats w/ random salt
-	hash, err := argon2id.CreateHash(user.PasswordHash, argon2id.DefaultParams)
+
+	// Make sure username isn't taken
+	ctx := context.Background()
+	_, err := h.Queries.GetUserByUsername(ctx, user.Username)
+	if err == nil {
+		return c.JSON(http.StatusBadRequest, "User already exists")
+	}
+
+	// TODO: update for more passes, currently does only 1
+	// Hash password
+	hash, err := argon2id.CreateHash(user.Password, argon2id.DefaultParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	user.PasswordHash = hash
+
+	// Copy over data into a new user struct
+	newUser := new(db.CreateUserParams)
+	newUser.PasswordHash = hash
+	newUser.Username = user.Username
+
 	// Insert data into db
-	ctx := context.Background()
-	result, err := h.Queries.CreateUser(ctx, *user)
+	result, err := h.Queries.CreateUser(ctx, *newUser)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -53,24 +55,25 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	if _, err = VerifyParseResult(result, 1); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	id, _ := result.LastInsertId()
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"user_id": id})
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) LoginUser(c echo.Context) error {
-	user := new(db.CreateUserParams)
+	user := new(UserAuthParams)
 	if err := c.Bind(user); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
+	// Lookup user in database
 	ctx := context.Background()
 	dbu, err := h.Queries.GetUserByUsername(ctx, user.Username)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	res, err := argon2id.ComparePasswordAndHash(user.PasswordHash, dbu.PasswordHash)
+	// Make sure passwords match
+	res, err := argon2id.ComparePasswordAndHash(user.Password, dbu.PasswordHash)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -78,8 +81,29 @@ func (h *Handler) LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid login credentials.")
 	}
 
-	// probably attach auth here
-	return c.JSON(http.StatusOK, user)
+	// Create JWT token
+	claims := &auth.CustomClaims{
+		Name:     user.Username,
+		LoggedIn: true,
+		Id:       int(dbu.ID),
+		IsAdmin:  dbu.IsAdmin,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+		},
+	}
+
+	// Create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Generate encoded token and send it as response.
+	t, err := token.SignedString([]byte("change_me")) // TODO: get from .env
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"token": t,
+	})
 }
 
 func (h *Handler) ChangePassword(c echo.Context) error {

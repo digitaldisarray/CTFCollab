@@ -1,10 +1,10 @@
 package router
 
 import (
-	"net/http"
-
 	"github.com/digitaldisarray/ctfcollab/auth"
 	"github.com/digitaldisarray/ctfcollab/handler"
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -17,6 +17,13 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	e.Use(middleware.Logger())
 	//e.Use(middleware.CORS()) // Dev env only?
 	e.Use(middleware.Recover())
+
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(auth.CustomClaims)
+		},
+		SigningKey: []byte("change_me"), // TODO: Get from .env
+	}
 
 	// CTF routes
 	{
@@ -41,32 +48,9 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	{
 		e.POST("/user", handler.CreateUser)
 		e.POST("/user/login", handler.LoginUser)
-		e.POST("/users/password", handler.ChangePassword) // admin, or account owner
-		e.DELETE("/users/:id", handler.DeleteUser)        // admin, or account owner
+		e.POST("/users/password", handler.ChangePassword, echojwt.WithConfig(config)) // admin, or account owner
+		e.DELETE("/users/:id", handler.DeleteUser, echojwt.WithConfig(config))        // admin, or account owner
 	}
 
 	return e
-}
-
-func jwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// Extract token from Authorization header
-		authHeader := c.Request().Header.Get("Authorization")
-		if authHeader == "" {
-			// Handle anonymous user case or error if needed
-			c.Set("user", nil)
-			return next(c)
-		}
-
-		// Parse token
-		tokenString := authHeader[len("Bearer "):]
-		claims, err := auth.ParseToken(tokenString)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
-		}
-
-		// Set claims in context
-		c.Set("user", claims)
-		return next(c)
-	}
 }
