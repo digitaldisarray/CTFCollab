@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -12,8 +13,9 @@ type UserResponse struct {
 }
 
 var (
-	user_id  int
-	password = "xyz"
+	user_id   int
+	password  = "xyz"
+	jwt_token string
 )
 
 // Teardown function to clean up after tests
@@ -86,6 +88,24 @@ func TestLoginUser(t *testing.T) {
 	if resp.StatusCode() != http.StatusOK {
 		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode())
 	}
+
+	// Check that the response body contains a JWT token
+	var responseBody map[string]interface{}
+	if err := json.Unmarshal(resp.Body(), &responseBody); err != nil {
+		t.Fatalf("Failed to parse response body: %v", err)
+	}
+
+	token, exists := responseBody["token"]
+	if !exists {
+		t.Error("Expected to find 'token' in response body, but it was missing.")
+	}
+
+	// Optionally, you can also validate if the token has the structure of a JWT (i.e., three parts separated by dots)
+	tokenStr, ok := token.(string)
+	jwt_token = tokenStr // Save for later use
+	if !ok || !(len(strings.Split(tokenStr, ".")) == 3) {
+		t.Errorf("Expected a valid JWT token, but got: %v", token)
+	}
 }
 
 func TestChangePassword(t *testing.T) {
@@ -99,6 +119,7 @@ func TestChangePassword(t *testing.T) {
 
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", jwt_token)).
 		SetBody(fmt.Sprintf(`{
 			"id": %d,
 			"password_hash": "%s"
