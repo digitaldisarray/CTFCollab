@@ -1,4 +1,30 @@
 definitions:
+  db.CreateCTFParams:
+    properties:
+      author_id:
+        type: integer
+      description:
+        type: string
+      end_date:
+        type: string
+      name:
+        type: string
+      phrase:
+        type: string
+      start_date:
+        type: string
+    type: object
+  db.CreateChallengeParams:
+    properties:
+      description:
+        type: string
+      flag:
+        type: string
+      name:
+        type: string
+      phrase:
+        type: string
+    type: object
   db.CreateUserParams:
     properties:
       password_hash:
@@ -9,6 +35,39 @@ definitions:
 info:
   contact: {}
 paths:
+  /ctfs:
+    post:
+      consumes:
+      - application/json
+      description: Creates a CTF challenge
+      parameters:
+      - description: Create challenge
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/db.CreateChallengeParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: challenge updated
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create a CTF challenge
+      tags:
+      - challenges
   /users:
     post:
       consumes:

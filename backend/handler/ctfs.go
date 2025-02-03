@@ -7,6 +7,16 @@ import (
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
 	"github.com/labstack/echo/v4"
 )
+// GetJoinedCTFs returns all joined CTFs
+// @Summary returns joined CTFs
+// @Description Uses JWT to return all joined CTFs
+// @Tags ctfs
+// @Accept json
+// @Produce json
+// @Param user body db.GetJoinedCTFsParams true "Joined CTF"
+// @Success 200 {object} map[string]interface{} "CTF: ctf name"
+// @Failure 500 {string} map[string]string "Internal server error"
+// @Router /ctfs [post]
 
 func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 	// Get JWT claims
@@ -29,6 +39,17 @@ func (h *Handler) GetCTF(c echo.Context) error {
 	return c.JSON(http.StatusOK, ctf)
 }
 
+// CreateCTF creates a new CTF 
+// @Summary Create a CTF
+// @Description Creates a CTF and verifies that the CTF has been created
+// @Tags ctfs
+// @Accept json
+// @Produce json
+// @Param user body db.CreateCTFParams true "Create CTF"
+// @Success 200 {object} map[string]interface{} "ctf_id: ID of the created CTF"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 500 {string} map[string]string "Internal server error"
+// @Router /ctfs [post]
 func (h *Handler) CreateCTF(c echo.Context) error {
 	// TODO: Make sure user is signed in
 
@@ -94,11 +115,23 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not implemented")
 }
 
+
+// CreateCTF returns a CTF challenge 
+// @Summary CTF challenge
+// @Description returns CTF challenge on success
+// @Tags ctfs
+// @Accept json
+// @Produce json
+// @Param user body db.GetChallengesParams true "Get challenge"
+// @Success 200 {object} map[string]interface{} "challenge returned"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 500 {string} map[string]string "Internal server error"
+// @Router /ctfs [post]
 func (h *Handler) GetChallenges(c echo.Context) error {
 	// TODO: Make sure user is a member of the CTF
 
 	ctx := context.Background()
-	challenges, err := h.Queries.GetCTFChallenges(ctx, c.Param("phrase"))
+	challenges, err := h.Queries.GetChallenges(ctx, c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -106,6 +139,17 @@ func (h *Handler) GetChallenges(c echo.Context) error {
 	return c.JSON(http.StatusOK, challenges)
 }
 
+// CreateCTF creates a new CTF challenge 
+// @Summary Create a CTF challenge
+// @Description Creates a CTF challenge 
+// @Tags challenges
+// @Accept json
+// @Produce json
+// @Param user body db.CreateChallengeParams true "Create challenge"
+// @Success 200 {object} map[string]interface{} "challenge updated"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 500 {string} map[string]string "Internal server error"
+// @Router /ctfs [post]
 func (h *Handler) CreateChallenge(c echo.Context) error {
 	// TODO: Make sure user is a member of the CTF
 

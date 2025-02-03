@@ -15,6 +15,56 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/ctfs": {
+            "post": {
+                "description": "Creates a CTF challenge",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Create a CTF challenge",
+                "parameters": [
+                    {
+                        "description": "Create challenge",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/db.CreateChallengeParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "challenge updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "post": {
                 "description": "Creates a new user in the database with a hashed password using the Argon2id algorithm",
@@ -67,6 +117,46 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "db.CreateCTFParams": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phrase": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.CreateChallengeParams": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "flag": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phrase": {
+                    "type": "string"
+                }
+            }
+        },
         "db.CreateUserParams": {
             "type": "object",
             "properties": {
