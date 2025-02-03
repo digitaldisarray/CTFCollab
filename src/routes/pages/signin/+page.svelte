@@ -14,7 +14,7 @@
             <form class="flex flex-col w-full max-w-sm items-center space-y-2">
                 <Input type="email" placeholder="me@example.com..." />
                 <Input type="password" placeholder="Enter your password" />
-                <Button href="src\routes\admin-account.svelte" type="submit">Log In</Button>
+                <Button href="/pages/admin-page" type="submit">Log In</Button>
             </form>
         </div>
         
