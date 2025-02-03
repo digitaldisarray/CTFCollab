@@ -15,6 +15,50 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/challenges/{id}": {
+            "delete": {
+                "description": "Deletes a Challenge by ID from the database, requires admin privileges",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Delete Challenge",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Challenge ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Challenge successfully deleted"
+                    },
+                    "400": {
+                        "description": "Invalid Challenge ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "post": {
                 "description": "Creates a new user in the database with a hashed password using the Argon2id algorithm",
@@ -113,7 +157,7 @@ const docTemplate = `{
         },
         "/users/password": {
             "post": {
-                "description": "Hashes and updates the password for an existing user",
+                "description": "Hashes and updates the password for an existing user, requires admin privileges or account owner",
                 "consumes": [
                     "application/json"
                 ],
@@ -162,7 +206,7 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "delete": {
-                "description": "Deletes a user by ID from the database, requires admin privileges",
+                "description": "Deletes a user by ID from the database, requires admin privileges or account owner",
                 "consumes": [
                     "application/json"
                 ],

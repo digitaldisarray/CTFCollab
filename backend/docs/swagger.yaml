@@ -16,6 +16,35 @@ definitions:
 info:
   contact: {}
 paths:
+  /challenges/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a Challenge by ID from the database, requires admin privileges
+      parameters:
+      - description: Challenge ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge successfully deleted
+        "400":
+          description: Invalid Challenge ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete Challenge
+      tags:
+      - challenges
   /user:
     post:
       consumes:
@@ -86,6 +115,7 @@ paths:
       consumes:
       - application/json
       description: Deletes a user by ID from the database, requires admin privileges
+        or account owner
       parameters:
       - description: User ID
         in: path
@@ -114,7 +144,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Hashes and updates the password for an existing user
+      description: Hashes and updates the password for an existing user, requires
+        admin privileges or account owner
       parameters:
       - description: Password Update Request
         in: body

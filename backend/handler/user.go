@@ -106,7 +106,7 @@ func (h *Handler) LoginUser(c echo.Context) error {
 
 // ChangePassword updates the password for a user
 // @Summary Update password
-// @Description Hashes and updates the password for an existing user
+// @Description Hashes and updates the password for an existing user, requires admin privileges or account owner
 // @Tags users
 // @Accept json
 // @Produce json
@@ -143,7 +143,7 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 
 // DeleteUser removes a user from the database
 // @Summary Delete user
-// @Description Deletes a user by ID from the database, requires admin privileges
+// @Description Deletes a user by ID from the database, requires admin privileges or account owner
 // @Tags users
 // @Accept json
 // @Produce json
