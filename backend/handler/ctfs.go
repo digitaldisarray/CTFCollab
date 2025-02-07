@@ -116,13 +116,13 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 }
 
 
-// CreateCTF returns a CTF challenge 
-// @Summary CTF challenge
-// @Description returns CTF challenge on success
+// GetChallenges returns all CTF challenges
+// @Summary CTF challenges
+// @Description returns CTF on success
 // @Tags ctfs
 // @Accept json
 // @Produce json
-// @Param user body db.GetChallengesParams true "Get challenge"
+// @Param user body db.GetCTFChallengesRow true "Get challenge"
 // @Success 200 {object} map[string]interface{} "challenge returned"
 // @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 500 {string} map[string]string "Internal server error"
@@ -131,7 +131,7 @@ func (h *Handler) GetChallenges(c echo.Context) error {
 	// TODO: Make sure user is a member of the CTF
 
 	ctx := context.Background()
-	challenges, err := h.Queries.GetChallenges(ctx, c.Param("phrase"))
+	challenges, err := h.Queries.GetCTFChallenges(ctx, c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
