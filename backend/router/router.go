@@ -48,8 +48,9 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	{
 		e.POST("/user", handler.CreateUser)
 		e.POST("/user/login", handler.LoginUser)
+		e.GET("/users/:username", handler.GetUser)                                    // admin, or account owner
 		e.POST("/users/password", handler.ChangePassword, echojwt.WithConfig(config)) // admin, or account owner
-		e.DELETE("/users/:id", handler.DeleteUser, echojwt.WithConfig(config))        // admin, or account owner
+		e.DELETE("/users/:username", handler.DeleteUser, echojwt.WithConfig(config))  // admin, or account owner
 	}
 
 	return e

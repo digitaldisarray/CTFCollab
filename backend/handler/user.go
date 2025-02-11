@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -59,6 +58,21 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func (h *Handler) GetUser(c echo.Context) error {
+	username := c.Param("username")
+	ctx := context.Background()
+
+	// Get user from database
+	user, err := h.Queries.GetUserByUsername(ctx, username)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	// Remove password hash before sending user data
+	user.PasswordHash = ""
+	return c.JSON(http.StatusOK, user)
+}
+
 func (h *Handler) LoginUser(c echo.Context) error {
 	user := new(UserAuthParams)
 	if err := c.Bind(user); err != nil {
@@ -107,7 +121,7 @@ func (h *Handler) LoginUser(c echo.Context) error {
 }
 
 func (h *Handler) ChangePassword(c echo.Context) error {
-	var req db.ChangePasswordParams
+	var req UserAuthParams
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
 	}
@@ -115,14 +129,16 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 	log.Printf("ChangePassword request: %+v", req)
 
 	// Hash the new password before updating it in the database
-	hash, err := argon2id.CreateHash(req.PasswordHash, argon2id.DefaultParams)
+	hash, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Password hashing failed")
 	}
-	req.PasswordHash = hash
 
 	// Update the password in the database
-	_, err = h.Queries.ChangePassword(c.Request().Context(), req)
+	var updateReq db.ChangePasswordParams
+	updateReq.Username = req.Username
+	updateReq.PasswordHash = hash
+	_, err = h.Queries.ChangePassword(c.Request().Context(), updateReq)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update password")
 	}
@@ -131,14 +147,11 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
-	userID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
-	}
+	username := c.Param("username")
 
 	// TODO: Add authentication and authorization checks here
 
-	_, err = h.Queries.DeleteUser(c.Request().Context(), int32(userID))
+	_, err := h.Queries.DeleteUser(c.Request().Context(), username)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user")
 	}
