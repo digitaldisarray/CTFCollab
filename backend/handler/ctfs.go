@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -165,7 +164,6 @@ func (h *Handler) SearchCTFs(c echo.Context) error {
 	if err := c.Bind(search); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	fmt.Println(search)
 
 	// sqlcSearch is a sub struct, doesn't contain the dates
 	sqlcSearch := new(db.SearchCTFsParams)
