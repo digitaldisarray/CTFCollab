@@ -21,7 +21,11 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	// CTF routes
 	{
 		e.GET("/ctfs", handler.GetJoinedCTFs)
+		e.GET("/ctfs/search", handler.SearchCTFs) // can be changed I think
 		e.GET("/ctfs/:phrase", handler.GetCTF)
+
+		// e.GET("/ctfs/global", handler.GetAllCTFs) List all ctfs, might be redundant
+
 		e.POST("/ctfs", handler.CreateCTF)
 		e.DELETE("/ctfs/:phrase", handler.DeleteCTF)
 		e.PUT("/ctfs/:phrase", handler.UpdateCTF)
