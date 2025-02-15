@@ -29,3 +29,8 @@ WHERE username = ?;
 UPDATE users
 SET username = ?
 WHERE id = ?;
+
+-- name: SetAdminStatus :execresult
+UPDATE users
+SET is_admin = ?
+WHERE username = ?;

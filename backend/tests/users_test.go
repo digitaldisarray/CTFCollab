@@ -1,12 +1,9 @@
 package tests
 
 import (
-	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"testing"
-	"time"
 )
 
 var (
@@ -20,105 +17,15 @@ var (
 func teardownUsers() {
 	for _, account := range accounts {
 		// Login to user to get their token
-		token, err := loginToUser(account.username, account.password)
+		token, err := LoginToUser(account.username, account.password, client)
 		if err != nil {
 			fmt.Printf("Teardown: failed to login to user %s: %v\n", account.username, err)
 			continue
 		}
 
 		// Delete the user
-		deleteUser(account.username, token)
+		DeleteUser(account.username, token, client)
 	}
-}
-
-// HELPER function to generate a random string
-func randomString(n int) string {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letters[r.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-// HELPER function to delete a user
-func deleteUser(username, token string) error {
-	// Send a DELETE request to the server
-	url := fmt.Sprintf("http://localhost:1337/users/%s", username)
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
-		Delete(url)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("Failed to delete user, status code: %d, Body: %s", resp.StatusCode(), string(resp.Body()))
-	}
-
-	return nil
-}
-
-// HELPER function to create a user with a random username and password
-func createRandomUser() (string, string, error) {
-	// Generate random username and password
-	username := "testuser_" + randomString(8)
-	password := randomString(16)
-
-	// Crete the user
-	if err := createUser(username, password); err != nil {
-		return "", "", err
-	}
-
-	return username, password, nil
-}
-
-// HELPER function to create a user with a given username and password
-func createUser(username, password string) error {
-	// Send a POST request to the server
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{"username": "%s", "password": "%s"}`, username, password)).
-		Post("http://localhost:1337/user")
-
-	// Check for errors
-	if err != nil {
-		return fmt.Errorf("Failed to create user: %v\n", err)
-	}
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("Failed to create user, status code: %d\n", resp.StatusCode())
-	}
-
-	return nil
-}
-
-func loginToUser(username, password string) (string, error) {
-	// Request to login
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{"username": "%s", "password": "%s"}`, username, password)).
-		Post("http://localhost:1337/user/login")
-
-	// Check for errors
-	if err != nil {
-		return "", fmt.Errorf("Failed to send request: %v\n", err)
-	}
-	if resp.StatusCode() != http.StatusOK {
-		return "", fmt.Errorf("Failed to login, status code: %d, body: %s\n", resp.StatusCode(), string(resp.Body()))
-	}
-
-	// Check that the response body contains a JWT token
-	var responseBody map[string]interface{}
-	if err := json.Unmarshal(resp.Body(), &responseBody); err != nil {
-		return "", fmt.Errorf("Failed to parse response body: %v\n", err)
-	}
-	token, exists := responseBody["token"]
-	if !exists {
-		return "", fmt.Errorf("Expected to find 'token' in response body, but it was missing.")
-	}
-
-	return token.(string), nil
 }
 
 // TestPostUser creates a new user and also attempts to create a duplicate user
@@ -128,9 +35,9 @@ func TestPostUser(t *testing.T) {
 
 	// Create a new user
 	t.Log("Creating random user")
-	username, password, err := createRandomUser()
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatal("Failed to create user")
+		t.Fatal(err)
 	} else {
 		t.Log("Created user successfully")
 	}
@@ -141,7 +48,7 @@ func TestPostUser(t *testing.T) {
 
 	// Make sure we can't create the same user again
 	t.Logf("Attempting to create user with same username: %s", username)
-	if err := createUser(username, password); err == nil {
+	if err := CreateUser(username, password, client); err == nil {
 		t.Fatal("Created user with duplicate username")
 	}
 
@@ -155,9 +62,9 @@ func TestLoginUser(t *testing.T) {
 
 	// Create a new user
 	t.Log("Creating random user")
-	username, password, err := createRandomUser()
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatal("Failed to create user")
+		t.Fatal(err)
 	} else {
 		t.Log("Created user successfully")
 	}
@@ -168,7 +75,7 @@ func TestLoginUser(t *testing.T) {
 
 	// Request to login
 	t.Logf("Logging in with username: %s, password: %s", username, password)
-	token, err := loginToUser(username, password)
+	token, err := LoginToUser(username, password, client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,30 +88,28 @@ func TestChangePassword(t *testing.T) {
 
 	// Create a new user
 	t.Log("Creating random user")
-	username, password, err := createRandomUser()
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatal("Failed to create user")
+		t.Fatal(err)
 	}
 	t.Log("Created user successfully")
 
 	// Request to login
 	t.Logf("Logging in with username: %s, password: %s", username, password)
-	token, err := loginToUser(username, password)
+	token, err := LoginToUser(username, password, client)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("Received token: %s", token)
 
 	// Change the password
-	newPassword := randomString(16)
+	t.Logf("Attempting to change password")
+	newPassword := RandomString(16)
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
-		SetBody(fmt.Sprintf(`{
-			"username": "%s",
-			"password": "%s"
-		}`, username, newPassword)).
-		Post("http://localhost:1337/users/password")
+		SetBody(fmt.Sprintf(`{ "old_password": "%s", "new_password": "%s" }`, password, newPassword)).
+		Post(fmt.Sprintf("http://localhost:1337/users/%s/password", username))
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
@@ -218,7 +123,7 @@ func TestChangePassword(t *testing.T) {
 
 	// Verify new password by logging in
 	t.Logf("Logging in with new password: %s", newPassword)
-	token, err = loginToUser(username, newPassword)
+	token, err = LoginToUser(username, newPassword, client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,23 +136,23 @@ func TestDeleteUser(t *testing.T) {
 
 	// Create a new user
 	t.Log("Creating random user")
-	username, password, err := createRandomUser()
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatal("Failed to create user")
+		t.Fatal(err)
 	} else {
 		t.Log("Created user successfully")
 	}
 
 	// Log into user to get their token
 	t.Logf("Logging in to user with username: %s", username)
-	token, err := loginToUser(username, password)
+	token, err := LoginToUser(username, password, client)
 	if err != nil {
 		t.Fatalf("Failed to login to user: %v", err)
 	}
 
 	// Delete the user
 	t.Logf("Deleting user with username: %s", username)
-	if err := deleteUser(username, token); err != nil {
+	if err := DeleteUser(username, token, client); err != nil {
 		t.Fatalf("Failed to delete user: %v", err)
 	}
 

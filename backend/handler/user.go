@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -16,6 +15,11 @@ import (
 type UserAuthParams struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type ChangePasswordParams struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
 }
 
 func (h *Handler) CreateUser(c echo.Context) error {
@@ -121,22 +125,38 @@ func (h *Handler) LoginUser(c echo.Context) error {
 }
 
 func (h *Handler) ChangePassword(c echo.Context) error {
-	var req UserAuthParams
+	var req ChangePasswordParams
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
 	}
 
-	log.Printf("ChangePassword request: %+v", req)
+	// TODO: Bypass old password check if JWT is admin
+
+	// Make sure old password is correct
+	ctx := context.Background()
+	dbu, err := h.Queries.GetUserByUsername(ctx, c.Param("username")) // Lookup user in database
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	// Make sure passwords match
+	res, err := argon2id.ComparePasswordAndHash(req.OldPassword, dbu.PasswordHash)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	if !res {
+		return c.JSON(http.StatusBadRequest, "Incorrect password")
+	}
 
 	// Hash the new password before updating it in the database
-	hash, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
+	hash, err := argon2id.CreateHash(req.NewPassword, argon2id.DefaultParams)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Password hashing failed")
 	}
 
 	// Update the password in the database
 	var updateReq db.ChangePasswordParams
-	updateReq.Username = req.Username
+	updateReq.Username = c.Param("username")
 	updateReq.PasswordHash = hash
 	_, err = h.Queries.ChangePassword(c.Request().Context(), updateReq)
 	if err != nil {
@@ -147,13 +167,23 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
-	username := c.Param("username")
-
-	// TODO: Add authentication and authorization checks here
-
-	_, err := h.Queries.DeleteUser(c.Request().Context(), username)
+	_, err := h.Queries.DeleteUser(c.Request().Context(), c.Param("username"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *Handler) BecomeAdmin(c echo.Context) error {
+	var req db.SetAdminStatusParams
+	req.IsAdmin = true
+	req.Username = c.Param("username")
+
+	ctx := context.Background()
+	_, err := h.Queries.SetAdminStatus(ctx, req)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to set admin status")
 	}
 
 	return c.NoContent(http.StatusOK)

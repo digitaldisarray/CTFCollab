@@ -99,3 +99,18 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	)
 	return i, err
 }
+
+const setAdminStatus = `-- name: SetAdminStatus :execresult
+UPDATE users
+SET is_admin = ?
+WHERE username = ?
+`
+
+type SetAdminStatusParams struct {
+	IsAdmin  bool   `json:"is_admin"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) SetAdminStatus(ctx context.Context, arg SetAdminStatusParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, setAdminStatus, arg.IsAdmin, arg.Username)
+}
