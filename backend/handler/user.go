@@ -37,8 +37,8 @@ type Params struct {
 // @Produce json
 // @Param user body db.CreateUserParams true "Create User"
 // @Success 200 {object} map[string]interface{} "user_id: ID of the created user"
-// @Failure 400 {object} map[string]string "Invalid input"
-// @Failure 500 {string} map[string]string "Internal server error"
+// @Failure 400 {string} string "Invalid input"
+// @Failure 500 {string} string "Internal server error"
 // @Router /user [post]
 func (h *Handler) CreateUser(c echo.Context) error {
 	// Parse request
@@ -77,8 +77,8 @@ func (h *Handler) CreateUser(c echo.Context) error {
 // @Produce json
 // @Param user body db.CreateUserParams true "Login Credentials"
 // @Success 200 {object} db.CreateUserParams "Logged in user information"
-// @Failure 400 {string} response "Invalid login credentials"
-// @Failure 500 {string} response "Internal server error"
+// @Failure 400 {string} string "Invalid login credentials"
+// @Failure 500 {string} string "Internal server error"
 // @Router /user/login [post]
 func (h *Handler) LoginUser(c echo.Context) error {
 	user := new(db.CreateUserParams)
@@ -112,8 +112,8 @@ func (h *Handler) LoginUser(c echo.Context) error {
 // @Produce json
 // @Param req body db.ChangePasswordParams true "Password Update Request"
 // @Success 200 "Password updated successfully"
-// @Failure 400 {object} map[string]string "Invalid input or password criteria not met"
-// @Failure 500 {object} map[string]string "Internal server error during password update"
+// @Failure 400 {string} string "Invalid input or password criteria not met"
+// @Failure 500 {string} string "Internal server error during password update"
 // @Router /users/password [post]
 func (h *Handler) ChangePassword(c echo.Context) error {
 	var req db.ChangePasswordParams
@@ -145,12 +145,11 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 // @Summary Delete user
 // @Description Deletes a user by ID from the database, requires admin privileges or account owner
 // @Tags users
-// @Accept json
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 "User successfully deleted"
-// @Failure 400 {object} map[string]string "Invalid user ID"
-// @Failure 500 {string} map[string]string "Internal server error"
+// @Failure 400 {string} string "Invalid user ID"
+// @Failure 500 {string} string "Internal server error"
 // @Router /users/{id} [delete]
 func (h *Handler) DeleteUser(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("id"))

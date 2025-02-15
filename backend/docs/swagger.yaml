@@ -32,12 +32,12 @@ paths:
       responses:
         "200":
           description: Challenge successfully deleted
+          schema:
+            type: string
         "400":
           description: Invalid Challenge ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Internal server error
           schema:
@@ -69,9 +69,7 @@ paths:
         "400":
           description: Invalid input
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Internal server error
           schema:
@@ -112,8 +110,6 @@ paths:
       - users
   /users/{id}:
     delete:
-      consumes:
-      - application/json
       description: Deletes a user by ID from the database, requires admin privileges
         or account owner
       parameters:
@@ -130,9 +126,7 @@ paths:
         "400":
           description: Invalid user ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Internal server error
           schema:
@@ -161,15 +155,11 @@ paths:
         "400":
           description: Invalid input or password criteria not met
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Internal server error during password update
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
       summary: Update password
       tags:
       - users

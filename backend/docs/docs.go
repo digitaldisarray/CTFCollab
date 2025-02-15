@@ -39,15 +39,15 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Challenge successfully deleted"
+                        "description": "Challenge successfully deleted",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     "400": {
                         "description": "Invalid Challenge ID",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -94,10 +94,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid input",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -186,19 +183,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid input or password criteria not met",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
                         "description": "Internal server error during password update",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     }
                 }
@@ -207,9 +198,6 @@ const docTemplate = `{
         "/users/{id}": {
             "delete": {
                 "description": "Deletes a user by ID from the database, requires admin privileges or account owner",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -233,10 +221,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
