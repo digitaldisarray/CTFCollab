@@ -134,7 +134,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not implemented")
 }
 
-<<<<<<< HEAD
 
 // GetChallenges returns all CTF challenges
 // @Summary CTF challenges
@@ -147,17 +146,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 // @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 500 {string} map[string]string "Internal server error"
 // @Router /ctfs [post]
-=======
-// GetChallenges returns challenges for a CTF
-// @Summary Get CTF challenges
-// @Description Returns all challenges for a specific CTF
-// @Tags challenges
-// @Produce json
-// @Param phrase path string true "CTF phrase"
-// @Success 200 {string} string "List of challenges"
-// @Failure 500 {string} string "Internal server error"
-// @Router /ctfs/{phrase}/challenges [get]
->>>>>>> 29259a58797c573c9dc87be9f1abd42ef1d4d80c
 func (h *Handler) GetChallenges(c echo.Context) error {
 	// TODO: Make sure user is a member of the CTF
 
