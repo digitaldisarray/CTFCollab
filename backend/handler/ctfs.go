@@ -7,16 +7,6 @@ import (
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
 	"github.com/labstack/echo/v4"
 )
-// GetJoinedCTFs returns all joined CTFs
-// @Summary returns joined CTFs
-// @Description Uses JWT to return all joined CTFs
-// @Tags ctfs
-// @Accept json
-// @Produce json
-// @Param user body db.GetJoinedCTFsParams true "Joined CTF"
-// @Success 200 {object} map[string]interface{} "CTF: ctf name"
-// @Failure 500 {string} map[string]string "Internal server error"
-// @Router /ctfs [post]
 
 func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 	// Get JWT claims
@@ -25,6 +15,14 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not implemented")
 }
 
+// GetCTF returns a CTF by phrase
+// @Summary Get CTF details
+// @Description Returns CTF details by its mnemonic phrase
+// @Tags ctfs
+// @Produce json
+// @Param phrase path string true "CTF phrase"
+// @Success 200 {object} db.Ctf "CTF details"
+// @Failure 500 {string} string "Internal server error"
 func (h *Handler) GetCTF(c echo.Context) error {
 	// TODO: Make sure user is member of CTF through JWT, or is admin
 
@@ -39,16 +37,16 @@ func (h *Handler) GetCTF(c echo.Context) error {
 	return c.JSON(http.StatusOK, ctf)
 }
 
-// CreateCTF creates a new CTF 
+// CreateCTF creates a new CTF
 // @Summary Create a CTF
-// @Description Creates a CTF and verifies that the CTF has been created
+// @Description Creates a new CTF and returns its ID
 // @Tags ctfs
 // @Accept json
 // @Produce json
-// @Param user body db.CreateCTFParams true "Create CTF"
-// @Success 200 {object} map[string]interface{} "ctf_id: ID of the created CTF"
-// @Failure 400 {object} map[string]string "Invalid input"
-// @Failure 500 {string} map[string]string "Internal server error"
+// @Param ctf body db.CreateCTFParams true "CTF details"
+// @Success 200 {object} map[string]interface{} "{\"ctf_id\": string}"
+// @Failure 400 {string} string "Invalid input"
+// @Failure 500 {string} string "Internal server error"
 // @Router /ctfs [post]
 func (h *Handler) CreateCTF(c echo.Context) error {
 	// TODO: Make sure user is signed in
@@ -78,6 +76,15 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{"ctf_id": ctf_id})
 }
 
+// DeleteCTF deletes a CTF by phrase
+// @Summary Delete a CTF
+// @Description Deletes a CTF by its mnemonic phrase
+// @Tags ctfs
+// @Produce json
+// @Param phrase path string true "CTF phrase"
+// @Success 200 {string} string "Deleted"
+// @Failure 500 {string} string "Internal server error"
+// @Router /ctfs/{phrase} [delete]
 func (h *Handler) DeleteCTF(c echo.Context) error {
 	// TODO Make sure user is CTF owner or an admin
 	ctx := context.Background()
@@ -89,6 +96,18 @@ func (h *Handler) DeleteCTF(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Deleted")
 }
 
+// UpdateCTF updates a CTF by phrase
+// @Summary Update CTF details
+// @Description Updates CTF details by its mnemonic phrase
+// @Tags ctfs
+// @Accept json
+// @Produce json
+// @Param phrase path string true "CTF phrase"
+// @Param ctf body db.UpdateCTFParams true "CTF update parameters"
+// @Success 200 {string} string "Updated"
+// @Failure 400 {string} string "Invalid input"
+// @Failure 500 {string} string "Internal server error"
+// @Router /ctfs/{phrase} [put]
 func (h *Handler) UpdateCTF(c echo.Context) error {
 	// TODO Make sure user is CTF owner or an admin
 
@@ -115,6 +134,7 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not implemented")
 }
 
+<<<<<<< HEAD
 
 // GetChallenges returns all CTF challenges
 // @Summary CTF challenges
@@ -127,6 +147,17 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 // @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 500 {string} map[string]string "Internal server error"
 // @Router /ctfs [post]
+=======
+// GetChallenges returns challenges for a CTF
+// @Summary Get CTF challenges
+// @Description Returns all challenges for a specific CTF
+// @Tags challenges
+// @Produce json
+// @Param phrase path string true "CTF phrase"
+// @Success 200 {string} string "List of challenges"
+// @Failure 500 {string} string "Internal server error"
+// @Router /ctfs/{phrase}/challenges [get]
+>>>>>>> 29259a58797c573c9dc87be9f1abd42ef1d4d80c
 func (h *Handler) GetChallenges(c echo.Context) error {
 	// TODO: Make sure user is a member of the CTF
 
@@ -139,19 +170,19 @@ func (h *Handler) GetChallenges(c echo.Context) error {
 	return c.JSON(http.StatusOK, challenges)
 }
 
-// CreateCTF creates a new CTF challenge 
-// @Summary Create a CTF challenge
-// @Description Creates a CTF challenge 
+// CreateChallenge creates a new challenge
+// @Summary Create a challenge
+// @Description Creates a new challenge for a CTF
 // @Tags challenges
 // @Accept json
 // @Produce json
-// @Param user body db.CreateChallengeParams true "Create challenge"
-// @Success 200 {object} map[string]interface{} "challenge updated"
-// @Failure 400 {object} map[string]string "Invalid input"
-// @Failure 500 {string} map[string]string "Internal server error"
-// @Router /ctfs [post]
+// @Param phrase path string true "CTF phrase"
+// @Param challenge body db.CreateChallengeParams true "Challenge details"
+// @Success 200 {string} string "Challenge created"
+// @Failure 400 {string} string "Invalid input"
+// @Failure 500 {string} string "Internal server error"
+// @Router /ctfs/{phrase}/challenges [post]
 func (h *Handler) CreateChallenge(c echo.Context) error {
-	// TODO: Make sure user is a member of the CTF
 
 	challenge := new(db.CreateChallengeParams)
 	if err := c.Bind(challenge); err != nil {

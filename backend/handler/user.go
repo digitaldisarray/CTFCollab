@@ -29,17 +29,6 @@ type Params struct {
 	KeyLength uint32
 }
 
-// CreateUser creates a new user with a hashed password
-// @Summary Create a new user
-// @Description Creates a new user in the database with a hashed password using the Argon2id algorithm
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param user body db.CreateUserParams true "Create User"
-// @Success 200 {object} map[string]interface{} "user_id: ID of the created user"
-// @Failure 400 {object} map[string]string "Invalid input"
-// @Failure 500 {string} map[string]string "Internal server error"
-// @Router /users [post]
 func (h *Handler) CreateUser(c echo.Context) error {
 	// Parse request
 	user := new(db.CreateUserParams)

@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/ctfs": {
             "post": {
-                "description": "Creates a CTF challenge",
+                "description": "Creates a new CTF and returns its ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,23 +25,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "challenges"
+                    "ctfs"
                 ],
-                "summary": "Create a CTF challenge",
+                "summary": "Create a CTF",
                 "parameters": [
                     {
-                        "description": "Create challenge",
-                        "name": "user",
+                        "description": "CTF details",
+                        "name": "ctf",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/db.CreateChallengeParams"
+                            "$ref": "#/definitions/db.CreateCTFParams"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "challenge updated",
+                        "description": "{\\\"ctf_id\\\": string}",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -50,10 +50,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid input",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -65,9 +62,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users": {
-            "post": {
-                "description": "Creates a new user in the database with a hashed password using the Argon2id algorithm",
+        "/ctfs/{phrase}": {
+            "put": {
+                "description": "Updates CTF details by its mnemonic phrase",
                 "consumes": [
                     "application/json"
                 ],
@@ -75,35 +72,157 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "ctfs"
                 ],
-                "summary": "Create a new user",
+                "summary": "Update CTF details",
                 "parameters": [
                     {
-                        "description": "Create User",
-                        "name": "user",
+                        "type": "string",
+                        "description": "CTF phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "CTF update parameters",
+                        "name": "ctf",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/db.CreateUserParams"
+                            "$ref": "#/definitions/db.UpdateCTFParams"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "user_id: ID of the created user",
+                        "description": "Updated",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "string"
                         }
                     },
                     "400": {
                         "description": "Invalid input",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a CTF by its mnemonic phrase",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Delete a CTF",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CTF phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}/challenges": {
+            "get": {
+                "description": "Returns all challenges for a specific CTF",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Get CTF challenges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CTF phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of challenges",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new challenge for a CTF",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Create a challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CTF phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Challenge details",
+                        "name": "challenge",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/db.CreateChallengeParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Challenge created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -157,13 +276,48 @@ const docTemplate = `{
                 }
             }
         },
-        "db.CreateUserParams": {
+        "db.Ctf": {
             "type": "object",
             "properties": {
-                "password_hash": {
+                "author_id": {
+                    "type": "integer"
+                },
+                "description": {
                     "type": "string"
                 },
-                "username": {
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phrase": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.UpdateCTFParams": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phrase": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 }
             }

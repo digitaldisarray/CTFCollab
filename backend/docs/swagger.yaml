@@ -25,11 +25,34 @@ definitions:
       phrase:
         type: string
     type: object
-  db.CreateUserParams:
+  db.Ctf:
     properties:
-      password_hash:
+      author_id:
+        type: integer
+      description:
         type: string
-      username:
+      end_date:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phrase:
+        type: string
+      start_date:
+        type: string
+    type: object
+  db.UpdateCTFParams:
+    properties:
+      description:
+        type: string
+      end_date:
+        type: string
+      name:
+        type: string
+      phrase:
+        type: string
+      start_date:
         type: string
     type: object
 info:
@@ -39,11 +62,126 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a CTF challenge
+      description: Creates a new CTF and returns its ID
       parameters:
-      - description: Create challenge
+      - description: CTF details
         in: body
-        name: user
+        name: ctf
+        required: true
+        schema:
+          $ref: '#/definitions/db.CreateCTFParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{\"ctf_id\": string}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create a CTF
+      tags:
+      - ctfs
+  /ctfs/{phrase}:
+    delete:
+      description: Deletes a CTF by its mnemonic phrase
+      parameters:
+      - description: CTF phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete a CTF
+      tags:
+      - ctfs
+    put:
+      consumes:
+      - application/json
+      description: Updates CTF details by its mnemonic phrase
+      parameters:
+      - description: CTF phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      - description: CTF update parameters
+        in: body
+        name: ctf
+        required: true
+        schema:
+          $ref: '#/definitions/db.UpdateCTFParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated
+          schema:
+            type: string
+        "400":
+          description: Invalid input
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Update CTF details
+      tags:
+      - ctfs
+  /ctfs/{phrase}/challenges:
+    get:
+      description: Returns all challenges for a specific CTF
+      parameters:
+      - description: CTF phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of challenges
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get CTF challenges
+      tags:
+      - challenges
+    post:
+      consumes:
+      - application/json
+      description: Creates a new challenge for a CTF
+      parameters:
+      - description: CTF phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      - description: Challenge details
+        in: body
+        name: challenge
         required: true
         schema:
           $ref: '#/definitions/db.CreateChallengeParams'
@@ -51,55 +189,18 @@ paths:
       - application/json
       responses:
         "200":
-          description: challenge updated
+          description: Challenge created
           schema:
-            additionalProperties: true
-            type: object
+            type: string
         "400":
           description: Invalid input
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Internal server error
           schema:
             type: string
-      summary: Create a CTF challenge
+      summary: Create a challenge
       tags:
       - challenges
-  /users:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new user in the database with a hashed password using
-        the Argon2id algorithm
-      parameters:
-      - description: Create User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/db.CreateUserParams'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 'user_id: ID of the created user'
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid input
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            type: string
-      summary: Create a new user
-      tags:
-      - users
 swagger: "2.0"
