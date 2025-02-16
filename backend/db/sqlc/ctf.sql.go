@@ -229,6 +229,58 @@ func (q *Queries) ListUsersCTFs(ctx context.Context, userID int32) ([]ListUsersC
 	return items, nil
 }
 
+const searchCTFs = `-- name: SearchCTFs :many
+SELECT
+    id, phrase, name, description, start_date, end_date, author_id
+FROM
+    ctfs
+WHERE
+    (? IS NULL OR ctfs.name LIKE CONCAT('%', ?, '%')) 
+    and (? IS NULL OR ctfs.description LIKE CONCAT('%', ?, '%'))
+ORDER BY start_date
+`
+
+type SearchCTFsParams struct {
+	Name        interface{} `json:"name"`
+	Description interface{} `json:"description"`
+}
+
+func (q *Queries) SearchCTFs(ctx context.Context, arg SearchCTFsParams) ([]Ctf, error) {
+	rows, err := q.db.QueryContext(ctx, searchCTFs,
+		arg.Name,
+		arg.Name,
+		arg.Description,
+		arg.Description,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Ctf
+	for rows.Next() {
+		var i Ctf
+		if err := rows.Scan(
+			&i.ID,
+			&i.Phrase,
+			&i.Name,
+			&i.Description,
+			&i.StartDate,
+			&i.EndDate,
+			&i.AuthorID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateCTF = `-- name: UpdateCTF :execresult
 UPDATE ctfs
 SET

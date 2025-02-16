@@ -2,6 +2,18 @@
 SELECT * FROM ctfs
 ORDER BY start_date;
 
+-- name: SearchCTFs :many
+SELECT
+    *
+FROM
+    ctfs
+WHERE
+    (sqlc.arg(name) IS NULL OR ctfs.name LIKE CONCAT('%', sqlc.arg(name), '%')) 
+    and (sqlc.arg(description) IS NULL OR ctfs.description LIKE CONCAT('%', sqlc.arg(description), '%'))
+ORDER BY start_date;
+
+
+
 -- name: GetCTFByPhrase :one
 SELECT * FROM ctfs
 WHERE phrase = ? LIMIT 1;
