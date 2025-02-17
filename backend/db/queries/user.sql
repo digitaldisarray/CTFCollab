@@ -18,14 +18,19 @@ WHERE username = ? LIMIT 1;
 
 -- name: DeleteUser :execresult
 DELETE from users
-WHERE id = ?;
+WHERE username = ?;
 
 -- name: ChangePassword :execresult
 UPDATE users
 SET password_hash = ?
-WHERE id = ?;
+WHERE username = ?;
 
 -- name: ChangeUsername :execresult
 UPDATE users
 SET username = ?
 WHERE id = ?;
+
+-- name: SetAdminStatus :execresult
+UPDATE users
+SET is_admin = ?
+WHERE username = ?;
