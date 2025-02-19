@@ -2,16 +2,19 @@ package util
 
 import (
 	"crypto/rand"
+	"embed"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 )
+
+//go:embed english.txt
+var f embed.FS
 
 var words []string
 
 func loadWords(wordlist string) error {
-	data, err := os.ReadFile(wordlist)
+	data, err := f.ReadFile(wordlist)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v", err)
 	}

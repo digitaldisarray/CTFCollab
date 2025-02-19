@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/digitaldisarray/ctfcollab/auth"
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
 	"github.com/digitaldisarray/ctfcollab/util"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -47,7 +49,10 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	// TODO: Make sure author_id is set based off of their JWT claims
+	// Make sure author_id is set based off of their JWT claims
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*auth.CustomClaims)
+	ctf.AuthorID = int32(claims.Id)
 
 	// Generate CTF phrase
 	mnemonic, err := util.GenerateMnemonic(6)
