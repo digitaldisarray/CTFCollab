@@ -121,6 +121,25 @@ func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTF
 	return items, nil
 }
 
+const isUserMemberOfCTF = `-- name: IsUserMemberOfCTF :one
+SELECT COUNT(*) > 0 AS is_member
+FROM user_ctfs
+JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
+WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?
+`
+
+type IsUserMemberOfCTFParams struct {
+	UserID int32  `json:"user_id"`
+	Phrase string `json:"phrase"`
+}
+
+func (q *Queries) IsUserMemberOfCTF(ctx context.Context, arg IsUserMemberOfCTFParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isUserMemberOfCTF, arg.UserID, arg.Phrase)
+	var is_member bool
+	err := row.Scan(&is_member)
+	return is_member, err
+}
+
 const joinCTF = `-- name: JoinCTF :execresult
 INSERT INTO user_ctfs (
     user_id, ctf_id

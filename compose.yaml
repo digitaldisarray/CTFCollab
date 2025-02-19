@@ -14,7 +14,7 @@ services:
       db: # Make sure db starts before the api
         condition: service_healthy
   db:
-    image: mysql:latest
+    image: docker.io/library/mysql:latest
     restart: always
     env_file:
      - .env

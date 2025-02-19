@@ -73,3 +73,9 @@ JOIN
     ctfs ON challenges.ctf_id = ctfs.id
 WHERE 
     ctfs.phrase = ?;
+
+-- name: IsUserMemberOfCTF :one
+SELECT COUNT(*) > 0 AS is_member
+FROM user_ctfs
+JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
+WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?;

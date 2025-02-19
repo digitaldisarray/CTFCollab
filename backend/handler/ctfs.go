@@ -6,8 +6,20 @@ import (
 	"time"
 
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
+	"github.com/digitaldisarray/ctfcollab/util"
 	"github.com/labstack/echo/v4"
 )
+
+func (h *Handler) GetAllCTFs(c echo.Context) error {
+	ctx := context.Background()
+
+	ctfs, err := h.Queries.ListAllCTFs(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, ctfs)
+}
 
 func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 	// Get JWT claims
@@ -17,8 +29,6 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 }
 
 func (h *Handler) GetCTF(c echo.Context) error {
-	// TODO: Make sure user is member of CTF through JWT, or is admin
-
 	// Lookup CTF by phrase and return it
 	ctx := context.Background()
 
@@ -31,16 +41,20 @@ func (h *Handler) GetCTF(c echo.Context) error {
 }
 
 func (h *Handler) CreateCTF(c echo.Context) error {
-	// TODO: Make sure user is signed in
-
 	// Parse parameters from the request
 	ctf := new(db.CreateCTFParams)
 	if err := c.Bind(ctf); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	// TODO: Make sure author_id is set based off of their authentication
-	// TODO: Generate mnemonic phrase here
+	// TODO: Make sure author_id is set based off of their JWT claims
+
+	// Generate CTF phrase
+	mnemonic, err := util.GenerateMnemonic(6)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	ctf.Phrase = mnemonic
 
 	// Create the CTF in the database
 	ctx := context.Background()
@@ -50,16 +64,15 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	}
 
 	// Make sure CTF was created
-	ctf_id, err := VerifyParseResult(result, 1)
+	_, err = VerifyParseResult(result, 1)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"ctf_id": ctf_id})
+	return c.JSON(http.StatusOK, map[string]interface{}{"phrase": mnemonic})
 }
 
 func (h *Handler) DeleteCTF(c echo.Context) error {
-	// TODO Make sure user is CTF owner or an admin
 	ctx := context.Background()
 	err := h.Queries.DeleteCTFByPhrase(ctx, c.Param("phrase"))
 	if err != nil {
@@ -70,8 +83,6 @@ func (h *Handler) DeleteCTF(c echo.Context) error {
 }
 
 func (h *Handler) UpdateCTF(c echo.Context) error {
-	// TODO Make sure user is CTF owner or an admin
-
 	ctf := new(db.UpdateCTFParams)
 	if err := c.Bind(ctf); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -96,8 +107,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 }
 
 func (h *Handler) GetChallenges(c echo.Context) error {
-	// TODO: Make sure user is a member of the CTF
-
 	ctx := context.Background()
 	challenges, err := h.Queries.GetCTFChallenges(ctx, c.Param("phrase"))
 	if err != nil {
@@ -108,8 +117,6 @@ func (h *Handler) GetChallenges(c echo.Context) error {
 }
 
 func (h *Handler) CreateChallenge(c echo.Context) error {
-	// TODO: Make sure user is a member of the CTF
-
 	challenge := new(db.CreateChallengeParams)
 	if err := c.Bind(challenge); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -124,17 +131,6 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "Updated")
-}
-
-func (h *Handler) GetAllCTFs(c echo.Context) error {
-
-	ctx := context.Background()
-	ctfs, err := h.Queries.ListAllCTFs(ctx)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, ctfs)
 }
 
 // helper struct for SearchCTFs
