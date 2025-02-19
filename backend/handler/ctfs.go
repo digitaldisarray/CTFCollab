@@ -24,10 +24,21 @@ func (h *Handler) GetAllCTFs(c echo.Context) error {
 }
 
 func (h *Handler) GetJoinedCTFs(c echo.Context) error {
-	// Get JWT claims
-	// If JWT claims exist, get all CTFs user is member of
-	// If JWT claims don't exist (unauthenticated), return an error
-	return c.String(http.StatusNotImplemented, "Not implemented")
+	// Get user ID from JWT claims
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*auth.CustomClaims)
+	id := int32(claims.Id)
+
+	// TODO: Check if user is a guest or logged in, if guest lookup with a guest query instead
+
+	// Look up CTFs that logged in user belongs to
+	ctx := context.Background()
+	ctfs, err := h.Queries.ListUsersCTFs(ctx, id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, ctfs)
 }
 
 func (h *Handler) GetCTF(c echo.Context) error {
@@ -74,7 +85,9 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"phrase": mnemonic})
+	// TODO: Add the user to the CTF
+
+	return c.JSON(http.StatusOK, echo.Map{"phrase": mnemonic})
 }
 
 func (h *Handler) DeleteCTF(c echo.Context) error {
@@ -84,7 +97,7 @@ func (h *Handler) DeleteCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "Deleted")
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) UpdateCTF(c echo.Context) error {
@@ -101,7 +114,7 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "Updated")
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) JoinCTF(c echo.Context) error {
@@ -135,7 +148,7 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "Updated")
+	return c.NoContent(http.StatusOK)
 }
 
 // helper struct for SearchCTFs

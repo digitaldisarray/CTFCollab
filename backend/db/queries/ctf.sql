@@ -47,12 +47,12 @@ INSERT INTO user_ctfs (
 
 -- name: ListUsersCTFs :many
 SELECT 
-    ctfs.id AS ctf_id,
     ctfs.name AS ctf_name,
     ctfs.description AS ctf_description,
     ctfs.start_date,
     ctfs.end_date,
-    ctfs.author_id AS ctf_author_id
+    ctfs.author_id AS ctf_author_id,
+    ctfs.phrase
 FROM 
     ctfs
 JOIN 

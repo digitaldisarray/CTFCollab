@@ -195,12 +195,12 @@ func (q *Queries) ListAllCTFs(ctx context.Context) ([]Ctf, error) {
 
 const listUsersCTFs = `-- name: ListUsersCTFs :many
 SELECT 
-    ctfs.id AS ctf_id,
     ctfs.name AS ctf_name,
     ctfs.description AS ctf_description,
     ctfs.start_date,
     ctfs.end_date,
-    ctfs.author_id AS ctf_author_id
+    ctfs.author_id AS ctf_author_id,
+    ctfs.phrase
 FROM 
     ctfs
 JOIN 
@@ -210,12 +210,12 @@ WHERE
 `
 
 type ListUsersCTFsRow struct {
-	CtfID          int32     `json:"ctf_id"`
 	CtfName        string    `json:"ctf_name"`
 	CtfDescription string    `json:"ctf_description"`
 	StartDate      time.Time `json:"start_date"`
 	EndDate        time.Time `json:"end_date"`
 	CtfAuthorID    int32     `json:"ctf_author_id"`
+	Phrase         string    `json:"phrase"`
 }
 
 func (q *Queries) ListUsersCTFs(ctx context.Context, userID int32) ([]ListUsersCTFsRow, error) {
@@ -228,12 +228,12 @@ func (q *Queries) ListUsersCTFs(ctx context.Context, userID int32) ([]ListUsersC
 	for rows.Next() {
 		var i ListUsersCTFsRow
 		if err := rows.Scan(
-			&i.CtfID,
 			&i.CtfName,
 			&i.CtfDescription,
 			&i.StartDate,
 			&i.EndDate,
 			&i.CtfAuthorID,
+			&i.Phrase,
 		); err != nil {
 			return nil, err
 		}

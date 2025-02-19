@@ -28,12 +28,17 @@ type Ctf struct {
 	AuthorID    int32     `json:"author_id"`
 }
 
-type Session struct {
+type Guest struct {
 	ID        int32        `json:"id"`
-	Cookie    string       `json:"cookie"`
 	Nickname  string       `json:"nickname"`
 	LastSeen  sql.NullTime `json:"last_seen"`
 	CreatedAt sql.NullTime `json:"created_at"`
+}
+
+type GuestCtf struct {
+	GuestID  int32        `json:"guest_id"`
+	CtfID    int32        `json:"ctf_id"`
+	JoinedAt sql.NullTime `json:"joined_at"`
 }
 
 type User struct {

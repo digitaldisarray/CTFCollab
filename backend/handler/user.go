@@ -136,14 +136,12 @@ func (h *Handler) LoginUser(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("change_me")) // TODO: get from .env
+	encoded_token, err := token.SignedString([]byte("change_me")) // TODO: get from .env
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
-		"token": t,
-	})
+	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 }
 
 // ChangePassword updates the password for a user
