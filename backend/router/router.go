@@ -29,7 +29,6 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	}
 
 	// CTF routes
-	e.POST("/:phrase/join", handler.JoinCTF) // Accessible without JWT
 	{
 		ctfs := e.Group("/ctfs")
 		ctfs.Use(echojwt.WithConfig(config))
@@ -40,8 +39,10 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
 		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.MemberOnly(handler.Queries))
+		ctfs.POST("/:phrase/join", handler.JoinCTF)
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
+		// TODO: Route to get participants for a CTF, accessible to CTF members
 	}
 
 	// Challenge routes
@@ -52,17 +53,20 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	}
 
 	// User routes
-	if os.Getenv("TEST_MODE") == "True" {
-		e.GET("/users2/:username/become_admin", handler.BecomeAdmin)
-	}
-	e.POST("/users", handler.CreateUser)      // Accessible without JWT
-	e.POST("/users/login", handler.LoginUser) // Accessible without JWT
+	e.POST("/users/guest", handler.CreateGuest) // Accessible without JWT
+	e.POST("/users", handler.CreateUser)        // Accessible without JWT
+	e.POST("/users/login", handler.LoginUser)   // Accessible without JWT
 	{
 		users := e.Group("/users")
 		users.Use(echojwt.WithConfig(config))
 		users.GET("/:username", handler.GetUser, auth.SelfOnly)
 		users.DELETE("/:username", handler.DeleteUser, auth.SelfOnly)
 		users.POST("/:username/password", handler.ChangePassword, auth.SelfOnly)
+	}
+
+	// Testing only
+	if os.Getenv("TEST_MODE") == "True" {
+		e.GET("/users2/:username/become_admin", handler.BecomeAdmin)
 	}
 
 	return e

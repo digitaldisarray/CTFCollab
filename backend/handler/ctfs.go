@@ -85,8 +85,15 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// TODO: Add the user to the CTF
-
+	// Add the user to the CTF
+	join := new(db.JoinCTFParams)
+	ctf_id, err := result.LastInsertId()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	join.CtfID = int32(ctf_id)
+	join.UserID = int32(claims.Id)
+	h.Queries.JoinCTF(ctx, *join)
 	return c.JSON(http.StatusOK, echo.Map{"phrase": mnemonic})
 }
 
@@ -119,8 +126,8 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 
 func (h *Handler) JoinCTF(c echo.Context) error {
 	// Get JWT claims
-	// If no claims exist, generate them (anonymous account)
-	// Add user to CTF
+	// If user, add user to CTF
+	// If guest, add guest to CTF
 	return c.String(http.StatusNotImplemented, "Not implemented")
 }
 
