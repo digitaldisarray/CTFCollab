@@ -17,7 +17,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// Middleware
 	e.Use(middleware.Logger())
-	//e.Use(middleware.CORS()) // Dev env only?
+	e.Use(middleware.CORS()) // Dev env only?
 	e.Use(middleware.Recover())
 	// TODO: Rate limit?
 
