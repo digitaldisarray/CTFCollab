@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS challenges (
     description TEXT NOT NULL,
     flag TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    hedgedoc_url VARCHAR(512) UNIQUE NOT NULL,
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id)
 );
 

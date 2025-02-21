@@ -12,13 +12,14 @@ SELECT flag FROM challenges
 WHERE id = ? LIMIT 1;
 
 -- name: CreateChallenge :execresult
-INSERT INTO challenges (ctf_id, name, description, flag, created_at)
+INSERT INTO challenges (ctf_id, name, description, flag, created_at, hedgedoc_url)
 SELECT 
     ctfs.id,
     ? AS challenge_name,        -- Replace ? with the challenge name
     ? AS challenge_description, -- Replace ? with the challenge description
     ? AS challenge_flag,        -- Replace ? with the challenge flag
-    CURRENT_TIMESTAMP
+    CURRENT_TIMESTAMP,
+    ? AS hedgedoc_url
 FROM 
     ctfs
 WHERE 

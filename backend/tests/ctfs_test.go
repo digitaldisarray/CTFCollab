@@ -53,6 +53,9 @@ func TestCTFEndToEnd(t *testing.T) {
 	}
 	ctfs = append(ctfs, phrase) // Add CTF to list to be deleted it later
 
+	// TODO: Create Challenge and test hedgedoc url creation
+	t.Log("Creating Challenge")
+
 	// Rename CTF
 	// Test Get all CTFs
 

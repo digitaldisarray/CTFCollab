@@ -16,6 +16,7 @@ type Challenge struct {
 	Description string       `json:"description"`
 	Flag        string       `json:"flag"`
 	CreatedAt   sql.NullTime `json:"created_at"`
+	HedgedocUrl string       `json:"hedgedoc_url"`
 }
 
 type Ctf struct {

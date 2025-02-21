@@ -131,33 +131,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not implemented")
 }
 
-func (h *Handler) GetChallenges(c echo.Context) error {
-	ctx := context.Background()
-	challenges, err := h.Queries.GetCTFChallenges(ctx, c.Param("phrase"))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, challenges)
-}
-
-func (h *Handler) CreateChallenge(c echo.Context) error {
-	challenge := new(db.CreateChallengeParams)
-	if err := c.Bind(challenge); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	challenge.Phrase = c.Param("phrase") // Set the target CTF to add challenge under
-
-	ctx := context.Background()
-	_, err := h.Queries.CreateChallenge(ctx, *challenge)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.NoContent(http.StatusOK)
-}
-
 // helper struct for SearchCTFs
 type OuterSearchParams struct {
 	Name        interface{} `json:"name"`

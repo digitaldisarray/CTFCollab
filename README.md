@@ -17,6 +17,10 @@ MYSQL_DATABASE=ctfcollab
 MYSQL_USER=ctfuser
 MYSQL_PASSWORD=CHANGE_ME
 MYSQL_URL=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(db:3306)/${MYSQL_DATABASE}?multiStatements=true&parseTime=true
+CMD_DB_URL=mysql://hedgedoc:hedgedoc_pass@db:3306/hedgedoc
+CMD_DOMAIN=localhost:3001
+CMD_PROTOCOL_USESSL=false
+CMD_URL_ADDPORT=false
 TEST_MODE=False
 ```
 

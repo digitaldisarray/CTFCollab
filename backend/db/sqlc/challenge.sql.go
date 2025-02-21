@@ -11,13 +11,14 @@ import (
 )
 
 const createChallenge = `-- name: CreateChallenge :execresult
-INSERT INTO challenges (ctf_id, name, description, flag, created_at)
+INSERT INTO challenges (ctf_id, name, description, flag, created_at, hedgedoc_url)
 SELECT 
     ctfs.id,
     ? AS challenge_name,        -- Replace ? with the challenge name
     ? AS challenge_description, -- Replace ? with the challenge description
     ? AS challenge_flag,        -- Replace ? with the challenge flag
-    CURRENT_TIMESTAMP
+    CURRENT_TIMESTAMP,
+    ? AS hedgedoc_url
 FROM 
     ctfs
 WHERE 
@@ -28,6 +29,7 @@ type CreateChallengeParams struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Flag        string `json:"flag"`
+	HedgedocUrl string `json:"hedgedoc_url"`
 	Phrase      string `json:"phrase"`
 }
 
@@ -36,6 +38,7 @@ func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams
 		arg.Name,
 		arg.Description,
 		arg.Flag,
+		arg.HedgedocUrl,
 		arg.Phrase,
 	)
 }
@@ -51,7 +54,7 @@ func (q *Queries) DeleteChallenge(ctx context.Context, id int32) error {
 }
 
 const getChallenge = `-- name: GetChallenge :one
-SELECT id, ctf_id, name, description, flag, created_at FROM challenges
+SELECT id, ctf_id, name, description, flag, created_at, hedgedoc_url FROM challenges
 WHERE id = ? LIMIT 1
 `
 
@@ -65,6 +68,7 @@ func (q *Queries) GetChallenge(ctx context.Context, id int32) (Challenge, error)
 		&i.Description,
 		&i.Flag,
 		&i.CreatedAt,
+		&i.HedgedocUrl,
 	)
 	return i, err
 }
