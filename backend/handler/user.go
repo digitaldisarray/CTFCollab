@@ -141,6 +141,17 @@ func (h *Handler) LoginUser(c echo.Context) error {
 		return err
 	}
 
+	// auth should be included in subsequent requests if you use:
+	//			credentials: "include"
+
+	c.SetCookie(&http.Cookie{
+		Name:     "token",
+		Value:    encoded_token,
+		HttpOnly: true,
+		Secure:   false, // TODO: Change to true when not localhost
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+	})
 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 }
 
