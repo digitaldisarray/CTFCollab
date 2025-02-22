@@ -78,14 +78,14 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	}
 
 	// Add the user to the CTF
-	join := new(db.JoinCTFParams)
+	join := new(db.JoinCTFUserParams)
 	ctf_id, err := result.LastInsertId()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	join.CtfID = int32(ctf_id)
 	join.UserID = int32(claims.Id)
-	h.Queries.JoinCTF(c.Request().Context(), *join)
+	h.Queries.JoinCTFUser(c.Request().Context(), *join)
 	return c.JSON(http.StatusOK, echo.Map{"phrase": mnemonic})
 }
 
@@ -106,6 +106,8 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 
 	ctf.Phrase = c.Param("phrase") // Set the target CTF to update
 
+	// TOOD: Make sure we aren't modifying things we shouldn't here
+
 	_, err := h.Queries.UpdateCTF(c.Request().Context(), *ctf)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -115,10 +117,33 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 }
 
 func (h *Handler) JoinCTF(c echo.Context) error {
-	// Get JWT claims
-	// If user, add user to CTF
-	// If guest, add guest to CTF
-	return c.String(http.StatusNotImplemented, "Not implemented")
+	// Get CTF ID from phrase
+	phrase := c.Param("phrase")
+	ctf, err := h.Queries.GetCTFByPhrase(c.Request().Context(), phrase)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*auth.CustomClaims)
+
+	if claims.LoggedIn {
+		join := new(db.JoinCTFUserParams)
+		join.CtfID = ctf.ID
+		join.UserID = int32(claims.Id)
+		_, err = h.Queries.JoinCTFUser(c.Request().Context(), *join)
+	} else {
+		join := new(db.JoinCTFGuestParams)
+		join.CtfID = ctf.ID
+		join.GuestID = int32(claims.Id)
+		_, err = h.Queries.JoinCTFGuest(c.Request().Context(), *join)
+	}
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) GetChallenges(c echo.Context) error {

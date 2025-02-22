@@ -121,6 +121,25 @@ func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTF
 	return items, nil
 }
 
+const isGuestMemberOfCTF = `-- name: IsGuestMemberOfCTF :one
+SELECT COUNT(*) > 0 AS is_member
+FROM guest_ctfs
+JOIN ctfs ON guest_ctfs.ctf_id = ctfs.id
+WHERE guest_ctfs.guest_id = ? AND ctfs.phrase = ?
+`
+
+type IsGuestMemberOfCTFParams struct {
+	GuestID int32  `json:"guest_id"`
+	Phrase  string `json:"phrase"`
+}
+
+func (q *Queries) IsGuestMemberOfCTF(ctx context.Context, arg IsGuestMemberOfCTFParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isGuestMemberOfCTF, arg.GuestID, arg.Phrase)
+	var is_member bool
+	err := row.Scan(&is_member)
+	return is_member, err
+}
+
 const isUserMemberOfCTF = `-- name: IsUserMemberOfCTF :one
 SELECT COUNT(*) > 0 AS is_member
 FROM user_ctfs
@@ -140,7 +159,24 @@ func (q *Queries) IsUserMemberOfCTF(ctx context.Context, arg IsUserMemberOfCTFPa
 	return is_member, err
 }
 
-const joinCTF = `-- name: JoinCTF :execresult
+const joinCTFGuest = `-- name: JoinCTFGuest :execresult
+INSERT INTO guest_ctfs (
+    guest_id, ctf_id
+) VALUES (
+    ?, ?
+)
+`
+
+type JoinCTFGuestParams struct {
+	GuestID int32 `json:"guest_id"`
+	CtfID   int32 `json:"ctf_id"`
+}
+
+func (q *Queries) JoinCTFGuest(ctx context.Context, arg JoinCTFGuestParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, joinCTFGuest, arg.GuestID, arg.CtfID)
+}
+
+const joinCTFUser = `-- name: JoinCTFUser :execresult
 INSERT INTO user_ctfs (
     user_id, ctf_id
 ) VALUES (
@@ -148,13 +184,13 @@ INSERT INTO user_ctfs (
 )
 `
 
-type JoinCTFParams struct {
+type JoinCTFUserParams struct {
 	UserID int32 `json:"user_id"`
 	CtfID  int32 `json:"ctf_id"`
 }
 
-func (q *Queries) JoinCTF(ctx context.Context, arg JoinCTFParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, joinCTF, arg.UserID, arg.CtfID)
+func (q *Queries) JoinCTFUser(ctx context.Context, arg JoinCTFUserParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, joinCTFUser, arg.UserID, arg.CtfID)
 }
 
 const listAllCTFs = `-- name: ListAllCTFs :many

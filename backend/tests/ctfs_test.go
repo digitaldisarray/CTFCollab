@@ -53,7 +53,31 @@ func TestCTFEndToEnd(t *testing.T) {
 	}
 	ctfs = append(ctfs, phrase) // Add CTF to list to be deleted it later
 
+	// Get the CTF to make sure it exists
+	t.Log("Make sure CTF was created")
+	body, err := GetCTF(token, phrase, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Rename CTF
+	t.Log("Renaming CTF")
+	new_name := RandomString(9)
+	body["name"] = new_name
+	err = UpdateCTF(token, phrase, body, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get CTF again to see if name change took place
+	body, err = GetCTF(token, phrase, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if body["name"] != new_name {
+		t.Fatal("New name not spotted after rename")
+	}
+
 	// Test Get all CTFs
 
 	// Create non privileged user

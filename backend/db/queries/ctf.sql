@@ -38,9 +38,16 @@ WHERE phrase = ?;
 DELETE FROM ctfs
 WHERE phrase = ?;
 
--- name: JoinCTF :execresult
+-- name: JoinCTFUser :execresult
 INSERT INTO user_ctfs (
     user_id, ctf_id
+) VALUES (
+    ?, ?
+);
+
+-- name: JoinCTFGuest :execresult
+INSERT INTO guest_ctfs (
+    guest_id, ctf_id
 ) VALUES (
     ?, ?
 );
@@ -79,3 +86,9 @@ SELECT COUNT(*) > 0 AS is_member
 FROM user_ctfs
 JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
 WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?;
+
+-- name: IsGuestMemberOfCTF :one
+SELECT COUNT(*) > 0 AS is_member
+FROM guest_ctfs
+JOIN ctfs ON guest_ctfs.ctf_id = ctfs.id
+WHERE guest_ctfs.guest_id = ? AND ctfs.phrase = ?;

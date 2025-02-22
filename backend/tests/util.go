@@ -168,3 +168,51 @@ func CreateCTF(token, name, description string, client *resty.Client) (string, e
 
 	return phrase.(string), nil
 }
+
+func UpdateCTF(token, phrase string, new_body map[string]interface{}, client *resty.Client) error {
+	// Convert map to JSON string
+	jsonBytes, err := json.Marshal(new_body)
+	if err != nil {
+		return fmt.Errorf("error marshalling new body map to JSON: %v", err)
+	}
+
+	// Put request to localhost:1337/ctfs/<phrase>
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
+		SetBody(string(jsonBytes)).
+		Put(fmt.Sprintf("http://localhost:1337/ctfs/%s", phrase))
+
+	// Check for errors
+	if err != nil {
+		return fmt.Errorf("failed to send rename ctf request: %v", err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("failed to rename ctf, status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	return nil
+}
+
+func GetCTF(token, phrase string, client *resty.Client) (map[string]interface{}, error) {
+	resp, err := client.R().
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
+		Get(fmt.Sprintf("http://localhost:1337/ctfs/%s", phrase))
+
+	// Check for errors
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ctf: %v", err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("failed to get ctf, status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	// Parse and return response body
+	var responseBody map[string]interface{}
+	if err := json.Unmarshal(resp.Body(), &responseBody); err != nil {
+		return nil, fmt.Errorf("failed to parse response body: %v", err)
+	}
+
+	return responseBody, nil
+
+}
