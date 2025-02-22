@@ -136,7 +136,7 @@ func (h *Handler) LoginUser(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	encoded_token, err := token.SignedString([]byte("change_me")) // TODO: get from .env
+	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ func (h *Handler) CreateGuest(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	encoded_token, err := token.SignedString([]byte("change_me")) // TODO: get from .env
+	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
 	if err != nil {
 		return err
 	}

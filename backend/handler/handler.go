@@ -16,14 +16,15 @@ import (
 )
 
 type Handler struct {
-	Queries *db.Queries
+	Queries   *db.Queries
+	JWTSecret string
 }
 
 func NewHandler(q *db.Queries) *Handler {
 	return &Handler{Queries: q}
 }
 
-func LoadHandler(dbUrl string) (*Handler, error) {
+func LoadHandler(dbUrl, jwtSecret string) (*Handler, error) {
 	// Get a database handle
 	handle, err := sql.Open("mysql", dbUrl)
 	if err != nil {
@@ -58,6 +59,9 @@ func LoadHandler(dbUrl string) (*Handler, error) {
 	// Make a handler object
 	queries := db.New(handle)
 	handler := NewHandler(queries)
+
+	// Set the JWT secret
+	handler.JWTSecret = jwtSecret
 
 	// Create an admin account if specified and we haven't already
 	CreateAdmin(queries)

@@ -25,7 +25,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(auth.CustomClaims)
 		},
-		SigningKey: []byte("change_me"), // TODO: Get from .env
+		SigningKey: []byte(handler.JWTSecret),
 	}
 
 	// CTF routes
