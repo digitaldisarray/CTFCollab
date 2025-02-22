@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -13,9 +12,7 @@ import (
 )
 
 func (h *Handler) GetAllCTFs(c echo.Context) error {
-	ctx := context.Background()
-
-	ctfs, err := h.Queries.ListAllCTFs(ctx)
+	ctfs, err := h.Queries.ListAllCTFs(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -32,8 +29,7 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 	// TODO: Check if user is a guest or logged in, if guest lookup with a guest query instead
 
 	// Look up CTFs that logged in user belongs to
-	ctx := context.Background()
-	ctfs, err := h.Queries.ListUsersCTFs(ctx, id)
+	ctfs, err := h.Queries.ListUsersCTFs(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -42,10 +38,7 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 }
 
 func (h *Handler) GetCTF(c echo.Context) error {
-	// Lookup CTF by phrase and return it
-	ctx := context.Background()
-
-	ctf, err := h.Queries.GetCTFByPhrase(ctx, c.Param("phrase"))
+	ctf, err := h.Queries.GetCTFByPhrase(c.Request().Context(), c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -73,8 +66,7 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	ctf.Phrase = mnemonic
 
 	// Create the CTF in the database
-	ctx := context.Background()
-	result, err := h.Queries.CreateCTF(ctx, *ctf)
+	result, err := h.Queries.CreateCTF(c.Request().Context(), *ctf)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -93,13 +85,12 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	}
 	join.CtfID = int32(ctf_id)
 	join.UserID = int32(claims.Id)
-	h.Queries.JoinCTF(ctx, *join)
+	h.Queries.JoinCTF(c.Request().Context(), *join)
 	return c.JSON(http.StatusOK, echo.Map{"phrase": mnemonic})
 }
 
 func (h *Handler) DeleteCTF(c echo.Context) error {
-	ctx := context.Background()
-	err := h.Queries.DeleteCTFByPhrase(ctx, c.Param("phrase"))
+	err := h.Queries.DeleteCTFByPhrase(c.Request().Context(), c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -115,8 +106,7 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 
 	ctf.Phrase = c.Param("phrase") // Set the target CTF to update
 
-	ctx := context.Background()
-	_, err := h.Queries.UpdateCTF(ctx, *ctf)
+	_, err := h.Queries.UpdateCTF(c.Request().Context(), *ctf)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -132,8 +122,7 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 }
 
 func (h *Handler) GetChallenges(c echo.Context) error {
-	ctx := context.Background()
-	challenges, err := h.Queries.GetCTFChallenges(ctx, c.Param("phrase"))
+	challenges, err := h.Queries.GetCTFChallenges(c.Request().Context(), c.Param("phrase"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -149,8 +138,7 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 
 	challenge.Phrase = c.Param("phrase") // Set the target CTF to add challenge under
 
-	ctx := context.Background()
-	_, err := h.Queries.CreateChallenge(ctx, *challenge)
+	_, err := h.Queries.CreateChallenge(c.Request().Context(), *challenge)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -175,8 +163,6 @@ Searches CTFs with optional params:
 	end_date: formatted datetime ex: (2025-04-20T09:00:00Z)
 */
 func (h *Handler) SearchCTFs(c echo.Context) error {
-
-	ctx := context.Background()
 	search := new(OuterSearchParams)
 
 	var startTime, endTime time.Time
@@ -190,7 +176,7 @@ func (h *Handler) SearchCTFs(c echo.Context) error {
 	sqlcSearch := new(db.SearchCTFsParams)
 	sqlcSearch.Name = search.Name
 	sqlcSearch.Description = search.Description
-	ctfs, err := h.Queries.SearchCTFs(ctx, *sqlcSearch)
+	ctfs, err := h.Queries.SearchCTFs(c.Request().Context(), *sqlcSearch)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

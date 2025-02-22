@@ -65,6 +65,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	}
 
 	// Testing only
+	// TODO: Rewrite tests to use built in admin instead of this endpoint
 	if os.Getenv("TEST_MODE") == "True" {
 		e.GET("/users2/:username/become_admin", handler.BecomeAdmin)
 	}
