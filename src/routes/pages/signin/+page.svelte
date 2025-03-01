@@ -9,7 +9,7 @@
         e.preventDefault()
         const loginData = {
             "username": email, 
-            "password_hash": password
+            "password": password
         }
         try {
 
