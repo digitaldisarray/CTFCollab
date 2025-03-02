@@ -58,6 +58,7 @@
         
         <div class="form-container">
             <form class="flex flex-col w-full max-w-sm items-center space-y-2">
+
                 <Input type="email" bind:value={email} placeholder="me@example.com..." />
                 <Input type="password" bind:value={password} placeholder="Enter your password" />
                 <Button href="src\routes\admin-account.svelte" type="submit" onclick={login}>Log In</Button>
