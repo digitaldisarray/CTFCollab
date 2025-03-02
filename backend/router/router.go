@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/digitaldisarray/ctfcollab/auth"
@@ -44,10 +43,6 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.POST("/:phrase/join", handler.JoinCTF)
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
-
-		for _, route := range e.Routes() {
-			fmt.Println(route.Method, route.Path)
-		}
 		// TODO: Route to get participants for a CTF, accessible to CTF members
 	}
 
@@ -68,10 +63,6 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		users.GET("/:username", handler.GetUser, auth.SelfOnly)
 		users.DELETE("/:username", handler.DeleteUser, auth.SelfOnly)
 		users.POST("/:username/password", handler.ChangePassword, auth.SelfOnly)
-
-		for _, route := range e.Routes() {
-			fmt.Println(route.Method, route.Path)
-		}
 	}
 
 	// Testing only

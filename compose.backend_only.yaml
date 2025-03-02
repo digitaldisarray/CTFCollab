@@ -29,7 +29,25 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+  hedgedoc:
+    image: quay.io/hedgedoc/hedgedoc:1.10.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "3001:3000"
+    volumes:
+      - hedgedoc-uploads:/hedgedoc/public/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      retries: 5
+      timeout: 10s
 
 volumes:
   db-data:
+  hedgedoc-uploads:
 

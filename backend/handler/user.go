@@ -63,14 +63,13 @@ func (h *Handler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// Make sure user was created and extract user ID
-	userID, err := VerifyParseResult(result, 1)
+	// Make sure user was created
+	_, err = VerifyParseResult(result, 1)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// Return user ID in response
-	return c.JSON(http.StatusOK, map[string]interface{}{"user_id": userID})
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) GetUser(c echo.Context) error {

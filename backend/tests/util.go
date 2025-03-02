@@ -146,7 +146,7 @@ func CreateCTF(token, name, description string, client *resty.Client) (string, e
 			"start_date": "%s",
 			"end_date": "%s"
 		}`, name, description, start_date, end_date)).
-		Post("http://localhost:1337/ctfs/")
+		Post("http://localhost:1337/ctfs")
 
 	// Check for errors
 	if err != nil {
