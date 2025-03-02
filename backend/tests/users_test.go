@@ -1,163 +1,164 @@
 package tests
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 )
 
-type UserResponse struct {
-	UserID int `json:"user_id"`
-}
-
 var (
-	user_id  int
-	password = "xyz"
+	accounts []struct {
+		username string
+		password string
+	}
 )
 
 // Teardown function to clean up after tests
 func teardownUsers() {
-	if user_id != 0 {
-		deleteUser(user_id)
+	for _, account := range accounts {
+		// Login to user to get their token
+		token, err := LoginToUser(account.username, account.password, client)
+		if err != nil {
+			fmt.Printf("Teardown: failed to login to user %s: %v\n", account.username, err)
+			continue
+		}
+
+		// Delete the user
+		DeleteUser(account.username, token, client)
 	}
 }
 
-// Helper function to delete a user
-func deleteUser(userID int) {
-	url := fmt.Sprintf("http://localhost:1337/users/%d", userID)
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		Delete(url)
-
-	if err != nil {
-		fmt.Printf("Failed to delete user: %v\n", err)
-		return
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		fmt.Printf("Failed to delete user, status code: %d\n", resp.StatusCode())
-	}
-}
-
-// TestPostUser creates a new user
+// TestPostUser creates a new user and also attempts to create a duplicate user
 func TestPostUser(t *testing.T) {
 	setup()
+	defer teardownUsers()
 
-	username := "testuser"
-
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{"username": "%s", "password_hash": "xyz"}`, username)).
-		Post("http://localhost:1337/user")
-
+	// Create a new user
+	t.Log("Creating random user")
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatalf("Failed to send request: %v", err)
+		t.Fatal(err)
+	} else {
+		t.Log("Created user successfully")
 	}
-	if resp.StatusCode() != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode())
+	accounts = append(accounts, struct {
+		username string
+		password string
+	}{username, password}) // Add accounts to list to delete later
+
+	// Make sure we can't create the same user again
+	t.Logf("Attempting to create user with same username: %s", username)
+	if err := CreateUser(username, password, client); err == nil {
+		t.Fatal("Created user with duplicate username")
 	}
 
-	var userResponse UserResponse
-	err = json.Unmarshal(resp.Body(), &userResponse)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal response: %v", err)
-	}
-
-	user_id = userResponse.UserID
-	t.Logf("Created user with ID: %d", user_id)
+	t.Log("Successfully prevented duplicate user creation")
 }
 
 // TestLoginUser tests user login
 func TestLoginUser(t *testing.T) {
 	setup()
+	defer teardownUsers()
 
-	username := "testuser"
-
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{"username": "%s", "password_hash": "%s"}`, username, password)).
-		Post("http://localhost:1337/user/login")
-
+	// Create a new user
+	t.Log("Creating random user")
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatalf("Failed to send request: %v", err)
+		t.Fatal(err)
+	} else {
+		t.Log("Created user successfully")
 	}
+	accounts = append(accounts, struct {
+		username string
+		password string
+	}{username, password}) // Add accounts to list to delete later
 
-	if resp.StatusCode() != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode())
+	// Request to login
+	t.Logf("Logging in with username: %s, password: %s", username, password)
+	token, err := LoginToUser(username, password, client)
+	if err != nil {
+		t.Fatal(err)
 	}
+	t.Logf("Received token: %s", token)
 }
 
 func TestChangePassword(t *testing.T) {
 	setup()
 	defer teardownUsers()
 
+	// Create a new user
+	t.Log("Creating random user")
+	username, password, err := CreateRandomUser(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Created user successfully")
+
+	// Request to login
+	t.Logf("Logging in with username: %s, password: %s", username, password)
+	token, err := LoginToUser(username, password, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("Received token: %s", token)
+
 	// Change the password
-	newPassword := "abc"
-
-	t.Logf("Changing password for user ID: %d, new password: %s", user_id, newPassword)
-
+	t.Logf("Attempting to change password")
+	newPassword := RandomString(16)
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(fmt.Sprintf(`{
-			"id": %d,
-			"password_hash": "%s"
-		}`, user_id, newPassword)).
-		Post("http://localhost:1337/users/password")
-
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
+		SetBody(fmt.Sprintf(`{ "old_password": "%s", "new_password": "%s" }`, password, newPassword)).
+		Post(fmt.Sprintf("http://localhost:1337/users/%s/password", username))
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-
-	t.Logf("ChangePassword response: %s", resp.Body()) // Log the response
-
 	if resp.StatusCode() != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode(), resp.Body())
+		t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode(), string(resp.Body()))
 	}
+	accounts = append(accounts, struct {
+		username string
+		password string
+	}{username, newPassword}) // Add accounts to list to delete later
 
-	username := "testuser"
-
-	// Verify the new password by logging in
-	loginPayload := fmt.Sprintf(`{"username": "%s", "password_hash": "%s"}`, username, newPassword)
-	t.Logf("Login request payload: %s", loginPayload) // Log the login payload
-
-	resp, err = client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(loginPayload).
-		Post("http://localhost:1337/user/login")
-
+	// Verify new password by logging in
+	t.Logf("Logging in with new password: %s", newPassword)
+	token, err = LoginToUser(username, newPassword, client)
 	if err != nil {
-		t.Fatalf("Failed to send request: %v", err)
+		t.Fatal(err)
 	}
-
-	t.Logf("Login response: %s", resp.Body()) // Log the login response
-
-	if resp.StatusCode() != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode(), resp.Body())
-	}
+	t.Logf("New password worked, received token: %s", token)
 }
 
-// TestDeleteUser deletes the user created in TestPostUser
+// TestDeleteUser creates a new user and then deletes it
 func TestDeleteUser(t *testing.T) {
 	setup()
-	defer teardownUsers()
 
-	if user_id == 0 {
-		t.Skip("No user ID available to delete")
-	}
-
-	url := fmt.Sprintf("http://localhost:1337/users/%d", user_id)
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		Delete(url)
-
+	// Create a new user
+	t.Log("Creating random user")
+	username, password, err := CreateRandomUser(client)
 	if err != nil {
-		t.Fatalf("Failed to send request: %v", err)
+		t.Fatal(err)
+	} else {
+		t.Log("Created user successfully")
 	}
 
-	if resp.StatusCode() != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode())
+	// Log into user to get their token
+	t.Logf("Logging in to user with username: %s", username)
+	token, err := LoginToUser(username, password, client)
+	if err != nil {
+		t.Fatalf("Failed to login to user: %v", err)
 	}
 
-	user_id = 0 // Reset user_id after deletion
+	// Delete the user
+	t.Logf("Deleting user with username: %s", username)
+	if err := DeleteUser(username, token, client); err != nil {
+		t.Fatalf("Failed to delete user: %v", err)
+	}
+
+	t.Log("Deleted user successfully")
 }
+
+// TODO: Attempt to change password of another user
+// TODO: Attempt to delete another user
+// TODO: Attempt to login with incorrect password

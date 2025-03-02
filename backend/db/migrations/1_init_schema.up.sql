@@ -6,10 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin BOOLEAN NOT NULL DEFAULT 0
 );
 
--- Sessions Table (Anonymous users w/ nicknames)
-CREATE TABLE IF NOT EXISTS sessions (
+-- Guests Table (Anonymous users w/ nicknames)
+CREATE TABLE IF NOT EXISTS guests (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    cookie VARCHAR(255) UNIQUE NOT NULL,
     nickname VARCHAR(255) NOT NULL,
     last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -37,6 +36,16 @@ CREATE TABLE IF NOT EXISTS user_ctfs (
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
 );
 
+-- Guests CTFs Table many-to-many
+CREATE TABLE IF NOT EXISTS guest_ctfs (
+    guest_id INT NOT NULL,
+    ctf_id INT NOT NULL,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Timestamp of when the guest joined the CTF
+    PRIMARY KEY (guest_id, ctf_id),
+    FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE CASCADE,
+    FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
+);
+
 -- Challenges Table
 CREATE TABLE IF NOT EXISTS challenges (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,6 +54,7 @@ CREATE TABLE IF NOT EXISTS challenges (
     description TEXT NOT NULL,
     flag TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    hedgedoc_url VARCHAR(512) UNIQUE NOT NULL,
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id)
 );
 

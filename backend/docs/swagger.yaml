@@ -1,4 +1,11 @@
 definitions:
+  db.ChangePasswordParams:
+    properties:
+      id:
+        type: integer
+      password_hash:
+        type: string
+    type: object
   db.CreateUserParams:
     properties:
       password_hash:
@@ -9,7 +16,36 @@ definitions:
 info:
   contact: {}
 paths:
-  /users:
+  /challenges/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a Challenge by ID from the database, requires admin privileges
+      parameters:
+      - description: Challenge ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge successfully deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid Challenge ID
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete Challenge
+      tags:
+      - challenges
+  /user:
     post:
       consumes:
       - application/json
@@ -33,14 +69,98 @@ paths:
         "400":
           description: Invalid input
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Internal server error
           schema:
             type: string
       summary: Create a new user
+      tags:
+      - users
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by comparing the submitted password to the
+        hashed password stored in the database
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/db.CreateUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged in user information
+          schema:
+            $ref: '#/definitions/db.CreateUserParams'
+        "400":
+          description: Invalid login credentials
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: User login
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Deletes a user by ID from the database, requires admin privileges
+        or account owner
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully deleted
+        "400":
+          description: Invalid user ID
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete user
+      tags:
+      - users
+  /users/password:
+    post:
+      consumes:
+      - application/json
+      description: Hashes and updates the password for an existing user, requires
+        admin privileges or account owner
+      parameters:
+      - description: Password Update Request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/db.ChangePasswordParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+        "400":
+          description: Invalid input or password criteria not met
+          schema:
+            type: string
+        "500":
+          description: Internal server error during password update
+          schema:
+            type: string
+      summary: Update password
       tags:
       - users
 swagger: "2.0"

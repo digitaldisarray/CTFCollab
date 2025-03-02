@@ -1,6 +1,24 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input/index.js";
+
+    import { onMount } from 'svelte';
+
+    let isDarkMode = false;
+
+    onMount(() => {
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    isDarkMode = systemTheme.matches;
+
+    // Apply dark mode class
+    document.documentElement.classList.toggle('dark', isDarkMode);
+
+    // Listen for changes in system setting
+    systemTheme.addEventListener('change', (event) => {
+        isDarkMode = event.matches;
+        document.documentElement.classList.toggle('dark', isDarkMode);
+    });
+    });
 </script>
 
 <div class="welcome-container">
@@ -17,6 +35,13 @@
             variant="ghost"
         >
             About
+        </Button>
+        <span class="separator">|</span>
+        <Button
+        href="/pages/event-room"
+        variant="ghost"
+        >
+            Test Event Room
         </Button>
     </div>
     <header>
@@ -48,7 +73,6 @@
         justify-content: center;
         height: 100vh;
         text-align: center;
-        background-color: #f0f0f0;
         padding: 20px;
     }
 
@@ -60,7 +84,7 @@
 
     header p {
         font-size: 1.2rem;
-        color: #666;
+        color: #dc4405;
     }
 
     main {
@@ -77,5 +101,8 @@
         justify-content: center; /* Center the form horizontally */
         width: 100%;
         margin-top: 20px;
+    }
+    .separator{
+        color: #dc4405;
     }
 </style>

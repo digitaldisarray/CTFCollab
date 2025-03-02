@@ -29,14 +29,6 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
-  frontend:
-    build:
-      dockerfile: Dockerfile
-    #environment:
-      #- NODE_ENV=production # Stops stack traces from appearing in browser
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
   hedgedoc:
     image: quay.io/hedgedoc/hedgedoc:1.10.0
     restart: unless-stopped
@@ -58,3 +50,4 @@ services:
 volumes:
   db-data:
   hedgedoc-uploads:
+

@@ -13,16 +13,16 @@ import (
 const changePassword = `-- name: ChangePassword :execresult
 UPDATE users
 SET password_hash = ?
-WHERE id = ?
+WHERE username = ?
 `
 
 type ChangePasswordParams struct {
 	PasswordHash string `json:"password_hash"`
-	ID           int32  `json:"id"`
+	Username     string `json:"username"`
 }
 
 func (q *Queries) ChangePassword(ctx context.Context, arg ChangePasswordParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, changePassword, arg.PasswordHash, arg.ID)
+	return q.db.ExecContext(ctx, changePassword, arg.PasswordHash, arg.Username)
 }
 
 const changeUsername = `-- name: ChangeUsername :execresult
@@ -76,11 +76,11 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 
 const deleteUser = `-- name: DeleteUser :execresult
 DELETE from users
-WHERE id = ?
+WHERE username = ?
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id int32) (sql.Result, error) {
-	return q.db.ExecContext(ctx, deleteUser, id)
+func (q *Queries) DeleteUser(ctx context.Context, username string) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deleteUser, username)
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
@@ -98,4 +98,19 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.IsAdmin,
 	)
 	return i, err
+}
+
+const setAdminStatus = `-- name: SetAdminStatus :execresult
+UPDATE users
+SET is_admin = ?
+WHERE username = ?
+`
+
+type SetAdminStatusParams struct {
+	IsAdmin  bool   `json:"is_admin"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) SetAdminStatus(ctx context.Context, arg SetAdminStatusParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, setAdminStatus, arg.IsAdmin, arg.Username)
 }
