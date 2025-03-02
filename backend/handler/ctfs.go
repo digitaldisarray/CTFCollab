@@ -152,30 +152,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *Handler) GetChallenges(c echo.Context) error {
-	challenges, err := h.Queries.GetCTFChallenges(c.Request().Context(), c.Param("phrase"))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, challenges)
-}
-
-func (h *Handler) CreateChallenge(c echo.Context) error {
-	challenge := new(db.CreateChallengeParams)
-	if err := c.Bind(challenge); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	challenge.Phrase = c.Param("phrase") // Set the target CTF to add challenge under
-
-	_, err := h.Queries.CreateChallenge(c.Request().Context(), *challenge)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.NoContent(http.StatusOK)
-}
 
 // helper struct for SearchCTFs
 type OuterSearchParams struct {

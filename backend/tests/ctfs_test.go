@@ -53,6 +53,7 @@ func TestCTFEndToEnd(t *testing.T) {
 	}
 	ctfs = append(ctfs, phrase) // Add CTF to list to be deleted it later
 
+
 	// Get the CTF to make sure it exists
 	t.Log("Make sure CTF was created")
 	body, err := GetCTF(token, phrase, client)
