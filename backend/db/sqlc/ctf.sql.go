@@ -229,7 +229,62 @@ func (q *Queries) ListAllCTFs(ctx context.Context) ([]Ctf, error) {
 	return items, nil
 }
 
-const listUsersCTFs = `-- name: ListUsersCTFs :many
+const listGuestsJoinedCTFs = `-- name: ListGuestsJoinedCTFs :many
+SELECT 
+    ctfs.name AS ctf_name,
+    ctfs.description AS ctf_description,
+    ctfs.start_date,
+    ctfs.end_date,
+    ctfs.author_id AS ctf_author_id,
+    ctfs.phrase
+FROM 
+    ctfs
+JOIN 
+    guest_ctfs ON ctfs.id = guest_ctfs.ctf_id
+WHERE 
+    guest_ctfs.guest_id = ?
+`
+
+type ListGuestsJoinedCTFsRow struct {
+	CtfName        string    `json:"ctf_name"`
+	CtfDescription string    `json:"ctf_description"`
+	StartDate      time.Time `json:"start_date"`
+	EndDate        time.Time `json:"end_date"`
+	CtfAuthorID    int32     `json:"ctf_author_id"`
+	Phrase         string    `json:"phrase"`
+}
+
+func (q *Queries) ListGuestsJoinedCTFs(ctx context.Context, guestID int32) ([]ListGuestsJoinedCTFsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listGuestsJoinedCTFs, guestID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListGuestsJoinedCTFsRow
+	for rows.Next() {
+		var i ListGuestsJoinedCTFsRow
+		if err := rows.Scan(
+			&i.CtfName,
+			&i.CtfDescription,
+			&i.StartDate,
+			&i.EndDate,
+			&i.CtfAuthorID,
+			&i.Phrase,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersJoinedCTFs = `-- name: ListUsersJoinedCTFs :many
 SELECT 
     ctfs.name AS ctf_name,
     ctfs.description AS ctf_description,
@@ -245,7 +300,7 @@ WHERE
     user_ctfs.user_id = ?
 `
 
-type ListUsersCTFsRow struct {
+type ListUsersJoinedCTFsRow struct {
 	CtfName        string    `json:"ctf_name"`
 	CtfDescription string    `json:"ctf_description"`
 	StartDate      time.Time `json:"start_date"`
@@ -254,15 +309,15 @@ type ListUsersCTFsRow struct {
 	Phrase         string    `json:"phrase"`
 }
 
-func (q *Queries) ListUsersCTFs(ctx context.Context, userID int32) ([]ListUsersCTFsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listUsersCTFs, userID)
+func (q *Queries) ListUsersJoinedCTFs(ctx context.Context, userID int32) ([]ListUsersJoinedCTFsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersJoinedCTFs, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListUsersCTFsRow
+	var items []ListUsersJoinedCTFsRow
 	for rows.Next() {
-		var i ListUsersCTFsRow
+		var i ListUsersJoinedCTFsRow
 		if err := rows.Scan(
 			&i.CtfName,
 			&i.CtfDescription,
