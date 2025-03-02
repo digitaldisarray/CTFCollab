@@ -1,4 +1,11 @@
 <script lang="ts">
+  import * as Popover from "$lib/components/ui/popover/index.js";
+  import { Input } from "$lib/components/ui/input/index.js"; // Add Input component
+  import { Button } from "$lib/components/ui/button/index.js"; // Add Button component
+  import type { PageData } from "./$types.js";
+  import SettingsForm from "./settings-form.svelte";
+  let { data: pageData }: { data: PageData } = $props();
+
   import DataTable from "./data-table.svelte";
   import { columns } from "./columns.js";
   import { data } from "./columns.js";
@@ -10,10 +17,9 @@
   let value = today(getLocalTimeZone());
 
 
-  const goToNewEvent = () => {
-    goto("/pages/new-event");
-  };
+
 </script>
+
 
 
 <div class="page-container">
@@ -24,7 +30,6 @@
       <p>Manage your CTF event rooms.</p>
     </header>
 
-
     <!-- DataTable -->
     <DataTable {data} {columns} />
   </div>
@@ -33,15 +38,24 @@
     <header>
       <h1>Calendar</h1>
       <p>View upcoming CTF events.</p>
+      
     </header>
+
     <div class="cal-container">
+      <Popover.Root>
+        <Popover.Trigger>
+          <Button class="new-ctf-button">
+            New CTF
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content><SettingsForm data={pageData} /></Popover.Content>
+      </Popover.Root>
+      <br />
       <div class="calendar-wrapper">
         <Calendar bind:value class="rounded-md border" />
       </div>
-      <button on:click={goToNewEvent} class="custom-button">
-        Create Event Room
-      </button>
     </div>
+    
   </div>
 </div>
 
@@ -52,6 +66,7 @@
     justify-content: flex-start;
     width: 100%;
   }
+  
 
 
   .container {
