@@ -1,0 +1,35 @@
+services:
+  api:
+    restart: always
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        MYSQL_URL: "${MYSQL_URL}"
+    ports:
+      - "1337:1337"
+    env_file:
+      - .env
+    depends_on:
+      db: # Make sure db starts before the api
+        condition: service_healthy
+  db:
+    image: docker.io/library/mysql:latest
+    restart: always
+    env_file:
+     - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./backend/db/migrations/scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 30s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+volumes:
+  db-data:
+
