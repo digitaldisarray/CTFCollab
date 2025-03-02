@@ -5,6 +5,7 @@ export const formSchema = z.object({
   dob: z
       .string()
       .refine((v) => v, { message: "A scheduled event date is required" }),
+  ctfCode: z.string().min(2).max(50),
 
 
 });

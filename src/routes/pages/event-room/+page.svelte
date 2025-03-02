@@ -2,15 +2,36 @@
     import DataTable from "./data-table.svelte";
     import { columns } from "./columns.js";
     import { data } from "./columns.js";
+
+    import * as Popover from "$lib/components/ui/popover/index.js";
+    import { Input } from "$lib/components/ui/input/index.js"; // Add Input component
+    import { Button } from "$lib/components/ui/button/index.js"; // Add Button component
+    import type { PageData } from "./$types.js";
+    import SettingsForm from "./settings-form.svelte";
+    let { data: pageData }: { data: PageData } = $props();
   </script>
   
   <div class="page-container">
     <div class="container">
-      <!-- Header -->
-      <header>
-        <h1>Event Challenges</h1>
-        <p>Navigate Event Challenges here.</p>
-      </header>
+      <div class="horizontal-container">
+        <!-- Header -->
+        <header>
+          <h1>CTF Events</h1>
+          <p>Manage your CTF event rooms.</p>
+        </header>
+  
+        <!-- Add Challenge Button -->
+        <div class="button-container">
+          <Popover.Root>
+            <Popover.Trigger>
+              <Button class="new-ctf-button">
+                Add Challenge
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content><SettingsForm data={pageData} /></Popover.Content>
+          </Popover.Root>
+        </div>
+      </div>
   
       <!-- DataTable -->
       <DataTable {data} {columns} />
@@ -39,6 +60,17 @@
       padding: 20px;
       box-sizing: border-box; /* Include padding in the width calculation */
     }
+
+    .horizontal-container {
+    display: flex; /* Enables Flexbox */
+    flex-direction: row; /* Arranges children horizontally (default) */
+    align-items: center; /* Vertically centers children */
+    justify-content: flex-start; /* Aligns children to the start of the container */
+    gap: 16px; /* Adds space between children */
+  }
+  .button-container {
+    margin-left: auto; /* Pushes the button to the far right */
+  }
   
     header h1 {
       font-size: 2.5rem;
