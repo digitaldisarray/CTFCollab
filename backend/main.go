@@ -20,12 +20,20 @@ func main() {
 		log.Print("Could not load environment from .env, assuming they are already set in environment")
 	}
 
-	// Setup handlers
+	// Make sure JWT secret is found
+	jwtSecret, found := os.LookupEnv("JWT_SECRET")
+	if !found || jwtSecret == "" {
+		log.Panic("JWT_SECRET environment variable not set")
+	}
+
+	// Make sure MySQL url is found
 	dbUrl, found := os.LookupEnv("MYSQL_URL")
 	if !found || dbUrl == "" {
 		log.Panic("MYSQL_URL environment variable not set")
 	}
-	h, err := handler.LoadHandler(dbUrl)
+
+	// Setup handlers
+	h, err := handler.LoadHandler(dbUrl, jwtSecret)
 	if err != nil {
 		log.Panic(err)
 	}

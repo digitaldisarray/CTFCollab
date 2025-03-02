@@ -18,7 +18,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// Middleware
 	e.Use(middleware.Logger())
-	//e.Use(middleware.CORS()) // Dev env only?
+	e.Use(middleware.CORS()) // Dev env only?
 	e.Use(middleware.Recover())
 	// TODO: Rate limit?
 
@@ -26,7 +26,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(auth.CustomClaims)
 		},
-		SigningKey: []byte("change_me"), // TODO: Get from .env
+		SigningKey: []byte(handler.JWTSecret),
 	}
 
 	// CTF routes
@@ -75,6 +75,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	}
 
 	// Testing only
+	// TODO: Rewrite tests to use built in admin instead of this endpoint
 	if os.Getenv("TEST_MODE") == "True" {
 		e.GET("/users2/:username/become_admin", handler.BecomeAdmin)
 	}

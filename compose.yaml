@@ -54,6 +54,7 @@ services:
       interval: 30s
       retries: 5
       timeout: 10s
+
 volumes:
   db-data:
   hedgedoc-uploads:

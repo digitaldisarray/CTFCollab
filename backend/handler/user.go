@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -41,8 +40,7 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	}
 
 	// Make sure username isn't taken
-	ctx := context.Background()
-	_, err := h.Queries.GetUserByUsername(ctx, user.Username)
+	_, err := h.Queries.GetUserByUsername(c.Request().Context(), user.Username)
 	if err == nil {
 		return c.JSON(http.StatusBadRequest, "User already exists")
 	}
@@ -60,7 +58,7 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	newUser.Username = user.Username
 
 	// Insert data into db
-	result, err := h.Queries.CreateUser(ctx, *newUser)
+	result, err := h.Queries.CreateUser(c.Request().Context(), *newUser)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -77,10 +75,9 @@ func (h *Handler) CreateUser(c echo.Context) error {
 
 func (h *Handler) GetUser(c echo.Context) error {
 	username := c.Param("username")
-	ctx := context.Background()
 
 	// Get user from database
-	user, err := h.Queries.GetUserByUsername(ctx, username)
+	user, err := h.Queries.GetUserByUsername(c.Request().Context(), username)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -108,8 +105,7 @@ func (h *Handler) LoginUser(c echo.Context) error {
 	}
 
 	// Lookup user in database
-	ctx := context.Background()
-	dbu, err := h.Queries.GetUserByUsername(ctx, user.Username)
+	dbu, err := h.Queries.GetUserByUsername(c.Request().Context(), user.Username)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -138,11 +134,22 @@ func (h *Handler) LoginUser(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	encoded_token, err := token.SignedString([]byte("change_me")) // TODO: get from .env
+	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
 	if err != nil {
 		return err
 	}
 
+	// auth should be included in subsequent requests if you use:
+	//			credentials: "include"
+
+	c.SetCookie(&http.Cookie{
+		Name:     "token",
+		Value:    encoded_token,
+		HttpOnly: true,
+		Secure:   false, // TODO: Change to true when not localhost
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+	})
 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 }
 
@@ -163,25 +170,25 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
 	}
 
-	// TODO: Bypass old password check if JWT is admin
+	// Bypass old password check if JWT is admin
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(*auth.CustomClaims)
+	if !claims.IsAdmin {
+		// Make sure old passowwrd is correct
+		dbu, err := h.Queries.GetUserByUsername(c.Request().Context(), c.Param("username")) // Lookup user in database
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
 
-	// Make sure old password is correct
-	ctx := context.Background()
-	dbu, err := h.Queries.GetUserByUsername(ctx, c.Param("username")) // Lookup user in database
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		// Make sure passwords match
+		res, err := argon2id.ComparePasswordAndHash(req.OldPassword, dbu.PasswordHash)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		if !res {
+			return c.JSON(http.StatusBadRequest, "Incorrect password")
+		}
 	}
-
-	// Make sure passwords match
-	res, err := argon2id.ComparePasswordAndHash(req.OldPassword, dbu.PasswordHash)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	if !res {
-		return c.JSON(http.StatusBadRequest, "Incorrect password")
-	}
-
-	//TODO: Implement authentication and authorization checks here
 
 	// Hash the new password before updating it in the database
 	hash, err := argon2id.CreateHash(req.NewPassword, argon2id.DefaultParams)
@@ -225,8 +232,7 @@ func (h *Handler) BecomeAdmin(c echo.Context) error {
 	req.IsAdmin = true
 	req.Username = c.Param("username")
 
-	ctx := context.Background()
-	_, err := h.Queries.SetAdminStatus(ctx, req)
+	_, err := h.Queries.SetAdminStatus(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to set admin status")
 	}
@@ -245,8 +251,7 @@ func (h *Handler) CreateGuest(c echo.Context) error {
 	}
 
 	// Check if nickname exists in guest database
-	ctx := context.Background()
-	_, err := h.Queries.GetGuestByName(ctx, guest.Nickname)
+	_, err := h.Queries.GetGuestByName(c.Request().Context(), guest.Nickname)
 	if err == nil {
 		return c.JSON(http.StatusBadRequest, "Guest already exists")
 	}
@@ -265,7 +270,7 @@ func (h *Handler) CreateGuest(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	encoded_token, err := token.SignedString([]byte("change_me")) // TODO: get from .env
+	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
 	if err != nil {
 		return err
 	}

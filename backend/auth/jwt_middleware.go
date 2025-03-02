@@ -9,13 +9,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// TODO: (for all middleware) Make sure that the user referenced by the token still exists/account hasn't been deleted
-// TODO: If a user is stripped of admin, they may still have a JWT that gives them admin, so maybe we can add a last modified field to users?
+// TODO: Make JWTs rotate quickly to minimize the chance of them being used after an account gets deleted or loses permissions in some way
 
 // Makes sure user is an admin
 func AdminOnly(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// Get claims
 		token := c.Get("user").(*jwt.Token)
 		user, ok := token.Claims.(*CustomClaims)
 		if !ok {
@@ -32,14 +30,12 @@ func AdminOnly(next echo.HandlerFunc) echo.HandlerFunc {
 // Makes sure user is admin OR their jwt username matches the /:username in the request
 func SelfOnly(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// Get claims
 		token := c.Get("user").(*jwt.Token)
 		user, ok := token.Claims.(*CustomClaims)
 		if !ok {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token or token claims")
 		}
 
-		// Check permissions
 		if !user.IsAdmin && user.Name != c.Param("username") {
 			return echo.NewHTTPError(http.StatusForbidden, "Access forbidden")
 		}
@@ -52,22 +48,20 @@ func SelfOnly(next echo.HandlerFunc) echo.HandlerFunc {
 func OwnerOnly(h *db.Queries) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			// Get claims
 			token := c.Get("user").(*jwt.Token)
 			user, ok := token.Claims.(*CustomClaims)
 			if !ok {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token or token claims")
 			}
 
-			// Get the CTF by phrase
 			phrase := c.Param("phrase")
 			ctf, err := h.GetCTFByPhrase(context.Background(), phrase)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get CTF")
 			}
 
-			// Check if the user is the owner of the CTF
-			if ctf.AuthorID != int32(user.Id) {
+			// Make sure not a guest and check if the user is the owner of the CTF
+			if !user.LoggedIn || ctf.AuthorID != int32(user.Id) {
 				return echo.NewHTTPError(http.StatusForbidden, "Access forbidden")
 			}
 
@@ -87,11 +81,20 @@ func MemberOnly(h *db.Queries) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token or token claims")
 			}
 
-			// Check if user is a member of the given CTF
-			isMember, err := h.IsUserMemberOfCTF(context.Background(), db.IsUserMemberOfCTFParams{
-				UserID: int32(user.Id),
-				Phrase: c.Param("phrase"),
-			})
+			// Check if user or guest is a member of the given CTF
+			var isMember bool
+			var err error
+			if user.LoggedIn {
+				isMember, err = h.IsUserMemberOfCTF(context.Background(), db.IsUserMemberOfCTFParams{
+					UserID: int32(user.Id),
+					Phrase: c.Param("phrase"),
+				})
+			} else {
+				isMember, err = h.IsGuestMemberOfCTF(context.Background(), db.IsGuestMemberOfCTFParams{
+					GuestID: int32(user.Id),
+					Phrase:  c.Param("phrase"),
+				})
+			}
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to check membership")
 			}
