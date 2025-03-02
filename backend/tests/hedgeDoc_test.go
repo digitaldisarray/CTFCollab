@@ -3,19 +3,17 @@ package tests
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"path"
 	"strings"
 	"testing"
 )
 
 func TestCreateHedgeDocNote(t *testing.T) {
-	noteID, err := createHedgeDocNote()
+	hurl, err := createHedgeDocNote()
 	if err != nil {
 		t.Fatalf("Failed to create HedgeDoc note: %v", err)
 	}
 
-	fmt.Println("HedgeDoc Note Created! Note ID:", noteID)
+	fmt.Println("HedgeDoc Note Created! Note ID:", hurl)
 }
 
 func createHedgeDocNote() (string, error) {
@@ -40,24 +38,11 @@ func createHedgeDocNote() (string, error) {
 	defer resp.Body.Close()
 
 	// Should now have the response. Extract the 'Location' header:
+	// location might look like: "http://localhost:3001/zVl9cPTpStGxb5R05x3M5w"
 	location := resp.Header.Get("Location")
 	if location == "" {
 		return "", fmt.Errorf("HedgeDoc API did not return a valid Location header")
 	}
 
-	// location might look like: "http://localhost:3001/zVl9cPTpStGxb5R05x3M5w"
-	// Parse it to extract the note ID:
-	u, err := url.Parse(location)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse Location URL: %v", err)
-	}
-
-	// The note ID is basically everything after "/". EX:
-	//   /zVl9cPTpStGxb5R05x3M5w   => zVl9cPTpStGxb5R05x3M5w
-	noteID := path.Base(u.Path)
-	if noteID == "" {
-		return "", fmt.Errorf("could not extract note ID from location: %s", location)
-	}
-
-	return noteID, nil
+	return location, nil
 }

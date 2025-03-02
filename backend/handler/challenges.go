@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
-	"path"
 	"strconv"
 	"strings"
 
@@ -61,26 +59,13 @@ func createHedgeDocNote() (string, error) {
 	defer resp.Body.Close()
 
 	// Should now have the response. Extract the 'Location' header:
+	// location might look like: "http://localhost:3001/zVl9cPTpStGxb5R05x3M5w"
 	location := resp.Header.Get("Location")
 	if location == "" {
 		return "", fmt.Errorf("HedgeDoc API did not return a valid Location header")
 	}
 
-	// location might look like: "http://localhost:3001/zVl9cPTpStGxb5R05x3M5w"
-	// Parse it to extract the note ID:
-	u, err := url.Parse(location)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse Location URL: %v", err)
-	}
-
-	// The note ID is basically everything after "/". EX:
-	//   /zVl9cPTpStGxb5R05x3M5w   => zVl9cPTpStGxb5R05x3M5w
-	noteID := path.Base(u.Path)
-	if noteID == "" {
-		return "", fmt.Errorf("could not extract note ID from location: %s", location)
-	}
-
-	return noteID, nil
+	return location, nil
 }
 
 func (h *Handler) GetChallenges(c echo.Context) error {
@@ -102,12 +87,12 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 	challenge.Phrase = c.Param("phrase") // Set the target CTF to add challenge under
 
 	// Step 1: Create a new HedgeDoc note
-	noteID, err := createHedgeDocNote()
+	hurl, err := createHedgeDocNote()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	challenge.HedgedocUrl = noteID // Assign HedgeDoc note ID
+	challenge.HedgedocUrl = hurl // Assign HedgeDoc note ID
 
 	// Step 2: Insert the challenge into the database
 	ctx := context.Background()
@@ -117,9 +102,8 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 	}
 
 	// Return the created challenge with the HedgeDoc URL
-	hedgedocURL := fmt.Sprintf("http://localhost:3001/%s", noteID)
 	return c.JSON(http.StatusOK, map[string]string{
 		"challenge_name": challenge.Name,
-		"hedgedoc_url":   hedgedocURL,
+		"hedgedoc_url":   hurl,
 	})
 }
