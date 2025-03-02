@@ -32,6 +32,23 @@
         }
     }
 
+    import { onMount } from 'svelte';
+
+    let isDarkMode = false;
+
+    onMount(() => {
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    isDarkMode = systemTheme.matches;
+
+    // Apply dark mode class
+    document.documentElement.classList.toggle('dark', isDarkMode);
+
+    // Listen for changes in system setting
+    systemTheme.addEventListener('change', (event) => {
+        isDarkMode = event.matches;
+        document.documentElement.classList.toggle('dark', isDarkMode);
+    });
+    });
 </script>
 
 <div class="login-container">
@@ -66,7 +83,6 @@
         justify-content: center;
         height: 100vh;
         text-align: center;
-        background-color: #f0f0f0;
         padding: 20px;
     }
 
