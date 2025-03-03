@@ -5,9 +5,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        MYSQL_URL: "${MYSQL_URL}"
+        MYSQL_URL: ${MYSQL_URL}
     ports:
       - "1337:1337"
+    environment:
+      - MYSQL_URL=${MYSQL_URL}
     env_file:
       - .env
     depends_on:
@@ -32,6 +34,10 @@ services:
   frontend:
     build:
       dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - MYSQL_URL=${MYSQL_URL}
     #environment:
       #- NODE_ENV=production # Stops stack traces from appearing in browser
     ports:

@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// Get ready to read environment variables
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Print("Could not load environment from .env, assuming they are already set in environment")
 	}
