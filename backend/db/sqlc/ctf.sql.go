@@ -75,7 +75,8 @@ SELECT
     challenges.name AS challenge_name,
     challenges.description AS challenge_description,
     challenges.flag,
-    challenges.created_at AS challenge_created_at
+    challenges.created_at AS challenge_created_at,
+    challenges.hedgedoc_url as hedgedoc_url
 FROM 
     challenges
 JOIN 
@@ -90,6 +91,7 @@ type GetCTFChallengesRow struct {
 	ChallengeDescription string       `json:"challenge_description"`
 	Flag                 string       `json:"flag"`
 	ChallengeCreatedAt   sql.NullTime `json:"challenge_created_at"`
+	HedgedocUrl          string       `json:"hedgedoc_url"`
 }
 
 func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTFChallengesRow, error) {
@@ -107,6 +109,7 @@ func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTF
 			&i.ChallengeDescription,
 			&i.Flag,
 			&i.ChallengeCreatedAt,
+			&i.HedgedocUrl,
 		); err != nil {
 			return nil, err
 		}

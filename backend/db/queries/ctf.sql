@@ -89,7 +89,8 @@ SELECT
     challenges.name AS challenge_name,
     challenges.description AS challenge_description,
     challenges.flag,
-    challenges.created_at AS challenge_created_at
+    challenges.created_at AS challenge_created_at,
+    challenges.hedgedoc_url as hedgedoc_url
 FROM 
     challenges
 JOIN 

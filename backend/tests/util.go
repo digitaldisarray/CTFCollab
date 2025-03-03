@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -258,4 +259,43 @@ func CreateChallenge(token, phrase, name, description, flag string, client *rest
 	}
 
 	return challengeResp.ChallengeName, challengeResp.HedgeDocURL, nil
+}
+
+// GetChallengesResponse matches the JSON structure returned by the API endpoint GET /ctfs/:phrase/challenges.
+type GetCTFChallengesRow struct {
+	ChallengeID          int32        `json:"challenge_id"`
+	ChallengeName        string       `json:"challenge_name"`
+	ChallengeDescription string       `json:"challenge_description"`
+	Flag                 string       `json:"flag"`
+	ChallengeCreatedAt   sql.NullTime `json:"challenge_created_at"`
+	HedgedocURL          string       `json:"hedgedoc_url"`
+}
+
+// GetCTFChallenges makes a GET request to /ctfs/:phrase/challenges and returns the list of challenges.
+func GetCTFChallenges(token, phrase string, client *resty.Client) ([]GetCTFChallengesRow, error) {
+	url := fmt.Sprintf("http://localhost:1337/ctfs/%s/challenges", phrase)
+
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
+		Get(url)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to send GET request for challenges: %w", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf(
+			"unexpected status code %d from GetCTFChallenges, body: %s",
+			resp.StatusCode(),
+			resp.String(),
+		)
+	}
+
+	var challenges []GetCTFChallengesRow
+	if err := json.Unmarshal(resp.Body(), &challenges); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal get challenges response: %w", err)
+	}
+
+	return challenges, nil
 }
