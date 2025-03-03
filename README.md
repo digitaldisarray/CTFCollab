@@ -3,13 +3,14 @@ Collaborative tool for CTF (capture the flag) teams to keep track of and collabo
 
 
 ## Table of contents
-- [Running in docker](#running-in-docker-recommended)
+- [Running in docker](#running-in-docker)
+- [Running for frontend development](#running-for-frontend-development)
 - [Running locally](#running-locally)
 - [Running backend test suite](#running-the-backend-test-suite)
 
 
 
-## Running in docker (recommended)
+## Running in docker
 Create a `.env` file in the root directory of CTFCollab. Here is a template:
 ```
 MYSQL_ROOT_PASSWORD=CHANGE_ME
@@ -17,6 +18,11 @@ MYSQL_DATABASE=ctfcollab
 MYSQL_USER=ctfuser
 MYSQL_PASSWORD=CHANGE_ME
 MYSQL_URL=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(db:3306)/${MYSQL_DATABASE}?multiStatements=true&parseTime=true
+CMD_DB_URL=mysql://hedgedoc:hedgedoc_pass@db:3306/hedgedoc
+CMD_DOMAIN=localhost:3001
+HEDGEDOC_URL=http://hedgedoc:3000
+CMD_PROTOCOL_USESSL=false
+CMD_URL_ADDPORT=false
 TEST_MODE=False
 ADMIN_USERNAME=Admin
 ADMIN_PASSWORD=CHANGE_ME
@@ -39,6 +45,17 @@ docker volume rm ctfcollab_db-data
 # or, to remove the database while spinning the containers down
 docker compose down -v
 ```
+
+## Running for frontend development
+For frontend development, it helps to not run the frontend in docker so it auto updated with each change to the source code.
+```bash
+# Run just the backed in docker
+docker compose up -f compose.backend_only.yaml
+
+# Run the frontend outside of docker (make sure to do npm install)
+npm run dev
+```
+
 
 ## Running locally
 
@@ -70,6 +87,8 @@ Running code: `go run .` while in the backend directory
 
 You can modify the queries and schema in `backend/db/`. Once you modify them, use `sqlc generate` to generate the corresponding go code. You will need to [install sqlc](https://docs.sqlc.dev/en/stable/overview/install.html) to do so. 
 
+
+Also, we recommend using the mysql docker container to run the database locally
 
 ## Running the backend test suite
 

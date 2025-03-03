@@ -26,15 +26,21 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 	claims := user.Claims.(*auth.CustomClaims)
 	id := int32(claims.Id)
 
-	// TODO: Check if user is a guest or logged in, if guest lookup with a guest query instead
-
-	// Look up CTFs that logged in user belongs to
-	ctfs, err := h.Queries.ListUsersCTFs(c.Request().Context(), id)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if claims.LoggedIn {
+		// Look up CTFs that logged in user belongs to
+		ctfs, err := h.Queries.ListUsersJoinedCTFs(c.Request().Context(), id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		return c.JSON(http.StatusOK, ctfs)
+	} else {
+		// Look up CTFs that guest belongs to
+		ctfs, err := h.Queries.ListGuestsJoinedCTFs(c.Request().Context(), id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		return c.JSON(http.StatusOK, ctfs)
 	}
-
-	return c.JSON(http.StatusOK, ctfs)
 }
 
 func (h *Handler) GetCTF(c echo.Context) error {
@@ -146,30 +152,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *Handler) GetChallenges(c echo.Context) error {
-	challenges, err := h.Queries.GetCTFChallenges(c.Request().Context(), c.Param("phrase"))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, challenges)
-}
-
-func (h *Handler) CreateChallenge(c echo.Context) error {
-	challenge := new(db.CreateChallengeParams)
-	if err := c.Bind(challenge); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	challenge.Phrase = c.Param("phrase") // Set the target CTF to add challenge under
-
-	_, err := h.Queries.CreateChallenge(c.Request().Context(), *challenge)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.NoContent(http.StatusOK)
-}
 
 // helper struct for SearchCTFs
 type OuterSearchParams struct {

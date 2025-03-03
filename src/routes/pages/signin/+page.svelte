@@ -9,7 +9,7 @@
         e.preventDefault()
         const loginData = {
             "username": email, 
-            "password_hash": password
+            "password": password
         }
         try {
 
@@ -32,6 +32,23 @@
         }
     }
 
+    import { onMount } from 'svelte';
+
+    let isDarkMode = false;
+
+    onMount(() => {
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    isDarkMode = systemTheme.matches;
+
+    // Apply dark mode class
+    document.documentElement.classList.toggle('dark', isDarkMode);
+
+    // Listen for changes in system setting
+    systemTheme.addEventListener('change', (event) => {
+        isDarkMode = event.matches;
+        document.documentElement.classList.toggle('dark', isDarkMode);
+    });
+    });
 </script>
 
 <div class="login-container">
@@ -41,6 +58,7 @@
         
         <div class="form-container">
             <form class="flex flex-col w-full max-w-sm items-center space-y-2">
+
                 <Input type="email" bind:value={email} placeholder="me@example.com..." />
                 <Input type="password" bind:value={password} placeholder="Enter your password" />
                 <Button href="src\routes\admin-account.svelte" type="submit" onclick={login}>Log In</Button>
@@ -66,7 +84,6 @@
         justify-content: center;
         height: 100vh;
         text-align: center;
-        background-color: #f0f0f0;
         padding: 20px;
     }
 

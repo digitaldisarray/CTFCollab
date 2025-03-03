@@ -30,10 +30,11 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// CTF routes
 	{
+
 		ctfs := e.Group("/ctfs")
 		ctfs.Use(echojwt.WithConfig(config))
-		ctfs.GET("/", handler.GetAllCTFs, auth.AdminOnly)
-		ctfs.POST("/", handler.CreateCTF)
+		ctfs.GET("", handler.GetAllCTFs, auth.AdminOnly)
+		ctfs.POST("", handler.CreateCTF)
 		ctfs.GET("/joined", handler.GetJoinedCTFs)
 		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // can be changed I think
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))

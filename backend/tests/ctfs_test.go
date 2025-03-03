@@ -60,6 +60,42 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Create a challenge under the newly-created CTF
+	challengeName := "Sample Challenge"
+	challengeDescription := "A sample challenge description"
+	challengeFlag := "flag{test}"
+	createdName, hedgeDocURL, err := CreateChallenge(token, phrase, challengeName, challengeDescription, challengeFlag, client)
+	if err != nil {
+		t.Fatalf("Failed to create challenge: %v", err)
+	}
+
+	t.Logf("Challenge created successfully! Name: %s, HedgeDoc URL: %s", createdName, hedgeDocURL)
+
+	// Create the second challenge
+	secondName := "Another Challenge"
+	secondDesc := "A second challenge description"
+	secondFlag := "flag{test2}"
+	createdName2, hedgeDocURL2, err := CreateChallenge(token, phrase, secondName, secondDesc, secondFlag, client)
+	if err != nil {
+		t.Fatalf("Failed to create second challenge: %v", err)
+	}
+	t.Logf("Second challenge created successfully! Name: %s, HedgeDoc URL: %s", createdName2, hedgeDocURL2)
+
+	// Get challenges for the phrase and verify our new challenge is present
+	t.Log("Retrieving challenges for CTF")
+	challenges, err := GetCTFChallenges(token, phrase, client)
+	if err != nil {
+		t.Fatalf("Failed to get challenges: %v", err)
+	}
+	if len(challenges) == 0 {
+		t.Fatalf("Expected at least 1 challenge, got 0")
+	}
+
+	t.Log("Listing all challenges:")
+	for i, ch := range challenges {
+		t.Logf("Challenge #%d: %+v", i+1, ch)
+	}
+
 	// Rename CTF
 	t.Log("Renaming CTF")
 	new_name := RandomString(9)

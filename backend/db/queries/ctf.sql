@@ -52,7 +52,7 @@ INSERT INTO guest_ctfs (
     ?, ?
 );
 
--- name: ListUsersCTFs :many
+-- name: ListUsersJoinedCTFs :many
 SELECT 
     ctfs.name AS ctf_name,
     ctfs.description AS ctf_description,
@@ -67,13 +67,30 @@ JOIN
 WHERE 
     user_ctfs.user_id = ?;
 
+-- name: ListGuestsJoinedCTFs :many
+SELECT 
+    ctfs.name AS ctf_name,
+    ctfs.description AS ctf_description,
+    ctfs.start_date,
+    ctfs.end_date,
+    ctfs.author_id AS ctf_author_id,
+    ctfs.phrase
+FROM 
+    ctfs
+JOIN 
+    guest_ctfs ON ctfs.id = guest_ctfs.ctf_id
+WHERE 
+    guest_ctfs.guest_id = ?;
+
+
 -- name: GetCTFChallenges :many
 SELECT 
     challenges.id AS challenge_id,
     challenges.name AS challenge_name,
     challenges.description AS challenge_description,
     challenges.flag,
-    challenges.created_at AS challenge_created_at
+    challenges.created_at AS challenge_created_at,
+    challenges.hedgedoc_url as hedgedoc_url
 FROM 
     challenges
 JOIN 

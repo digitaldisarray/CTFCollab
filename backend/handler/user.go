@@ -64,7 +64,8 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	}
 
 	// Make sure user was created
-	if _, err = VerifyParseResult(result, 1); err != nil {
+	_, err = VerifyParseResult(result, 1)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
