@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -38,7 +39,11 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 }
 
 func createHedgeDocNote() (string, error) {
-	hedgedocAPI := "http://localhost:3001/new"
+	hedgeDocURL := os.Getenv("HEDGEDOC_URL")
+	if hedgeDocURL == "" {
+		hedgeDocURL = "http://hedgedoc:3000"
+	}
+	hedgedocAPI := hedgeDocURL + "/new"
 
 	req, err := http.NewRequest("POST", hedgedocAPI, strings.NewReader("# Challenge Notes"))
 	if err != nil {

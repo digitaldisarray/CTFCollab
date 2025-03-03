@@ -53,13 +53,23 @@ func TestCTFEndToEnd(t *testing.T) {
 	}
 	ctfs = append(ctfs, phrase) // Add CTF to list to be deleted it later
 
-
 	// Get the CTF to make sure it exists
 	t.Log("Make sure CTF was created")
 	body, err := GetCTF(token, phrase, client)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// Create a challenge under the newly-created CTF
+	challengeName := "Sample Challenge"
+	challengeDescription := "A sample challenge description"
+	challengeFlag := "flag{test}"
+	createdName, hedgeDocURL, err := CreateChallenge(token, phrase, challengeName, challengeDescription, challengeFlag, client)
+	if err != nil {
+		t.Fatalf("Failed to create challenge: %v", err)
+	}
+
+	t.Logf("Challenge created successfully! Name: %s, HedgeDoc URL: %s", createdName, hedgeDocURL)
 
 	// Rename CTF
 	t.Log("Renaming CTF")
