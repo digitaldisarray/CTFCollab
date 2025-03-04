@@ -276,7 +276,6 @@ func GetCTFChallenges(token, phrase string, client *resty.Client) ([]GetCTFChall
 	url := fmt.Sprintf("http://localhost:1337/ctfs/%s/challenges", phrase)
 
 	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 		Get(url)
 
@@ -298,4 +297,31 @@ func GetCTFChallenges(token, phrase string, client *resty.Client) ([]GetCTFChall
 	}
 
 	return challenges, nil
+}
+
+func GetChallenge(token string, phrase string, id int32, client *resty.Client) (map[string]interface{}, error) {
+	url := fmt.Sprintf("http://localhost:1337/ctfs/%s/challenge/%d", phrase, id)
+
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
+		Get(url)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to send GET request for challenge: %w", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf(
+			"unexpected status code %d from GetChallenge, body: %s",
+			resp.StatusCode(),
+			resp.String(),
+		)
+	}
+	var responseBody map[string]interface{}
+	if err := json.Unmarshal(resp.Body(), &responseBody); err != nil {
+		return nil, fmt.Errorf("failed to parse response body: %v", err)
+	}
+
+	return responseBody, nil
 }
