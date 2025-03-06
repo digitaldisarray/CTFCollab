@@ -19,7 +19,7 @@ func loadWords(wordlist string) error {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	words = strings.Split(string(data), "\n")
+	words = strings.Split(strings.ReplaceAll(string(data), "\r", ""), "\n")
 	return nil
 }
 

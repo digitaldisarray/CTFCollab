@@ -18,6 +18,19 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.CORS()) // Dev env only?
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"}, // Your Svelte dev server
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+			"X-Requested-With",
+		},
+		AllowCredentials: true,
+	}))
+
 	e.Use(middleware.Recover())
 	// TODO: Rate limit?
 

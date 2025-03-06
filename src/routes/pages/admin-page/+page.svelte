@@ -7,16 +7,76 @@
   let { data: pageData }: { data: PageData } = $props();
 
   import DataTable from "./data-table.svelte";
-  import { columns } from "./columns.js";
+  import ColumnDef from "./data-table.svelte";
+  import { columns, type Challenge, type CTF } from "./columns.js";
   import { data } from "./columns.js";
   import { getLocalTimeZone, today } from "@internationalized/date";
   import { Calendar } from "$lib/components/ui/calendar/index.js";
   import { goto } from "$app/navigation";
+  import { onMount } from 'svelte';
+
+  let value = [today(getLocalTimeZone())];
+
+  let ctfData: CTF[];
+  let conformData: Challenge[] = $state([]);
+  let loading = $state(true);
+  const getUsersCTFs = async () => {
+    const token = localStorage.getItem("jwtToken");
+    if(!token){
+      console.error("No token found");
+      goto('/pages/signin');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:1337/ctfs/joined', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        ctfData = await response.json();
+        
+        if (Array.isArray(ctfData) && ctfData.length > 0) {
+          conformData = ctfData.map((ctf) => {
+            const today = new Date();
+            let ctfDate = new Date(ctf.start_date);
+            let status: "completed" | "pending" | "in progress" = "pending";
+            
+            if(ctfDate < today){
+              status = "completed"
+            } else if (ctfDate.toDateString() === today.toDateString()){
+              status = "in progress"
+            }
+            
+            return {
+              id: String(ctf.phrase),
+              name: ctf.ctf_name,
+              date: ctfDate.toISOString(),
+              status: status as "completed" | "pending" | "in progress" | "canceled",
+              members: 0,
+            }
+          });
+          loading = false;
+        } else {
+          loading = false;
+          conformData = [];
+        }
+
+      } else {
+        conformData = [];
+      }
+    }catch (error) {
+      console.error("Error occured", error);
+    }
+  }
 
 
-  let value = today(getLocalTimeZone());
-
-
+  onMount(() => {
+    getUsersCTFs();
+  })
 
 </script>
 
@@ -31,7 +91,9 @@
     </header>
 
     <!-- DataTable -->
-    <DataTable {data} {columns} />
+
+    <DataTable data={conformData} {columns} />
+
   </div>
   <div class="container">
     <!-- Header -->
@@ -52,7 +114,7 @@
       </Popover.Root>
       <br />
       <div class="calendar-wrapper">
-        <Calendar bind:value class="rounded-md border" />
+        <Calendar bind:value={value} type="multiple" class="rounded-md border" />
       </div>
     </div>
     

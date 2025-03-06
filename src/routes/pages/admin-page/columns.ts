@@ -16,15 +16,19 @@ export type Challenge = {
     status: "pending" | "completed" | "in progress" | "canceled";
     date: string;
     name: string;
-  };
+};
 
 
-
-
-
+export type CTF = {
+    ctf_author_id: string;  
+    ctf_description: string;
+    ctf_name: string;
+    start_date: Date;
+    end_date: Date;
+    phrase: string;
+}
 
 export const columns: ColumnDef<Challenge>[] = [
-
 
     {
         accessorKey: "status",
@@ -86,6 +90,9 @@ export const columns: ColumnDef<Challenge>[] = [
         },
       },
     ];
+
+
+
 
 
 export const data: Challenge[] = [

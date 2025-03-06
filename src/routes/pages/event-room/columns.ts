@@ -12,7 +12,7 @@ export type Challenge = {
     active_members: number;
     status: "pending" | "processing" | "success" | "failed";
     name: string;
-  };
+};
 
 
 

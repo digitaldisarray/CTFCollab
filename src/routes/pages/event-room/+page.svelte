@@ -1,14 +1,60 @@
 <script lang="ts">
     import DataTable from "./data-table.svelte";
-    import { columns } from "./columns.js";
+    import { columns, type Challenge } from "./columns.js";
     import { data } from "./columns.js";
-
+    import { page } from '$app/stores'; 
     import * as Popover from "$lib/components/ui/popover/index.js";
     import { Input } from "$lib/components/ui/input/index.js"; // Add Input component
     import { Button } from "$lib/components/ui/button/index.js"; // Add Button component
     import type { PageData } from "./$types.js";
     import SettingsForm from "./settings-form.svelte";
     let { data: pageData }: { data: PageData } = $props();
+
+    let roomcode = '';
+    let challenges: Challenge[] = $state([]);
+    const getChallenges = async () => {
+
+        
+        const token = localStorage.getItem("jwtToken");
+        if(!token){
+            console.error("No token found");
+            return;
+        }
+        
+        try {
+            const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                let challengeData = await response.json();
+                if(Array.isArray(challengeData) && challengeData.length > 0){
+                    challenges = challengeData.map((challenge) => {
+                        return {
+                            name: challenge.challenge_name,
+                            active_members: 0,
+                            status: "pending",
+                            id: challenge.phrase
+                        }
+                    });
+                }
+            } else {
+                console.error("Failed to fetch challenges");
+            }
+        } catch (error) {
+            console.error("Error occured", error);
+        }
+    }
+    $effect(() => {
+        roomcode = $page.url.searchParams.get('code') || "";
+        getChallenges();
+    });
+    
+    
   </script>
   
   <div class="page-container">
@@ -34,7 +80,7 @@
       </div>
   
       <!-- DataTable -->
-      <DataTable {data} {columns} />
+      <DataTable data={challenges} {columns} />
     </div>
     <div class="container">
         <!-- Header -->
