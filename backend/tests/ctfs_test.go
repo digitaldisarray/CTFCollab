@@ -96,6 +96,18 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Logf("Challenge #%d: %+v", i+1, ch)
 	}
 
+	//Get challenge with id param and output it
+	t.Log("Retrieving challenge with id")
+
+	id := challenges[0].ChallengeID
+	t.Log(token)
+	challenge, err := GetChallenge(token, phrase, id, client)
+	if err != nil {
+		t.Fatalf("Failed to get challenge: %v", err)
+	}
+
+	t.Logf("Challenge id#%d: %+v", id, challenge)
+
 	// Rename CTF
 	t.Log("Renaming CTF")
 	new_name := RandomString(9)

@@ -83,6 +83,22 @@ func (h *Handler) GetChallenges(c echo.Context) error {
 	return c.JSON(http.StatusOK, challenges)
 }
 
+func (h *Handler) GetChallenge(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid challenge ID")
+	}
+
+	ctx := context.Background()
+
+	challenge, err := h.Queries.GetChallenge(ctx, int32(id))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid challenge ID")
+	}
+
+	return c.JSON(http.StatusOK, challenge)
+}
+
 func (h *Handler) CreateChallenge(c echo.Context) error {
 	challenge := new(db.CreateChallengeParams)
 	if err := c.Bind(challenge); err != nil {
