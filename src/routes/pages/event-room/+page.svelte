@@ -1,17 +1,52 @@
 <script lang="ts">
     import DataTable from "./data-table.svelte";
     import { columns, type Challenge } from "./columns.js";
-    import { data } from "./columns.js";
+
     import { page } from '$app/stores'; 
     import * as Popover from "$lib/components/ui/popover/index.js";
     import { Input } from "$lib/components/ui/input/index.js"; // Add Input component
     import { Button } from "$lib/components/ui/button/index.js"; // Add Button component
     import type { PageData } from "./$types.js";
     import SettingsForm from "./settings-form.svelte";
+    import {currentCTF, challenges} from "./columns.js"
+    import { type CTF  } from "../admin-page/columns.js" //
+    
     let { data: pageData }: { data: PageData } = $props();
 
     let roomcode = '';
-    let challenges: Challenge[] = $state([]);
+    
+    const getCurrentCTF = async () => {
+      const token = localStorage.getItem("jwtToken");
+      if(!token){
+        console.error("No token found");
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:1337/ctfs/${roomcode}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if(res.ok){
+          let ctfData = await res.json()
+          
+          currentCTF.set({
+            ctf_id: ctfData.id,
+            ctf_author_id: ctfData.author_id,
+            ctf_description: ctfData.description,
+            ctf_name: ctfData.name,
+            start_date: ctfData.start_date,
+            end_date: ctfData.end_date,
+            phrase:ctfData.phrase
+          })
+        } 
+      } catch(error){
+        console.error("Error fetching current CTF")
+      }
+    }
+
     const getChallenges = async () => {
 
         
@@ -33,14 +68,16 @@
             if (response.ok) {
                 let challengeData = await response.json();
                 if(Array.isArray(challengeData) && challengeData.length > 0){
-                    challenges = challengeData.map((challenge) => {
+                    challenges.set(challengeData.map((challenge) => {
                         return {
                             name: challenge.challenge_name,
                             active_members: 0, // TODO: need to add a members to backend or have some way to check it
                             status: "pending", // TODO: need to add a status to the backend maybe? or just remove
-                            id: challenge.phrase
+                            id: "",
+                            hedgedoc_url: challenge.hedgedoc_url
                         }
-                    });
+                    })
+                  )
                 }
             } else {
                 console.error("Failed to fetch challenges");
@@ -52,6 +89,7 @@
     $effect(() => {
         roomcode = $page.url.searchParams.get('code') || "";
         getChallenges();
+        getCurrentCTF();
     });
     
     
@@ -80,7 +118,7 @@
       </div>
   
       <!-- DataTable -->
-      <DataTable data={challenges} {columns} />
+      <DataTable data={$challenges} {columns} />
     </div>
     <div class="container">
         <!-- Header -->

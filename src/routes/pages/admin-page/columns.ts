@@ -9,7 +9,14 @@ import DataTableStatusButton from "./data-status-button.svelte";
 import DataTableDateButton from "./data-date-button.svelte";
 import { writable } from "svelte/store";
 
- 
+/**
+ *CURRENT USE: 
+  id = phrase
+  members = default to 0
+  status = default to pending
+  date = start_date 
+  name = name
+ */
 export type Challenge = {
     id: string;
     members: number;
@@ -20,8 +27,9 @@ export type Challenge = {
 
 
 export type CTF = {
-    ctf_author_id: string;  
-    ctf_description: string;
+    ctf_id: number,
+    ctf_author_id: string | null;  
+    ctf_description: string | null;
     ctf_name: string;
     start_date: Date;
     end_date: Date;
@@ -120,47 +128,47 @@ export const columns: ColumnDef<Challenge>[] = [
 
 
 
-export const data: Challenge[] = [
-    {
-      id: "1",
-      members: 2,
-      status: "pending",
-      date: "2023-10-01",
-      name: "Event 3",
-    },
-    {
-      id: "2",
-      members: 1,
-      status: "completed",
-      date: "2023-10-01",
-      name: "Event 1",
-    },
-    {
-        id: "3",
-        members: 3,
-        status: "completed",
-        date: "2023-10-01",
-        name: "Event 2",
-    },
-    {
-      id: "4",
-      members: 2,
-      status: "completed",
-      date: "2023-10-01",
-      name: "Event 5",
-    },
-    {
-      id: "5",
-      members: 1,
-      status: "in progress",
-      date: "2023-10-01",
-      name: "Event 6",
-    },
-    {
-        id: "6",
-        members: 3,
-        status: "pending",
-        date: "2023-10-01",
-        name: "Event 4",
-    },
-];
+// export const data: Challenge[] = [
+//     {
+//       id: "1",
+//       members: 2,
+//       status: "pending",
+//       date: "2023-10-01",
+//       name: "Event 3",
+//     },
+//     {
+//       id: "2",
+//       members: 1,
+//       status: "completed",
+//       date: "2023-10-01",
+//       name: "Event 1",
+//     },
+//     {
+//         id: "3",
+//         members: 3,
+//         status: "completed",
+//         date: "2023-10-01",
+//         name: "Event 2",
+//     },
+//     {
+//       id: "4",
+//       members: 2,
+//       status: "completed",
+//       date: "2023-10-01",
+//       name: "Event 5",
+//     },
+//     {
+//       id: "5",
+//       members: 1,
+//       status: "in progress",
+//       date: "2023-10-01",
+//       name: "Event 6",
+//     },
+//     {
+//         id: "6",
+//         members: 3,
+//         status: "pending",
+//         date: "2023-10-01",
+//         name: "Event 4",
+//     },
+// ];

@@ -26,17 +26,71 @@
     } from "sveltekit-superforms";
     import { z } from "zod";
     import { zodClient } from "sveltekit-superforms/adapters";
-  
+    import { onMount } from "svelte";
+    import { type CTF } from "../admin-page/columns.js" 
+    import  { challenges, currentCTF, type Challenge } from "./columns.js"
     let { data }: { data: { form: SuperValidated<Infer<FormSchema>> } } = $props();
   
     const form = superForm(data.form, {
       validators: zodClient(formSchema),
     });
-  
+    
+    
     const { form: formData, enhance } = form;
+
+    const handleSubmit = async(e: Event)=> {
+      e.preventDefault();
+      const token = localStorage.getItem("jwtToken");
+      if(!token){
+        console.error("No token found");
+        return;
+      }
+
+      const name = $formData.challengeName
+      if (!name){
+        return;
+      }
+      const description = $formData.challengeDetails
+      const flag = $formData.challengeFlag
+
+
+      try {
+        const response = await fetch(`http://localhost:1337/ctfs/${$currentCTF.phrase}/challenges`, {
+
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            "name": name,
+            "description": description,
+            "flag": flag,
+          })
+        })
+        if(response.ok){
+          let challengeData = await response.json()
+          let newChallenge: Challenge = {
+            id: "",
+            hedgedoc_url: challengeData.hedgedoc_url,
+            active_members: 0,
+            status: "pending" as"pending" | "processing" | "success" | "failed",
+            name: name
+          }
+  
+          challenges.update((c)=> [...c, newChallenge])
+        } else {
+
+          console.error("Failed to submit form")
+        }
+      } catch(error){
+        console.error("Unable to submit challenge")
+      }
+    }
+
   </script>
   
-  <form method="POST" use:enhance>
+  <form method="POST" use:enhance onsubmit={handleSubmit}>
     <!-- Challenge Name Field -->
     <Form.Field {form} name="challengeName">
       <Form.Control>
@@ -52,13 +106,25 @@
     <Form.Field {form} name="challengeDetails">
         <Form.Control>
           {#snippet children({ props })}
-            <Form.Label>Challenge Details</Form.Label>
+            <Form.Label>(Optional) Challenge Details</Form.Label>
             <Input {...props} bind:value={$formData.challengeDetails} />
           {/snippet}
         </Form.Control>
         <Form.Description>Describe the details of this challenge</Form.Description>
         <Form.FieldErrors />
-      </Form.Field>
+    </Form.Field>
+
+    <!-- Flag Field -->
+    <Form.Field {form} name="challengeFlag">
+        <Form.Control>
+          {#snippet children({ props })}
+            <Form.Label>(Optional) Challenge Flag</Form.Label>
+            <Input {...props} bind:value={$formData.challengeFlag} />
+          {/snippet}
+        </Form.Control>
+        <Form.Description>The flag for this challenge</Form.Description>
+        <Form.FieldErrors />
+    </Form.Field>
   
     <!-- Submit Button -->
     <Form.Button>Submit</Form.Button>
