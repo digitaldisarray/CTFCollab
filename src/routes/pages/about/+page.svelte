@@ -45,17 +45,6 @@
         </div>
     </div>
     <style>
-      .about {
-        text-align: center;
-        display: block;
-        margin: 20px auto;
-      }
-
-      .about h1 {
-        font-size: 2.5rem;
-        color: #333;
-        margin-bottom: 10px;
-      }
       .about-container {
         display: flex;
         flex-direction: column;
@@ -108,8 +97,6 @@
             line-height: 1.6;
         }
 
-
-        
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -171,33 +158,7 @@
             justify-content: center;
             margin-right: 0.8rem;
         }
-        
-        .cta {
-            text-align: center;
-            padding: 3rem 2rem;
-            border-radius: 8px;
-            margin: 3rem 0;
-        }
-        
-        .cta h2 {
-            margin-top: 0;
-        }
-        
-        .btn {
-            display: inline-block;
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 1rem;
-            transition: background-color 0.3s ease;
-        }
-        
-        .btn:hover {
-            background-color: #0284c7;
-        }
-        
+             
         footer {
             padding: 2rem;
             text-align: center;
@@ -206,7 +167,7 @@
         }
     </style>
     <footer>
-        <p1>&copy; 2025 CTF Collaboration Platform. All rights reserved.</p1>
+        <p1>&copy; 2025 CTF-Collab. All rights reserved.</p1>
     </footer>
 </body>
   
