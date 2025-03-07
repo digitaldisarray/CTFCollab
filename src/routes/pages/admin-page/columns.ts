@@ -28,6 +28,32 @@ export type CTF = {
     phrase: string;
 }
 
+export const ctfData = writable<Challenge[]>([]) // so the CTF list is rememeber across states
+
+// format CTF's to challenges
+export function formatData(ctf: Array<CTF>): Challenge[]{
+  let newData = ctf.map((c) => {
+      const today = new Date();
+      let ctfDate = new Date(c.start_date);
+      let status: "completed" | "pending" | "in progress" = "pending";
+      
+      if(ctfDate < today){  
+        status = "completed"
+      } else if (ctfDate.toDateString() === today.toDateString()){
+        status = "in progress"
+      }
+      
+      return {
+        id: String(c.phrase),
+        name: c.ctf_name,
+        date: ctfDate.toISOString(),
+        status: status as "completed" | "pending" | "in progress" | "canceled",
+        members: 0,
+      }
+  });
+  return newData;
+}
+
 export const columns: ColumnDef<Challenge>[] = [
 
     {
@@ -92,31 +118,7 @@ export const columns: ColumnDef<Challenge>[] = [
     ];
 
 
-export const ctfData = writable<Challenge[]>([])
 
-
-export function formatData(ctf: Array<CTF>): Challenge[]{
-  let newData = ctf.map((c) => {
-      const today = new Date();
-      let ctfDate = new Date(c.start_date);
-      let status: "completed" | "pending" | "in progress" = "pending";
-      
-      if(ctfDate < today){ // TODO: add a status to backend 
-        status = "completed"
-      } else if (ctfDate.toDateString() === today.toDateString()){
-        status = "in progress"
-      }
-      
-      return {
-        id: String(c.phrase),
-        name: c.ctf_name,
-        date: ctfDate.toISOString(),
-        status: status as "completed" | "pending" | "in progress" | "canceled",
-        members: 0,
-      }
-  });
-  return newData;
-}
 
 export const data: Challenge[] = [
     {

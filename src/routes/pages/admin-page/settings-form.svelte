@@ -85,7 +85,7 @@
         const data = await response.json();
         
         let newCTF: Challenge = {
-          id: data,
+          id: data.phrase,
           members: 0,
           status: "pending",
           date: start_date!!.toString(),
