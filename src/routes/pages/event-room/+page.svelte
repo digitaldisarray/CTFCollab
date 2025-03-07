@@ -36,8 +36,8 @@
                     challenges = challengeData.map((challenge) => {
                         return {
                             name: challenge.challenge_name,
-                            active_members: 0,
-                            status: "pending",
+                            active_members: 0, // TODO: need to add a members to backend or have some way to check it
+                            status: "pending", // TODO: need to add a status to the backend maybe? or just remove
                             id: challenge.phrase
                         }
                     });

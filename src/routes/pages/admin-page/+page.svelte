@@ -45,7 +45,7 @@
             let ctfDate = new Date(ctf.start_date);
             let status: "completed" | "pending" | "in progress" = "pending";
             
-            if(ctfDate < today){
+            if(ctfDate < today){ // TODO: add a status to backend 
               status = "completed"
             } else if (ctfDate.toDateString() === today.toDateString()){
               status = "in progress"
