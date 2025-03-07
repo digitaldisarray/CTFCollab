@@ -82,7 +82,7 @@
         if (isChallenge(row.original)) {
             let ctf: Challenge = row.original;
             if (ctf) {
-                console.log(ctf)
+                
                 window.open(ctf.hedgedoc_url, "_blank");
             }
         }
