@@ -7,7 +7,7 @@ import { Checkbox } from "$lib/components/ui/checkbox/index.js";
 import DataTableNameButton from "./data-name-button.svelte";
 import DataTableStatusButton from "./data-status-button.svelte";
 import DataTableDateButton from "./data-date-button.svelte";
-
+import { writable } from "svelte/store";
 
  
 export type Challenge = {
@@ -92,8 +92,31 @@ export const columns: ColumnDef<Challenge>[] = [
     ];
 
 
+export const ctfData = writable<Challenge[]>([])
 
 
+export function formatData(ctf: Array<CTF>): Challenge[]{
+  let newData = ctf.map((c) => {
+      const today = new Date();
+      let ctfDate = new Date(c.start_date);
+      let status: "completed" | "pending" | "in progress" = "pending";
+      
+      if(ctfDate < today){ // TODO: add a status to backend 
+        status = "completed"
+      } else if (ctfDate.toDateString() === today.toDateString()){
+        status = "in progress"
+      }
+      
+      return {
+        id: String(c.phrase),
+        name: c.ctf_name,
+        date: ctfDate.toISOString(),
+        status: status as "completed" | "pending" | "in progress" | "canceled",
+        members: 0,
+      }
+  });
+  return newData;
+}
 
 export const data: Challenge[] = [
     {

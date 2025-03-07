@@ -18,7 +18,7 @@
     import * as Form from "$lib/components/ui/form/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { formSchema, type FormSchema } from "./schema";
-    
+    import { ctfData, formatData, type Challenge } from "./columns.js";
     import {
       type SuperValidated,
       type Infer,
@@ -26,6 +26,7 @@
     } from "sveltekit-superforms";
     import { z } from "zod";
     import { zodClient } from "sveltekit-superforms/adapters";
+    import { id } from "date-fns/locale";
   
     let { data }: { data: { form: SuperValidated<Infer<FormSchema>> } } = $props();
   
@@ -60,21 +61,38 @@
             console.error("No token found");
             return;
       }
+
+      const name = $formData.ctfName;
+      const start_date = formatDate($formData.start_date)
+      const end_date = formatDate($formData.end_date)
+      const description = $formData.ctfDescription
+      const jsonBody = JSON.stringify({
+          "name": name,
+          "start_date": start_date,
+          "end_date": end_date,
+          "description": description
+      })
+      
       const response = await fetch('http://localhost:1337/ctfs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          "name": $formData.ctfName,
-          "start_date": formatDate($formData.start_date),
-          "end_date": formatDate($formData.end_date),
-          "description": $formData.ctfDescription,
-        }),
+        body: jsonBody
       });
       if (response.ok) {
         const data = await response.json();
+        
+        let newCTF: Challenge = {
+          id: data,
+          members: 0,
+          status: "pending",
+          date: start_date!!.toString(),
+          name: name
+        };
+        console.log(newCTF)
+        ctfData.update((ctf)=>[...ctf, newCTF])
         
       } else {
         console.error("Failed to submit form");

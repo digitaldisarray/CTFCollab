@@ -1,25 +1,26 @@
 <script lang="ts">
   import * as Popover from "$lib/components/ui/popover/index.js";
-  import { Input } from "$lib/components/ui/input/index.js"; // Add Input component
   import { Button } from "$lib/components/ui/button/index.js"; // Add Button component
   import type { PageData } from "./$types.js";
   import SettingsForm from "./settings-form.svelte";
-  let { data: pageData }: { data: PageData } = $props();
-
   import DataTable from "./data-table.svelte";
-  import ColumnDef from "./data-table.svelte";
   import { columns, type Challenge, type CTF } from "./columns.js";
-  import { data } from "./columns.js";
+  import { ctfData, formatData } from "./columns.js";
   import { getLocalTimeZone, today } from "@internationalized/date";
   import { Calendar } from "$lib/components/ui/calendar/index.js";
   import { goto } from "$app/navigation";
   import { onMount } from 'svelte';
 
+  
+  let { data: pageData }: { data: PageData } = $props();
+
   let value = [today(getLocalTimeZone())];
 
-  let ctfData: CTF[];
   let conformData: Challenge[] = $state([]);
   let loading = $state(true);
+
+
+
   const getUsersCTFs = async () => {
     const token = localStorage.getItem("jwtToken");
     if(!token){
@@ -27,7 +28,7 @@
       goto('/pages/signin');
       return;
     }
-
+    
     try {
       const response = await fetch('http://localhost:1337/ctfs/joined', {
         method: 'GET',
@@ -37,28 +38,10 @@
         }
       });
       if (response.ok) {
-        ctfData = await response.json();
+        let resp = await response.json();
         
-        if (Array.isArray(ctfData) && ctfData.length > 0) {
-          conformData = ctfData.map((ctf) => {
-            const today = new Date();
-            let ctfDate = new Date(ctf.start_date);
-            let status: "completed" | "pending" | "in progress" = "pending";
-            
-            if(ctfDate < today){ // TODO: add a status to backend 
-              status = "completed"
-            } else if (ctfDate.toDateString() === today.toDateString()){
-              status = "in progress"
-            }
-            
-            return {
-              id: String(ctf.phrase),
-              name: ctf.ctf_name,
-              date: ctfDate.toISOString(),
-              status: status as "completed" | "pending" | "in progress" | "canceled",
-              members: 0,
-            }
-          });
+        if (Array.isArray(resp) && resp.length > 0) {
+          ctfData.set(formatData(resp));
           loading = false;
         } else {
           loading = false;
@@ -92,7 +75,7 @@
 
     <!-- DataTable -->
 
-    <DataTable data={conformData} {columns} />
+    <DataTable data={$ctfData} {columns} />
 
   </div>
   <div class="container">
