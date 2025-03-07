@@ -80,7 +80,7 @@
     });
 
 
-
+    // if you click a ctf you get redirected to the event room for that ctf
     const handleClick = (event: Event, row: { original: TData }) => {
         if (isChallenge(row.original)) {
             let ctf: Challenge = row.original;

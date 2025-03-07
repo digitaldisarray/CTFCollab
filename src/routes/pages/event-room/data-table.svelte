@@ -77,6 +77,7 @@
     },
     });
 
+    // handle the click event to redirect to hedgedoc
     const handleClick = (event: Event, row: { original: TData }) => {
         if (isChallenge(row.original)) {
             let ctf: Challenge = row.original;

@@ -20,7 +20,7 @@
   let loading = $state(true);
 
 
-
+  // get all the users ctfs
   const getUsersCTFs = async () => {
     const token = localStorage.getItem("jwtToken");
     if(!token){
