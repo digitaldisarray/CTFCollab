@@ -152,7 +152,6 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-
 // helper struct for SearchCTFs
 type OuterSearchParams struct {
 	Name        interface{} `json:"name"`

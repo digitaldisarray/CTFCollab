@@ -7,24 +7,62 @@ import { Checkbox } from "$lib/components/ui/checkbox/index.js";
 import DataTableNameButton from "./data-name-button.svelte";
 import DataTableStatusButton from "./data-status-button.svelte";
 import DataTableDateButton from "./data-date-button.svelte";
+import { writable } from "svelte/store";
 
-
- 
+/**
+ *CURRENT USE: 
+  id = phrase
+  members = default to 0
+  status = default to pending
+  date = start_date 
+  name = name
+ */
 export type Challenge = {
     id: string;
     members: number;
     status: "pending" | "completed" | "in progress" | "canceled";
     date: string;
     name: string;
-  };
+};
 
 
+export type CTF = {
+    ctf_id: number,
+    ctf_author_id: string | null;  
+    ctf_description: string | null;
+    ctf_name: string;
+    start_date: Date;
+    end_date: Date;
+    phrase: string;
+}
 
+export const ctfData = writable<Challenge[]>([]) // so the CTF list is rememeber across states
 
-
+// format CTF's to challenges
+export function formatData(ctf: Array<CTF>): Challenge[]{
+  let newData = ctf.map((c) => {
+      const today = new Date();
+      let ctfDate = new Date(c.start_date);
+      let status: "completed" | "pending" | "in progress" = "pending";
+      
+      if(ctfDate < today){  
+        status = "completed"
+      } else if (ctfDate.toDateString() === today.toDateString()){
+        status = "in progress"
+      }
+      
+      return {
+        id: String(c.phrase),
+        name: c.ctf_name,
+        date: ctfDate.toISOString(),
+        status: status as "completed" | "pending" | "in progress" | "canceled",
+        members: 0,
+      }
+  });
+  return newData;
+}
 
 export const columns: ColumnDef<Challenge>[] = [
-
 
     {
         accessorKey: "status",
@@ -88,47 +126,49 @@ export const columns: ColumnDef<Challenge>[] = [
     ];
 
 
-export const data: Challenge[] = [
-    {
-      id: "1",
-      members: 2,
-      status: "pending",
-      date: "2023-10-01",
-      name: "Event 3",
-    },
-    {
-      id: "2",
-      members: 1,
-      status: "completed",
-      date: "2023-10-01",
-      name: "Event 1",
-    },
-    {
-        id: "3",
-        members: 3,
-        status: "completed",
-        date: "2023-10-01",
-        name: "Event 2",
-    },
-    {
-      id: "4",
-      members: 2,
-      status: "completed",
-      date: "2023-10-01",
-      name: "Event 5",
-    },
-    {
-      id: "5",
-      members: 1,
-      status: "in progress",
-      date: "2023-10-01",
-      name: "Event 6",
-    },
-    {
-        id: "6",
-        members: 3,
-        status: "pending",
-        date: "2023-10-01",
-        name: "Event 4",
-    },
-];
+
+
+// export const data: Challenge[] = [
+//     {
+//       id: "1",
+//       members: 2,
+//       status: "pending",
+//       date: "2023-10-01",
+//       name: "Event 3",
+//     },
+//     {
+//       id: "2",
+//       members: 1,
+//       status: "completed",
+//       date: "2023-10-01",
+//       name: "Event 1",
+//     },
+//     {
+//         id: "3",
+//         members: 3,
+//         status: "completed",
+//         date: "2023-10-01",
+//         name: "Event 2",
+//     },
+//     {
+//       id: "4",
+//       members: 2,
+//       status: "completed",
+//       date: "2023-10-01",
+//       name: "Event 5",
+//     },
+//     {
+//       id: "5",
+//       members: 1,
+//       status: "in progress",
+//       date: "2023-10-01",
+//       name: "Event 6",
+//     },
+//     {
+//         id: "6",
+//         members: 3,
+//         status: "pending",
+//         date: "2023-10-01",
+//         name: "Event 4",
+//     },
+// ];

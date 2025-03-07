@@ -2,6 +2,8 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
+    import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
     let email = '';
     let password = '';
     const login = async(e: Event) => {
@@ -23,7 +25,9 @@
             
             if(response.ok){
                 const data = await response.json();
-                console.log("Success", data)
+                const token = data.token;
+                localStorage.setItem('jwtToken', token);
+                goto('/pages/admin-page')
             } else {
                 console.log("Failure")
             }
@@ -32,22 +36,22 @@
         }
     }
 
-    import { onMount } from 'svelte';
+    
 
     let isDarkMode = false;
 
     onMount(() => {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-    isDarkMode = systemTheme.matches;
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        isDarkMode = systemTheme.matches;
 
-    // Apply dark mode class
-    document.documentElement.classList.toggle('dark', isDarkMode);
-
-    // Listen for changes in system setting
-    systemTheme.addEventListener('change', (event) => {
-        isDarkMode = event.matches;
+        // Apply dark mode class
         document.documentElement.classList.toggle('dark', isDarkMode);
-    });
+
+        // Listen for changes in system setting
+        systemTheme.addEventListener('change', (event) => {
+            isDarkMode = event.matches;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+        });
     });
 </script>
 
@@ -63,6 +67,7 @@
                 <Input type="password" bind:value={password} placeholder="Enter your password" />
                 <Button href="src\routes\admin-account.svelte" type="submit" onclick={login}>Log In</Button>
             </form>
+            <p></p>
         </div>
         
         

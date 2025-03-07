@@ -1,7 +1,8 @@
 <script lang="ts" generics="TData, TValue">
     import { Button } from "$lib/components/ui/button/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
-
+    import { type Challenge } from "./columns.js"
+    import { goto } from '$app/navigation';
 
     import {
         type ColumnDef,
@@ -77,6 +78,22 @@
       },
     },
     });
+
+
+    // if you click a ctf you get redirected to the event room for that ctf
+    const handleClick = (event: Event, row: { original: TData }) => {
+        if (isChallenge(row.original)) {
+            let ctf: Challenge = row.original;
+            if (ctf.id.trim()) {
+                goto(`/pages/event-room?code=${ctf.id}`);
+            }
+        }
+
+        function isChallenge(data: any): data is Challenge {
+            return (data as Challenge).id !== undefined;
+        }
+
+    }
    </script>
 
 
@@ -118,7 +135,7 @@
             </Table.Header>
             <Table.Body>
             {#each table.getRowModel().rows as row (row.id)}
-            <Table.Row data-state={row.getIsSelected() && "selected"}>
+            <Table.Row data-state={row.getIsSelected() && "selected"} onclick={(event)=>{handleClick(event, row)}}>
                 {#each row.getVisibleCells() as cell (cell.id)}
                 <Table.Cell>
                 <FlexRender

@@ -1,6 +1,8 @@
 <script lang="ts" generics="TData, TValue">
     import { Button } from "$lib/components/ui/button/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
+    import { type Challenge } from "./columns.js"
+    import { goto } from '$app/navigation';
 
     import { 
         type ColumnDef, 
@@ -74,6 +76,22 @@
       },
     },
     });
+
+    // handle the click event to redirect to hedgedoc
+    const handleClick = (event: Event, row: { original: TData }) => {
+        if (isChallenge(row.original)) {
+            let ctf: Challenge = row.original;
+            if (ctf) {
+                
+                window.open(ctf.hedgedoc_url, "_blank");
+            }
+        }
+
+        function isChallenge(data: any): data is Challenge {
+            return (data as Challenge).id !== undefined;
+        }
+
+    }
    </script>
 
     <div>
@@ -110,7 +128,7 @@
             </Table.Header>
             <Table.Body>
             {#each table.getRowModel().rows as row (row.id)}
-            <Table.Row data-state={row.getIsSelected() && "selected"}>
+            <Table.Row data-state={row.getIsSelected() && "selected"} onclick={(event)=>handleClick(event, row)}>
                 {#each row.getVisibleCells() as cell (cell.id)}
                 <Table.Cell>
                 <FlexRender

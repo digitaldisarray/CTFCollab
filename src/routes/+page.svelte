@@ -1,24 +1,34 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input/index.js";
-
+    import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
 
     let isDarkMode = false;
 
     onMount(() => {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-    isDarkMode = systemTheme.matches;
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        isDarkMode = systemTheme.matches;
 
-    // Apply dark mode class
-    document.documentElement.classList.toggle('dark', isDarkMode);
-
-    // Listen for changes in system setting
-    systemTheme.addEventListener('change', (event) => {
-        isDarkMode = event.matches;
+        // Apply dark mode class
         document.documentElement.classList.toggle('dark', isDarkMode);
+
+        // Listen for changes in system setting
+        systemTheme.addEventListener('change', (event) => {
+            isDarkMode = event.matches;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+        });
     });
-    });
+
+    let roomcode = '';
+    const handleSubmit = (e: Event) => {
+        e.preventDefault();
+
+        if(roomcode.trim()){
+            goto(`/pages/event-room?code=${roomcode}`);
+        }
+    }
+
 </script>
 
 <div class="welcome-container">
@@ -48,10 +58,10 @@
         <h1>Welcome to CTF-Collab!</h1>
         <p>To join an event, enter room code below or login with existing account</p>
         
-        <div class="form-container">
+        <div class="form-container" on:submit={handleSubmit}>
             <form class="flex w-full max-w-sm items-center space-x-2">
-                <Input type="room-code" placeholder="enter room-code here..." />
-                <Button href="/pages/event-room" type="submit">Submit</Button>
+                <Input type="room-code" bind:value={roomcode} placeholder="enter room-code here..." />
+                <Button type="submit">Submit</Button>
             </form>
         </div>
         
