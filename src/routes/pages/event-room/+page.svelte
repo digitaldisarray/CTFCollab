@@ -17,8 +17,9 @@
 
     $effect(() => {
         roomcode = $page.url.searchParams.get('code') || "";
-        getChallenges();
         getCurrentCTF();
+        getChallenges();
+        
     });
     
     const getCurrentCTF = async () => {
@@ -63,6 +64,7 @@
         }
         
         try {
+            challenges.set([]);
             const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
                 method: 'GET',
                 headers: {
