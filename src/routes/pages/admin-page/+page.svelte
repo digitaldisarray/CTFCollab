@@ -64,12 +64,20 @@
 </script>
 
 
+<header class="logo-header">
+  <div class="absolute left-4 top-4 md:left-8 md:top-7">
+    <a href="/" class="logo">
+        <span class="ctf">CTF</span>
+        <span class="collab">Collab</span>
+    </a>
+  </div>
+</header>
 
 <div class="page-container">
   <div class="container">
     <!-- Header -->
     <header>
-      <h1>CTF Events</h1>
+      <h1>Administrator Dashboard</h1>
       <p>Manage your CTF event rooms.</p>
     </header>
 
@@ -106,6 +114,24 @@
 
 
 <style>
+  .logo-header {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    padding: 0 1rem;
+  }
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .ctf {
+        color: #dc4405;
+    }
+    .collab {
+        color: #666;
+        margin-left: 2px;
+    }
+
   .page-container {
     display: flex;
     justify-content: flex-start;
@@ -142,7 +168,7 @@
 
   header h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: #666;
     margin-bottom: 10px;
   }
 

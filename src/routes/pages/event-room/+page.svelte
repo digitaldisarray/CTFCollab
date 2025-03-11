@@ -10,10 +10,16 @@
     import SettingsForm from "./settings-form.svelte";
     import {currentCTF, challenges} from "./columns.js"
     import { type CTF  } from "../admin-page/columns.js" //
-    
+
     let { data: pageData }: { data: PageData } = $props();
 
     let roomcode = '';
+
+    $effect(() => {
+        roomcode = $page.url.searchParams.get('code') || "";
+        getChallenges();
+        getCurrentCTF();
+    });
     
     const getCurrentCTF = async () => {
       const token = localStorage.getItem("jwtToken");
@@ -86,22 +92,25 @@
             console.error("Error occured", error);
         }
     }
-    $effect(() => {
-        roomcode = $page.url.searchParams.get('code') || "";
-        getChallenges();
-        getCurrentCTF();
-    });
     
     
   </script>
-  
+<header class="logo-header">
+  <div class="absolute left-4 top-4 md:left-8 md:top-7">
+    <a href="/" class="logo">
+        <span class="ctf">CTF</span>
+        <span class="collab">Collab</span>
+    </a>
+  </div>
+</header>
+
   <div class="page-container">
     <div class="container">
       <div class="horizontal-container">
         <!-- Header -->
         <header>
-          <h1>CTF Events</h1>
-          <p>Manage your CTF event rooms.</p>
+          <h1>{$currentCTF?.ctf_name}</h1>
+          <p>Manage your Challenge rooms.</p>
         </header>
   
         <!-- Add Challenge Button -->
@@ -131,6 +140,24 @@
   </div>
   
   <style>
+    .logo-header {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    padding: 0 1rem;
+  }
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .ctf {
+        color: #dc4405;
+    }
+    .collab {
+        color: #666;
+        margin-left: 2px;
+    }
+
     .page-container {
       display: flex;
       justify-content: flex-start; /* Align container to the left */
@@ -158,7 +185,7 @@
   
     header h1 {
       font-size: 2.5rem;
-      color: #333;
+      color: #666;
       margin-bottom: 10px;
     }
   
