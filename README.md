@@ -60,7 +60,7 @@ npm run dev
 ## Running locally
 
 ### Just the frontend
-If for whatever reason you want to run the frontend outside of docker, fisrt run `npm install` (or `pnpm install` or `yarn`) in the repository directory. Then to run the frontend, use one of these commnds:
+If for whatever reason you want to run the frontend outside of docker, first run `npm install` (or `pnpm install` or `yarn`) in the repository directory. Then to run the frontend, use one of these commnds:
 
 ```bash
 npm run dev
