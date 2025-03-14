@@ -81,8 +81,9 @@
                             name: challenge.challenge_name,
                             active_members: 0, // TODO: need to add a members to backend or have some way to check it
                             status: "pending", // TODO: need to add a status to the backend maybe? or just remove
-                            id: "",
-                            hedgedoc_url: challenge.hedgedoc_url
+                            id: challenge.challenge_id.toString(),
+                            hedgedoc_url: challenge.hedgedoc_url,
+                            description: challenge.challenge_description
                         }
                     })
                   )

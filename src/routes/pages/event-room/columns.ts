@@ -20,6 +20,7 @@ export type Challenge = {
     active_members: number;
     status: "pending" | "processing" | "success" | "failed";
     name: string;
+    description: string;
 };
 
 export type CTFChallenge = {
@@ -34,11 +35,12 @@ export type CTFChallenge = {
 export function formatData(ctfch: Array<CTFChallenge>): Challenge[]{
   let newData = ctfch.map((c) => {
       return {
-        id: "",
+        id: c.id.toString(),
         hedgedoc_url: c.hedgedoc_url,
         active_members: 0,
         status: "pending" as "pending" | "processing" | "success" | "failed",
-        name: c.name
+        name: c.name,
+        description: c.description
       }
   });
   return newData;
@@ -103,7 +105,10 @@ export const columns: ColumnDef<Challenge>[] = [
         id: "actions",
         cell: ({ row }) => {
           // You can pass whatever you need from `row.original` to the component
-          return renderComponent(DataTableActions, { id: row.original.id });
+          return renderComponent(DataTableActions, { 
+            id: row.original.id,
+            description: row.original.description
+          });
         },
       },
     ];
