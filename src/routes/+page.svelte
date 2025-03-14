@@ -2,23 +2,6 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input/index.js";
     import { goto } from '$app/navigation';
-    import { onMount } from 'svelte';
-
-    let isDarkMode = false;
-
-    onMount(() => {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-        isDarkMode = systemTheme.matches;
-
-        // Apply dark mode class
-        document.documentElement.classList.toggle('dark', isDarkMode);
-
-        // Listen for changes in system setting
-        systemTheme.addEventListener('change', (event) => {
-            isDarkMode = event.matches;
-            document.documentElement.classList.toggle('dark', isDarkMode);
-        });
-    });
 
     let roomcode = '';
     const handleSubmit = (e: Event) => {
