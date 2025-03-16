@@ -19,7 +19,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.CORS()) // Dev env only?
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"}, // Your Svelte dev server
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:5173"}, // Your Svelte dev server
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
@@ -38,7 +38,8 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(auth.CustomClaims)
 		},
-		SigningKey: []byte(handler.JWTSecret),
+		SigningKey:  []byte(handler.JWTSecret),
+		TokenLookup: "cookie:token",
 	}
 
 	// CTF routes
@@ -62,8 +63,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// Challenge routes
 	{
-		//e.GET("/challenges/:id", ) // detailed information about a challenge, session has to be in the ctf it belongs to, or admin
-		//e.DELETE("/challenges/:id", handler.DeleteChallenge) // session has to belong to ctf
+		e.DELETE("/challenges/:id", handler.DeleteChallenge, auth.MemberOnly(handler.Queries)) // session has to belong to ctf
 		//e.PUT("/challenges/:id", )
 	}
 

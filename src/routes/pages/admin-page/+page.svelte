@@ -14,28 +14,22 @@
   
   let { data: pageData }: { data: PageData } = $props();
 
+  // svelte-ignore non_reactive_update
   let value = [today(getLocalTimeZone())];
 
   let conformData: Challenge[] = $state([]);
   let loading = $state(true);
 
-
   // get all the users ctfs
   const getUsersCTFs = async () => {
-    const token = localStorage.getItem("jwtToken");
-    if(!token){
-      console.error("No token found");
-      goto('/pages/signin');
-      return;
-    }
     
     try {
       const response = await fetch('http://localhost:1337/ctfs/joined', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+        },
+        credentials: 'include'
       });
       if (response.ok) {
         let resp = await response.json();
@@ -57,7 +51,7 @@
   }
 
 
-  onMount(() => {
+  onMount(async () => {
     getUsersCTFs();
   })
 
@@ -77,7 +71,7 @@
   <div class="container">
     <!-- Header -->
     <header>
-      <h1>Administrator Dashboard</h1>
+      <h1 class="admin-header">Administrator Dashboard</h1>
       <p>Manage your CTF event rooms.</p>
     </header>
 
@@ -132,6 +126,10 @@
         margin-left: 2px;
     }
 
+    .admin-header {
+        color: #ffffff;
+    }
+
   .page-container {
     display: flex;
     justify-content: flex-start;
@@ -168,7 +166,7 @@
 
   header h1 {
     font-size: 2.5rem;
-    color: #666;
+    color: #ffffff;
     margin-bottom: 10px;
   }
 
@@ -178,7 +176,7 @@
     color: #666;
   }
 
-
+/* 
   .custom-button {
     margin-top: 20px;
     padding: 15px 30px;
@@ -190,12 +188,13 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 100%; /* Make button same width as Calendar */
-    max-width: 400px; /* Match Calendar's max-width */
+    width: 100%;
+    max-width: 400px;
   }
 
 
   .custom-button:hover {
     background-color: darkorange;
   }
+   */
 </style>

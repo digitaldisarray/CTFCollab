@@ -10,12 +10,6 @@
     const ctfPhrase = new URLSearchParams($page.url.search).get("code");
 
     const fetchChallenge = async () => {
-        const token = localStorage.getItem("jwtToken");
-        if (!token) {
-            console.error("No token found");
-            return;
-        }
-
         if (!ctfPhrase || !challengeId) {
             console.error("Missing challenge or CTF phrase in URL");
             return;
@@ -26,8 +20,8 @@
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                }
+                },
+                credentials: 'include'
             });
 
             if (response.ok) {
@@ -41,7 +35,7 @@
         }
     };
 
-    onMount(() => {
+    onMount(async() => {
         if (challengeId) {
             fetchChallenge();
         }
@@ -83,12 +77,11 @@
         margin-left: 2px;
     }
     .iframe-container {
-    padding-top: 45px; /* Enough space to clear the header */
+    padding-top: 45px;
     }
 
     .my-iframe {
     width: 100%;
     height: 87vh;
-    border: 1px solid #ccc;
     }
 </style>

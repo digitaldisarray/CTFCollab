@@ -56,11 +56,6 @@
 
     const handleSubmit = async (e: Event) => {
       e.preventDefault();
-      const token = localStorage.getItem("jwtToken");
-        if(!token){
-            console.error("No token found");
-            return;
-      }
 
       const name = $formData.ctfName;
       const start_date = formatDate($formData.start_date)
@@ -77,8 +72,8 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: jsonBody
       });
       if (response.ok) {

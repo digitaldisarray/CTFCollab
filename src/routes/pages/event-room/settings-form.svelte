@@ -47,20 +47,14 @@
     });
 
     const getChallenges = async () => {
-        const token = localStorage.getItem("jwtToken");
-        if(!token){
-            console.error("No token found");
-            return;
-        }
-        
         try {
             challenges.set([]);
             const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
+                  },
+              credentials: 'include'
             });
 
             if (response.ok) {
@@ -86,38 +80,30 @@
         }
     }
 
-    const handleSubmit = async(e: Event)=> {
+    const handleSubmit = async (e: Event) => {
       e.preventDefault();
-      const token = localStorage.getItem("jwtToken");
-      if(!token){
-        console.error("No token found");
+      const name = $formData.challengeName;
+      if (!name) {
         return;
       }
-
-      const name = $formData.challengeName
-      if (!name){
-        return;
-      }
-      const description = $formData.challengeDetails
-      const flag = $formData.challengeFlag
-
+      const description = $formData.challengeDetails;
+      const flag = $formData.challengeFlag;
 
       try {
-        const response = await fetch(`http://localhost:1337/ctfs/${$currentCTF.phrase}/challenges`, {
-
+        const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
           },
+          credentials: 'include',
           body: JSON.stringify({
             "name": name,
             "description": description,
             "flag": flag,
-          })
-        })
-        if(response.ok){
-          let challengeData = await response.json()
+          }),
+        });
+        if (response.ok) {
+          const challengeData = await response.json();
           let newChallenge: Challenge = {
             id: challengeData.id,
             hedgedoc_url: challengeData.hedgedoc_url,
@@ -125,18 +111,20 @@
             status: "pending" as "pending" | "processing" | "success" | "failed",
             name: name,
             description: challengeData.description
-          }
-  
-          challenges.update((c)=> [...c, newChallenge])
+          };
+
+          challenges.update((c) => [...c, newChallenge]);
           await getChallenges();
         } else {
-
-          console.error("Failed to submit form")
+          // Read and log error details
+          const errorData = await response.json();
+          console.error("Failed to submit form:", errorData);
         }
-      } catch(error){
-        console.error("Unable to submit challenge")
+      } catch (error) {
+        console.error("Unable to submit challenge", error);
       }
-    }
+    };
+
 
   </script>
   
