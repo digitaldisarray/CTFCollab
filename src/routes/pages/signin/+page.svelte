@@ -7,15 +7,6 @@
     let email = '';
     let password = '';
 
-    // Check if there is an existing token
-    onMount(() => {
-        const existingToken = localStorage.getItem('jwtToken');
-        if (existingToken) {
-        // Token found, you could also verify it by hitting an endpoint if needed
-        goto('/pages/admin-page');
-        }
-    });
-
     const login = async(e: Event) => {
         
         e.preventDefault()
@@ -30,13 +21,12 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                // Tell fetch to include cookies
+                credentials: 'include',
                 body: JSON.stringify(loginData),
             });
             
             if(response.ok){
-                const data = await response.json();
-                const token = data.token;
-                localStorage.setItem('jwtToken', token);
                 goto('/pages/admin-page')
             } else {
                 console.log("Failure")

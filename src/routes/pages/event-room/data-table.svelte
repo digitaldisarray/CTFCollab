@@ -22,6 +22,7 @@
      FlexRender,
     } from "$lib/components/ui/data-table/index.js";
     import * as Table from "$lib/components/ui/table/index.js";
+  import { page } from "$app/stores";
     
     type DataTableProps<TData, TValue> = {
     data: TData[];
@@ -77,21 +78,34 @@
     },
     });
 
-    // handle the click event to redirect to hedgedoc
+    // handle the click event to redirect to challenge page where it has the collaborative text editor
     const handleClick = (event: Event, row: { original: TData }) => {
-        if (isChallenge(row.original)) {
-            let ctf: Challenge = row.original;
-            if (ctf) {
-                
-                window.open(ctf.hedgedoc_url, "_blank");
-            }
-        }
+    console.log("Clicked row:", row.original);
 
-        function isChallenge(data: any): data is Challenge {
-            return (data as Challenge).id !== undefined;
-        }
+    if (isChallenge(row.original)) {
+      let challenge: Challenge = row.original;
+      console.log("Challenge ID:", challenge.id);
 
+      // Extract the CTF event phrase from the URL
+      const ctfCode = new URLSearchParams($page.url.search).get("code");
+      console.log("CTF Code:", ctfCode);
+
+      if (!ctfCode) {
+        console.error("CTF code not found in URL");
+        return;
+      }
+
+      if (challenge.id.trim()) {
+        const url = `/pages/event-room/challenge?code=${encodeURIComponent(ctfCode)}&challenge=${challenge.id}`;
+        console.log("Navigating to:", url);
+        goto(url);
+      }
     }
+
+    function isChallenge(data: any): data is Challenge {
+        return (data as Challenge).id !== undefined;
+    }
+  };
    </script>
 
     <div>

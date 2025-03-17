@@ -29,6 +29,7 @@
     import { onMount } from "svelte";
     import { type CTF } from "../admin-page/columns.js" 
     import  { challenges, currentCTF, type Challenge } from "./columns.js"
+  import { get } from "svelte/store";
     let { data }: { data: { form: SuperValidated<Infer<FormSchema>> } } = $props();
   
     const form = superForm(data.form, {
@@ -37,56 +38,93 @@
     
     
     const { form: formData, enhance } = form;
+    
+    let roomcode = '';
 
-    const handleSubmit = async(e: Event)=> {
+    onMount(() => {
+      roomcode = get(page).url.searchParams.get('code') || "";
+      getChallenges();
+    });
+
+    const getChallenges = async () => {
+        try {
+            challenges.set([]);
+            const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                  },
+              credentials: 'include'
+            });
+
+            if (response.ok) {
+                let challengeData = await response.json();
+                if(Array.isArray(challengeData) && challengeData.length > 0){
+                    challenges.set(challengeData.map((challenge) => {
+                        return {
+                            name: challenge.challenge_name,
+                            active_members: 0, // TODO: need to add a members to backend or have some way to check it
+                            status: "pending", // TODO: need to add a status to the backend maybe? or just remove
+                            id: challenge.challenge_id.toString(),
+                            hedgedoc_url: challenge.hedgedoc_url,
+                            description: challenge.challenge_description
+                        }
+                    })
+                  )
+                }
+            } else {
+                console.error("Failed to fetch challenges");
+            }
+        } catch (error) {
+            console.error("Error occured", error);
+        }
+    }
+
+    const handleSubmit = async (e: Event) => {
       e.preventDefault();
-      const token = localStorage.getItem("jwtToken");
-      if(!token){
-        console.error("No token found");
+      const name = $formData.challengeName;
+      if (!name) {
         return;
       }
-
-      const name = $formData.challengeName
-      if (!name){
-        return;
-      }
-      const description = $formData.challengeDetails
-      const flag = $formData.challengeFlag
-
+      const description = $formData.challengeDetails;
+      const flag = $formData.challengeFlag;
 
       try {
-        const response = await fetch(`http://localhost:1337/ctfs/${$currentCTF.phrase}/challenges`, {
-
+        const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
           },
+          credentials: 'include',
           body: JSON.stringify({
             "name": name,
             "description": description,
             "flag": flag,
-          })
-        })
-        if(response.ok){
-          let challengeData = await response.json()
+          }),
+        });
+        if (response.ok) {
+          const challengeData = await response.json();
           let newChallenge: Challenge = {
-            id: "",
+            id: challengeData.id,
             hedgedoc_url: challengeData.hedgedoc_url,
             active_members: 0,
-            status: "pending" as"pending" | "processing" | "success" | "failed",
-            name: name
-          }
-  
-          challenges.update((c)=> [...c, newChallenge])
-        } else {
+            status: "pending" as "pending" | "processing" | "success" | "failed",
+            name: name,
+            description: challengeData.description
+          };
 
-          console.error("Failed to submit form")
+          challenges.update((c) => [...c, newChallenge]);
+          await getChallenges();
+        } else {
+          // Read and log error details
+          const errorData = await response.json();
+          console.error("Failed to submit form:", errorData);
         }
-      } catch(error){
-        console.error("Unable to submit challenge")
+      } catch (error) {
+        console.error("Unable to submit challenge", error);
       }
-    }
+    };
+
 
   </script>
   

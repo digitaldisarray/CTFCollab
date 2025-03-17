@@ -10,31 +10,27 @@
     import SettingsForm from "./settings-form.svelte";
     import {currentCTF, challenges} from "./columns.js"
     import { type CTF  } from "../admin-page/columns.js" //
+  import { onMount } from "svelte";
 
     let { data: pageData }: { data: PageData } = $props();
 
     let roomcode = '';
 
-    $effect(() => {
+    onMount(() => {
         roomcode = $page.url.searchParams.get('code') || "";
         getCurrentCTF();
         getChallenges();
         
     });
-    
+
     const getCurrentCTF = async () => {
-      const token = localStorage.getItem("jwtToken");
-      if(!token){
-        console.error("No token found");
-        return;
-      }
       try {
         const res = await fetch(`http://localhost:1337/ctfs/${roomcode}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+              },
+          credentials: 'include'
         });
         if(res.ok){
           let ctfData = await res.json()
@@ -54,23 +50,15 @@
       }
     }
 
-    const getChallenges = async () => {
-
-        
-        const token = localStorage.getItem("jwtToken");
-        if(!token){
-            console.error("No token found");
-            return;
-        }
-        
+    const getChallenges = async () => {  
         try {
             challenges.set([]);
             const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
+                  },
+              credentials: 'include'
             });
 
             if (response.ok) {
@@ -81,8 +69,9 @@
                             name: challenge.challenge_name,
                             active_members: 0, // TODO: need to add a members to backend or have some way to check it
                             status: "pending", // TODO: need to add a status to the backend maybe? or just remove
-                            id: "",
-                            hedgedoc_url: challenge.hedgedoc_url
+                            id: challenge.challenge_id.toString(),
+                            hedgedoc_url: challenge.hedgedoc_url,
+                            description: challenge.challenge_description
                         }
                     })
                   )
@@ -111,7 +100,7 @@
       <div class="horizontal-container">
         <!-- Header -->
         <header>
-          <h1>{$currentCTF?.ctf_name}</h1>
+          <h1 class="chal-name">{$currentCTF?.ctf_name}</h1>
           <p>Manage your Challenge rooms.</p>
         </header>
   
@@ -134,7 +123,7 @@
     <div class="container">
         <!-- Header -->
         <header>
-          <h1>Team Members</h1>
+          <h1 class="chal-name">Team Members</h1>
           <p>Invite team members to collaborate on challenges.</p>
         </header>
     
@@ -159,6 +148,14 @@
         color: #666;
         margin-left: 2px;
     }
+
+    .chal-name{
+        color: #ffffff;
+    }
+
+    header h1 {
+    color: #ffffff;
+  }
 
     .page-container {
       display: flex;
