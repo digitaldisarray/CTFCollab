@@ -47,7 +47,7 @@ export function formatData(ctfch: Array<CTFChallenge>): Challenge[]{
 }
 
 
-export const challenges = writable<Challenge[]>([])
+export const challenges = writable<Challenge[]>([]) //so the challenge list is rememeber across states
 export const currentCTF = writable<CTF>()
 
 export const columns: ColumnDef<Challenge>[] = [
