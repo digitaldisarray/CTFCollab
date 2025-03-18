@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS challenges (
     flag TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     hedgedoc_url VARCHAR(512) UNIQUE NOT NULL,
-    FOREIGN KEY (ctf_id) REFERENCES ctfs(id)
+    FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
 );
 
 -- -- Tags Table: Stores the different tags/categories users can assign to challenges

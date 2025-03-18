@@ -53,17 +53,17 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // can be changed I think
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
-		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.MemberOnly(handler.Queries))
+		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
 		ctfs.POST("/:phrase/join", handler.JoinCTF)
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.GET("/:phrase/challenge/:id", handler.GetChallenge, auth.MemberOnly(handler.Queries))
+		ctfs.DELETE("/:phrase/challenges/:id", handler.DeleteChallenge, auth.MemberOnly(handler.Queries)) // session has to belong to ctf
 		// TODO: Route to get participants for a CTF, accessible to CTF members
 	}
 
 	// Challenge routes
 	{
-		e.DELETE("/challenges/:id", handler.DeleteChallenge, auth.MemberOnly(handler.Queries)) // session has to belong to ctf
 		//e.PUT("/challenges/:id", )
 	}
 
