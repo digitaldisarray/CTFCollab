@@ -2,15 +2,49 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input/index.js";
     import { goto } from '$app/navigation';
-
+  
     let roomcode = '';
-    const handleSubmit = (e: Event) => {
-        e.preventDefault();
-        if(roomcode.trim()){
-            goto(`/pages/event-room?code=${roomcode}`);
+    let errorMessage = '';
+  
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault();
+      errorMessage = '';
+  
+      if (!roomcode.trim()) {
+        // Set an error if it's blank:
+        errorMessage = "Please enter a room code.";
+        return;
+      }
+  
+      try {
+        const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/exists`);
+        
+        if (!response.ok) {
+          // If the server returns 404 Not Found, or something else causes error:
+          if (response.status === 404) {
+            errorMessage = "No room found with that code.";
+          } else {
+            errorMessage = `Something went wrong: ${response.statusText}`;
+          }
+          return;
         }
+  
+        // If 200 OK, parse response
+        const result = await response.json();
+  
+        // Check if the server’s response indicates the code is valid
+        if (result.exists) {
+          // Navigate to the event-room if it exists
+          goto(`/pages/event-room?code=${roomcode}`);
+        } else {
+          errorMessage = "That room code doesn't exist.";
+        }
+      } catch (err) {
+        errorMessage = "Failed to contact server. Please try again.";
+        console.error(err);
+      }
     }
-</script>
+  </script>
 
 <div class="welcome-container">
     <div class="absolute left-4 top-4 md:left-8 md:top-7">
@@ -38,7 +72,11 @@
                 <Input type="room-code" bind:value={roomcode} placeholder="enter room-code here..." />
                 <Button type="submit">Submit</Button>
             </form>
+            
         </div>
+        {#if errorMessage}
+            <p2 class="mt-2 text-red-500">{errorMessage}</p2>
+        {/if}
     </header>
 
     <main>
@@ -74,13 +112,13 @@
 
     header h1 {
         font-size: 2.5rem;
-        color: #666;
+        color: #dc4405;
         margin-bottom: 10px;
     }
 
     header p {
         font-size: 1.2rem;
-        color: #dc4405;
+        color: #666;
     }
 
     main {

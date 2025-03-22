@@ -48,7 +48,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs := e.Group("/ctfs")
 		ctfs.Use(echojwt.WithConfig(config))
 		ctfs.GET("", handler.GetAllCTFs, auth.AdminOnly)
-		ctfs.POST("", handler.CreateCTF)
+		ctfs.POST("", handler.CreateCTF, auth.AdminOnly)
 		ctfs.GET("/joined", handler.GetJoinedCTFs)
 		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // can be changed I think
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
@@ -60,7 +60,10 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.GET("/:phrase/challenge/:id", handler.GetChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.DELETE("/:phrase/challenges/:id", handler.DeleteChallenge, auth.MemberOnly(handler.Queries)) // session has to belong to ctf
 		// TODO: Route to get participants for a CTF, accessible to CTF members
+		// TODO: Route to get participants for a challenge, accessible to CTF members
+
 	}
+	e.GET("/ctfs/:phrase/exists", handler.GetCTFExists)
 
 	// Challenge routes
 	{

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -219,4 +220,29 @@ func (h *Handler) SearchCTFs(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, new_ctfs)
+}
+
+// Used to check if a ctf exists without returning anymore data than necessary, meant to be used for those with and without roles
+func (h *Handler) GetCTFExists(c echo.Context) error {
+	phrase := c.Param("phrase")
+
+	// Check if the record exists in DB (disregard the returned object)
+	_, err := h.Queries.GetCTFByPhrase(c.Request().Context(), phrase)
+	if err != nil {
+		// If the error is 'no rows in result set', respond with a 404
+		if err == sql.ErrNoRows {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": "No CTF found with that phrase",
+			})
+		}
+		// Otherwise, something else went wrong (DB issue etc.)
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	// If found, just return 200 and a minimal payload
+	return c.JSON(http.StatusOK, map[string]bool{
+		"exists": true,
+	})
 }
