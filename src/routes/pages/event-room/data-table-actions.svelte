@@ -32,8 +32,13 @@
             alert('An error occurred while deleting the Challenge.');
         }
     };
+    const viewDetails = async () => {
+        navigator.clipboard.writeText(description)
+        if(description === "")
+            alert("No desc")
+        alert(description)
+    }
    </script>
-    
    <DropdownMenu.Root>
     <DropdownMenu.Trigger>
      {#snippet child({ props })}
@@ -57,7 +62,7 @@
      </DropdownMenu.Group>
      <DropdownMenu.Separator />
      <DropdownMenu.Item>View Active Members</DropdownMenu.Item>
-     <DropdownMenu.Item onclick={() => navigator.clipboard.writeText(description)}>View Challenge details</DropdownMenu.Item>
+     <DropdownMenu.Item onclick={viewDetails}>View Challenge details</DropdownMenu.Item>
      <DropdownMenu.Item onclick={deleteChal}>
         Delete Challenge
     </DropdownMenu.Item>
