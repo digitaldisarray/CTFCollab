@@ -2,7 +2,10 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input/index.js";
     import { goto } from '$app/navigation';
-  
+    import { onMount } from 'svelte';
+    const { data } = $props();
+
+
     let roomcode = '';
     let errorMessage = '';
   
@@ -44,6 +47,8 @@
         console.error(err);
       }
     }
+
+
   </script>
 
 <div class="welcome-container">
@@ -55,8 +60,12 @@
     </div>
     
     <div class="absolute right-4 top-4 md:right-8 md:top-8">
-        <Button href="/pages/signin" variant="ghost">Login</Button>
-        <span class="separator">|</span>
+        {#if data.user}
+            <Button href="/pages/admin-page" variant="ghost">Account</Button>
+        {:else}
+            <Button href="/pages/signin" variant="ghost">Login</Button>
+        {/if}
+            <span class="separator">|</span>
         <Button href="/pages/about" variant="ghost">About</Button>
         <span class="separator">|</span>
         <Button href="/pages/event-room" variant="ghost">
