@@ -14,11 +14,11 @@ export const handle: Handle = async ({ event, resolve }) => {
   
         if(response.ok){
             let resp = await response.json();
-
             event.locals.user = {
                 username: resp.username,
                 isAdmin: resp.isAdmin
             };
+            
 
         } else {
             event.locals.user = null;
@@ -27,7 +27,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     } else {
         event.locals.user = null;
     }
-
 
     return resolve(event);
 }

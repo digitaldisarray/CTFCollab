@@ -1,13 +1,7 @@
-/** @type {import('./$types').LayoutServerLoad} */
-export function load({ locals }){
+import type { LayoutServerLoad } from './$types';
 
-    if (locals.user) {
-		console.log(locals.user.username);
-	}
-    return {
-        user: locals.user && {
-            username: locals.user.username,
-            isAdmin: locals.user.username
-        }
+export const load: LayoutServerLoad = async ({ locals }) => {
+	return {
+        user: locals.user 
     }
-}
+};
