@@ -4,6 +4,7 @@
   import type { PageData } from "./$types.js";
   import SettingsForm from "./settings-form.svelte";
   import DataTable from "./data-table.svelte";
+  import AccountButton from "./account-button.svelte";
   import { columns, type Challenge, type CTF } from "./columns.js";
   import { ctfData, formatData } from "./columns.js";
   import { getLocalTimeZone, today } from "@internationalized/date";
@@ -13,7 +14,7 @@
 
   
   let { data: pageData }: { data: PageData } = $props();
-
+ 
   // svelte-ignore non_reactive_update
   let value = [today(getLocalTimeZone())];
 
@@ -104,6 +105,8 @@
     </div>
     
   </div>
+  <AccountButton cookie={pageData.cookie}/>
+
 </div>
 
 

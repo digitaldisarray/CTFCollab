@@ -4,10 +4,13 @@ import { superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
 import { formSchema } from "../admin-page/schema.js";
  
-export const load: PageServerLoad = async () => {
- return {
-  form: await superValidate(zod(formSchema)),
- };
+export const load: PageServerLoad = async ({cookies}) => {
+
+    const sessionCookie = cookies.get('session')
+    return {
+        form: await superValidate(zod(formSchema)),
+        cookie: sessionCookie
+    };
 };
  
 export const actions: Actions = {
