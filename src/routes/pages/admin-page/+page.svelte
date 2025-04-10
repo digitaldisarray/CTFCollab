@@ -11,6 +11,7 @@
   import { Calendar } from "$lib/components/ui/calendar/index.js";
   import { goto } from "$app/navigation";
   import { onMount } from 'svelte';
+    import { changePasswordForm } from "./schema.js";
 
   
   let { data: pageData }: { data: PageData } = $props();
@@ -105,7 +106,7 @@
     </div>
     
   </div>
-  <AccountButton cookie={pageData.cookie}/>
+  <AccountButton data={pageData}/>
 
 </div>
 

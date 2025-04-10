@@ -22,9 +22,9 @@
 		
 	});
 
-	// force a refresh so cookie data can properly be used in store value. 
+	// force a refresh so cookie data can properly be used in reactive ui 
 	afterNavigate(({from, to}) => {
-		if(from?.url.pathname.includes("signin") || from?.url.pathname.includes("logout")){
+		if(from?.url.pathname.includes("signin")){
 			goto(to?.url.pathname ? to.url.pathname : "/", {invalidateAll: true})
 		}
 	})
