@@ -7,6 +7,7 @@
 
     const ctfPhrase = new URLSearchParams($page.url.search).get("code");
     let { id, description }: { id: string; description: string } = $props();
+    let showDetails = $state(false)
 
     const deleteChal = async () => {
         // A confirmation prompt to help prevent accidental deletions
@@ -35,10 +36,36 @@
     const viewDetails = async () => {
         navigator.clipboard.writeText(description)
         if(description === "")
-            alert("No desc")
-        alert(description)
+            alert("No description for this event")
+        else{
+            showDetails = !showDetails
+            console.log(showDetails)
+            
+        }
+    }
+    const closeDetails = async (e) => {
+        e.stopPropagation()
+        showDetails = false
     }
    </script>
+
+   <style>
+    .detailsBox{
+        z-index: 99;
+        position: absolute;
+        border: solid 1px;
+        right: 10px;
+        padding: 3px;
+        border-radius: 4px;
+    }
+    .close{
+        position: relative;
+        right: 0;
+        top: 0;
+
+    }
+
+   </style>
    <DropdownMenu.Root>
     <DropdownMenu.Trigger>
      {#snippet child({ props })}
@@ -68,3 +95,10 @@
     </DropdownMenu.Item>
     </DropdownMenu.Content>
    </DropdownMenu.Root>
+   {#if showDetails}
+   <div class="detailsBox">
+    <h2>
+        {description} <button class="close" onclick={closeDetails}>×</button>
+    </h2>
+   </div>
+ {/if}
