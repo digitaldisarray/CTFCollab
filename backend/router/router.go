@@ -1,8 +1,6 @@
 package router
 
 import (
-	"os"
-
 	"github.com/digitaldisarray/ctfcollab/auth"
 	"github.com/digitaldisarray/ctfcollab/handler"
 	"github.com/golang-jwt/jwt/v5"
@@ -80,12 +78,6 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		users.GET("/:username", handler.GetUser, auth.SelfOnly)
 		users.DELETE("/:username", handler.DeleteUser, auth.SelfOnly)
 		users.POST("/:username/password", handler.ChangePassword, auth.SelfOnly)
-	}
-
-	// Testing only
-	// TODO: Rewrite tests to use built in admin instead of this endpoint
-	if os.Getenv("TEST_MODE") == "True" {
-		e.GET("/users2/:username/become_admin", handler.BecomeAdmin)
 	}
 
 	return e
