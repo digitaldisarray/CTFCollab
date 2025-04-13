@@ -47,7 +47,7 @@
         }
         let user = data.user.username
 
-        if($formData.oldPassword !== $formData.newPassword){
+        if($formData.oldPassword !== $formData.newPassword && $formData.oldPassword !== "" && $formData.newPassword !== ""){
             let resp = await fetch(`http://localhost:1337/users/${user}/password`, {
                 method: 'POST',
                 headers: {
@@ -56,7 +56,7 @@
                 credentials: 'include',
                 body: JSON.stringify(postreq)
             })
-
+            
             if(resp.ok){
                 alert("Password changed.")
                 toggleModal()
@@ -91,26 +91,26 @@
 
     {#if isModal}
         <div id="change-password-model" class="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70">
-            <Form.Field {form} name="oldPassword" >
-                <Form.Control>
-                    <Form.Label>Old Password</Form.Label>
-                    <Input bind:value={$formData.oldPassword} />
-                </Form.Control>
-                <Form.Description>Enter your old password.</Form.Description>
-                <Form.FieldErrors />
-            </Form.Field>
-            <Form.Field {form} name="newPassword" >
-                <Form.Control>
-                    <Form.Label>New Password</Form.Label>
-                    <Input bind:value={$formData.newPassword} />
-                </Form.Control>
-                <Form.Description>Enter your new password.</Form.Description>
-                <Form.FieldErrors />
-            </Form.Field>
-            <div class="flex-row">
-                <Form.Button onclick={(e) => changePassword(e)}>Enter</Form.Button>
-                <Form.Button onclick={() => toggleModal() }>Cancel</Form.Button>
-            </div>
+                <Form.Field {form} name="oldPassword" id="old-password-input-form">
+                    <Form.Control>
+                        <Form.Label>Old Password</Form.Label>
+                        <Input bind:value={$formData.oldPassword} type="password"/>
+                    </Form.Control>
+                    <Form.Description>Enter your old password.</Form.Description>
+                    <Form.FieldErrors />
+                </Form.Field>
+                <Form.Field {form} name="newPassword" id="new-password-input-form">
+                    <Form.Control>
+                        <Form.Label>New Password</Form.Label>
+                        <Input bind:value={$formData.newPassword} type="password"/>
+                    </Form.Control>
+                    <Form.Description>Enter your new password.</Form.Description>
+                    <Form.FieldErrors />
+                </Form.Field>
+                <div class="flex-row">
+                    <Form.Button type="submit" onclick={(e) => changePassword(e)}>Enter</Form.Button>
+                    <Form.Button onclick={() => toggleModal() }>Cancel</Form.Button>
+                </div>
         </div>
     {/if}
 </div>
