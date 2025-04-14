@@ -53,6 +53,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
 		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
 		ctfs.POST("/:phrase/join", handler.JoinCTF)
+		ctfs.POST("/:phrase/join-as-guest", handler.JoinCTFGuest)
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.GET("/:phrase/challenge/:id", handler.GetChallenge, auth.MemberOnly(handler.Queries))

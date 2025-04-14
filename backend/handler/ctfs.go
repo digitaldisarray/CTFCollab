@@ -35,8 +35,8 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, ctfs)
 	} else {
-		// Look up CTFs that guest belongs to
-		ctfs, err := h.Queries.ListGuestsJoinedCTFs(c.Request().Context(), id)
+		// Look up CTF that guest belongs to
+		ctfs, err := h.Queries.ListGuestsJoinedCTF(c.Request().Context(), id)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
@@ -140,10 +140,7 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 		join.UserID = int32(claims.Id)
 		_, err = h.Queries.JoinCTFUser(c.Request().Context(), *join)
 	} else {
-		join := new(db.JoinCTFGuestParams)
-		join.CtfID = ctf.ID
-		join.GuestID = int32(claims.Id)
-		_, err = h.Queries.JoinCTFGuest(c.Request().Context(), *join)
+		return c.NoContent(http.StatusBadRequest) // Can't join CTF as guest w/ this endpoint
 	}
 
 	if err != nil {
@@ -151,6 +148,12 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *Handler) JoinCTFGuest(c echo.Context) error {
+	// Generate a new guest account w/ specified or generated username & join it to CTF
+	// Return JWT for that account
+	return c.NoContent(http.StatusNotImplemented)
 }
 
 // helper struct for SearchCTFs

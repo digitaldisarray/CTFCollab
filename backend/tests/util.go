@@ -73,6 +73,25 @@ func CreateUser(username, password string, client *resty.Client) error {
 	return nil
 }
 
+// HELPER function to create a guest account
+func CreateGuest(nickname string, client *resty.Client) error {
+	// Send a POST request to the server
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(fmt.Sprintf(`{"nickname": "%s"}`, nickname)).
+		Post("http://localhost:1337/users/guest")
+
+	// Check for errors
+	if err != nil {
+		return fmt.Errorf("failed to create user: %v", err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("failed to create user, status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	return nil
+}
+
 func LoginToUser(username, password string, client *resty.Client) (string, error) {
 	// Request to login
 	resp, err := client.R().

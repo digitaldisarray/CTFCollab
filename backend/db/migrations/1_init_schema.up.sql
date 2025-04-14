@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS guests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nickname VARCHAR(255) NOT NULL,
     last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ctf_id INT NOT NULL,
+    FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
 );
 
 -- CTFs Table
@@ -33,16 +35,6 @@ CREATE TABLE IF NOT EXISTS user_ctfs (
     joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Timestamp of when the user joined the CTF
     PRIMARY KEY (user_id, ctf_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
-);
-
--- Guests CTFs Table many-to-many
-CREATE TABLE IF NOT EXISTS guest_ctfs (
-    guest_id INT NOT NULL,
-    ctf_id INT NOT NULL,
-    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Timestamp of when the guest joined the CTF
-    PRIMARY KEY (guest_id, ctf_id),
-    FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE CASCADE,
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
 );
 

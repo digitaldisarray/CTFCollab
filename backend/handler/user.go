@@ -226,19 +226,6 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *Handler) BecomeAdmin(c echo.Context) error {
-	var req db.SetAdminStatusParams
-	req.IsAdmin = true
-	req.Username = c.Param("username")
-
-	_, err := h.Queries.SetAdminStatus(c.Request().Context(), req)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to set admin status")
-	}
-
-	return c.NoContent(http.StatusOK)
-}
-
 func (h *Handler) CreateGuest(c echo.Context) error {
 	// Parse request body json
 	type GuestParams struct {
