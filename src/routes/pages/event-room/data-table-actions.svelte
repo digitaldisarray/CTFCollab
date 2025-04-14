@@ -95,10 +95,10 @@
     </DropdownMenu.Item>
     </DropdownMenu.Content>
    </DropdownMenu.Root>
-   {#if showDetails}
-   <div class="detailsBox">
-    <h2>
-        {description} <button class="close" onclick={closeDetails}>×</button>
-    </h2>
-   </div>
- {/if}
+{#if showDetails}
+    <div class="detailsBox">
+        <h2>
+            {description} <button class="close" onclick={closeDetails}>×</button>
+        </h2>
+    </div>
+{/if}
