@@ -76,10 +76,8 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		users := e.Group("/users")
 		users.Use(echojwt.WithConfig(config))
 		users.GET("/:username", handler.GetUser, auth.SelfOnly)
-		users.GET("/token", handler.GetUserByToken, auth.SelfOnly)
 		users.DELETE("/:username", handler.DeleteUser, auth.SelfOnly)
 		users.POST("/:username/password", handler.ChangePassword, auth.SelfOnly)
-		users.POST("/logout", handler.LogoutUser, auth.SelfOnly)
 	}
 
 	return e
