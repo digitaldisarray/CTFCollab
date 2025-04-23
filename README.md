@@ -23,6 +23,7 @@ CMD_DOMAIN=localhost:3001
 HEDGEDOC_URL=http://hedgedoc:3000
 CMD_PROTOCOL_USESSL=false
 CMD_URL_ADDPORT=false
+TEST_MODE=False
 ADMIN_USERNAME=Admin
 ADMIN_PASSWORD=CHANGE_ME
 JWT_SECRET=CHANGE_ME
@@ -49,7 +50,7 @@ docker compose down -v
 For frontend development, it helps to not run the frontend in docker so it auto updated with each change to the source code.
 ```bash
 # Run just the backed in docker
-docker compose -f compose.backend_only.yaml up
+docker compose up -f compose.backend_only.yaml
 
 # Run the frontend outside of docker (make sure to do npm install)
 npm run dev
