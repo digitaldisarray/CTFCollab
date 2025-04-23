@@ -101,22 +101,6 @@ func LoginToUser(username, password string, client *resty.Client) (string, error
 	return token.(string), nil
 }
 
-func MakeUserAdmin(username string, client *resty.Client) error {
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		Get(fmt.Sprintf("http://localhost:1337/users2/%s/become_admin", username))
-
-	// Check for errors
-	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("failed to make user admin, status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
-	}
-
-	return nil
-}
-
 func DeleteCTF(phrase, token string, client *resty.Client) error {
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
@@ -215,7 +199,22 @@ func GetCTF(token, phrase string, client *resty.Client) (map[string]interface{},
 	}
 
 	return responseBody, nil
+}
 
+func JoinCTF(token, phrase string, client *resty.Client) error {
+	resp, err := client.R().
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
+		Post(fmt.Sprintf("http://localhost:1337/ctfs/%s/join", phrase))
+
+	// Check for errors
+	if err != nil {
+		return fmt.Errorf("failed to join ctf: %v", err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("failed to join ctf, status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	return nil
 }
 
 type ChallengeResponse struct {
