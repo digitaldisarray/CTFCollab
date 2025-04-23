@@ -148,7 +148,6 @@ func (h *Handler) LoginUser(c echo.Context) error {
 		Secure:   false, // TODO: Change to true when not localhost
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
-		MaxAge:   3600,
 	})
 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 }
@@ -276,35 +275,4 @@ func (h *Handler) CreateGuest(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
-}
-
-func (h *Handler) GetUserByToken(c echo.Context) error {
-	user, ok := c.Get("user").(*jwt.Token)
-	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
-	}
-
-	claims, ok := user.Claims.(*auth.CustomClaims)
-	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "invalid claims")
-	}
-
-	return c.JSON(http.StatusOK, echo.Map{
-		"username": claims.Name,
-		"isAdmin":  claims.IsAdmin,
-	})
-}
-
-func (h *Handler) LogoutUser(c echo.Context) error {
-	c.SetCookie(&http.Cookie{
-		Name:     "token",
-		Value:    "",
-		HttpOnly: true,
-		Secure:   false, // TODO: Change to true when not localhost
-		SameSite: http.SameSiteStrictMode,
-		Path:     "/",
-		MaxAge:   -1,
-	})
-
-	return c.JSON(http.StatusOK, "Logged out.")
 }
