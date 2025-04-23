@@ -1,11 +1,6 @@
 package tests
 
-import (
-	"os"
-	"testing"
-
-	"github.com/joho/godotenv"
-)
+import "testing"
 
 var (
 	ctfs       []string // CTFs we have made to delete later
@@ -24,39 +19,7 @@ func TestCTFEndToEnd(t *testing.T) {
 	defer teardownCTFs()
 	defer teardownUsers()
 
-	// Login to admin account
-	err := godotenv.Load("../../.env") // Load env
-	if err != nil {
-		t.Fatalf("Error loading .env file: %v", err)
-	}
-
-	admin_username := os.Getenv("ADMIN_USERNAME") // Read admin creds
-	admin_password := os.Getenv("ADMIN_PASSWORD")
-	if admin_username == "" || admin_password == "" {
-		t.Fatalf("Admin username or password not set in .env file")
-	}
-
-	admin_token, err := LoginToUser(admin_username, admin_password, client) // Sign in as admin
-	if err != nil {
-		t.Fatalf("Failed to login to admin user: %v", err)
-	}
-
-	// Create CTF
-	t.Log("Creating CTF")
-	phrase, err := CreateCTF(admin_token, RandomString(8), RandomString(20), client)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctfs = append(ctfs, phrase) // Add CTF to list to be deleted it later
-
-	// Get the CTF to make sure it exists
-	t.Log("Make sure CTF was created")
-	body, err := GetCTF(admin_token, phrase, client)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create normal user
+	// Create user
 	t.Log("Creating user")
 	username, password, err := CreateRandomUser(client)
 	if err != nil {
@@ -67,15 +30,33 @@ func TestCTFEndToEnd(t *testing.T) {
 		password string
 	}{username, password}) // Add accounts to list to delete later
 
+	// Give user admin
+	t.Log("Making user admin")
+	err = MakeUserAdmin(username, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Login to user
 	t.Log("Logging into user")
 	token, err := LoginToUser(username, password, client)
 	if err != nil {
 		t.Fatal(err)
 	}
+	adminToken = token
 
-	// Join CTF
-	if err := JoinCTF(token, phrase, client); err != nil {
+	// Create CTF
+	t.Log("Creating CTF")
+	phrase, err := CreateCTF(token, RandomString(8), RandomString(20), client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctfs = append(ctfs, phrase) // Add CTF to list to be deleted it later
+
+	// Get the CTF to make sure it exists
+	t.Log("Make sure CTF was created")
+	body, err := GetCTF(token, phrase, client)
+	if err != nil {
 		t.Fatal(err)
 	}
 
