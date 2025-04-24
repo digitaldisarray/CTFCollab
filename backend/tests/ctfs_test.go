@@ -86,6 +86,12 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Fatalf("Expected at least 1 challenge, got 0")
 	}
 
+	t.Log("Joining CTF as a guest with no nickname")
+	_, err = JoinCTFAsGuest(phrase, "", client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// ==================== JOIN CTF AS NORMAL USER ====================
 	// Create normal user
 	t.Log("Creating user")

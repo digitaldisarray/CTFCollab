@@ -165,7 +165,7 @@ func (h *Handler) JoinCTFGuest(c echo.Context) error {
 	guestParams := new(GuestParams)
 	if err := c.Bind(guestParams); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "Invalid request bodyy",
+			"error": "Invalid request body",
 		})
 	}
 

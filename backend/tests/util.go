@@ -226,12 +226,15 @@ func JoinCTFAsGuest(phrase, nickname string, client *resty.Client) (string, erro
 		"nickname": nickname,
 	}
 
+	if nickname == "" {
+		payload = nil
+	}
+
 	// Make the POST request to the endpoint
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(payload).
-		Post(fmt.Sprintf("http://localhost:1337/ctfs/%s/joinasguest", phrase))
-
+		Post(fmt.Sprintf("http://localhost:1337/ctfs/%s/join-as-guest", phrase))
 	if err != nil {
 		return "", fmt.Errorf("failed to make request: %w", err)
 	}
