@@ -58,11 +58,32 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// ==================== JOIN CTF AS GUEST ====================
+	// ==================== JOIN CTF AS GUEST AND DO THINGS ====================
 	t.Log("Joining CTF as a guest")
-	_, err = JoinCTFAsGuest(phrase, "TestGuest", client)
+	guest_token, err := JoinCTFAsGuest(phrase, "TestGuest", client)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	// Make a challenge
+	t.Log("Creating a challenge as a guest")
+	challengeName := "Guest's Challenge"
+	challengeDescription := "A description from guest"
+	challengeFlag := "flag{guest}"
+	createdName, hedgeDocURL, err := CreateChallenge(guest_token, phrase, challengeName, challengeDescription, challengeFlag, client)
+	if err != nil {
+		t.Fatalf("Failed to create challenge: %v", err)
+	}
+	t.Logf("Challenge created successfully! Name: %s, HedgeDoc URL: %s", createdName, hedgeDocURL)
+
+	// Get challenges
+	t.Log("Fetching challenges as a guest")
+	challenges, err := GetCTFChallenges(guest_token, phrase, client)
+	if err != nil {
+		t.Fatalf("Failed to get challenges: %v", err)
+	}
+	if len(challenges) == 0 {
+		t.Fatalf("Expected at least 1 challenge, got 0")
 	}
 
 	// ==================== JOIN CTF AS NORMAL USER ====================
@@ -91,10 +112,10 @@ func TestCTFEndToEnd(t *testing.T) {
 
 	// ==================== CHALLENGE TESTING ====================
 	// Create a challenge under the newly-created CTF
-	challengeName := "Sample Challenge"
-	challengeDescription := "A sample challenge description"
-	challengeFlag := "flag{test}"
-	createdName, hedgeDocURL, err := CreateChallenge(token, phrase, challengeName, challengeDescription, challengeFlag, client)
+	challengeName = "Sample Challenge"
+	challengeDescription = "A sample challenge description"
+	challengeFlag = "flag{test}"
+	createdName, hedgeDocURL, err = CreateChallenge(token, phrase, challengeName, challengeDescription, challengeFlag, client)
 	if err != nil {
 		t.Fatalf("Failed to create challenge: %v", err)
 	}
@@ -113,7 +134,7 @@ func TestCTFEndToEnd(t *testing.T) {
 
 	// Get challenges for the phrase and verify our new challenge is present
 	t.Log("Retrieving challenges for CTF")
-	challenges, err := GetCTFChallenges(token, phrase, client)
+	challenges, err = GetCTFChallenges(token, phrase, client)
 	if err != nil {
 		t.Fatalf("Failed to get challenges: %v", err)
 	}
