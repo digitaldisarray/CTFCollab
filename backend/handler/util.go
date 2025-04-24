@@ -3,6 +3,8 @@ package handler
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
+	"time"
 )
 
 // Makes sure the expected vs actual rows affected match in a sql query result
@@ -26,4 +28,16 @@ func VerifyParseResult(result sql.Result, expected_affected int64) (int64, error
 	}
 
 	return last_inserted, nil
+}
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+// GenerateGuestNickname generates a random nickname in the format "guest_<random_string>"
+func GenerateGuestNickname() string {
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomString := make([]byte, 6)
+	for i := range randomString {
+		randomString[i] = charset[rng.Intn(len(charset))]
+	}
+	return "guest_" + string(randomString)
 }

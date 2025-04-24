@@ -226,40 +226,41 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *Handler) CreateGuest(c echo.Context) error {
-	// Parse request body json
-	type GuestParams struct {
-		Nickname string `json:"nickname"`
-	}
-	guest := new(GuestParams)
-	if err := c.Bind(guest); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+// Currently, the only way to create a guest is by joining a CTF
+// func (h *Handler) CreateGuest(c echo.Context) error {
+// 	// Parse request body json
+// 	type GuestParams struct {
+// 		Nickname string `json:"nickname"`
+// 	}
+// 	guest := new(GuestParams)
+// 	if err := c.Bind(guest); err != nil {
+// 		return c.JSON(http.StatusBadRequest, err.Error())
+// 	}
 
-	// Check if nickname exists in guest database
-	_, err := h.Queries.GetGuestByName(c.Request().Context(), guest.Nickname)
-	if err == nil {
-		return c.JSON(http.StatusBadRequest, "Guest already exists")
-	}
+// 	// Check if nickname exists in guest database
+// 	_, err := h.Queries.GetGuestByName(c.Request().Context(), guest.Nickname)
+// 	if err == nil {
+// 		return c.JSON(http.StatusBadRequest, "Guest already exists")
+// 	}
 
-	// Create JWT token for the guest
-	claims := &auth.CustomClaims{
-		Name:     guest.Nickname,
-		LoggedIn: false, // Guest so false!
-		IsAdmin:  false,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-		},
-	}
+// 	// Create JWT token for the guest
+// 	claims := &auth.CustomClaims{
+// 		Name:     guest.Nickname,
+// 		LoggedIn: false, // Guest so false!
+// 		IsAdmin:  false,
+// 		RegisteredClaims: jwt.RegisteredClaims{
+// 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+// 		},
+// 	}
 
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+// 	// Create token with claims
+// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	// Generate encoded token and send it as response.
-	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
-	if err != nil {
-		return err
-	}
+// 	// Generate encoded token and send it as response.
+// 	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
-}
+// 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
+// }

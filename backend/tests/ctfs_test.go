@@ -18,12 +18,14 @@ func teardownCTFs() {
 	}
 }
 
+// TODO: Split this up...
 // Create a CTF and modify it in many ways before deleting it
 func TestCTFEndToEnd(t *testing.T) {
 	setup()
 	defer teardownCTFs()
 	defer teardownUsers()
 
+	// ==================== CTF CREATION ====================
 	// Login to admin account
 	err := godotenv.Load("../../.env") // Load env
 	if err != nil {
@@ -56,6 +58,14 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// ==================== JOIN CTF AS GUEST ====================
+	t.Log("Joining CTF as a guest")
+	_, err = JoinCTFAsGuest(phrase, "TestGuest", client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// ==================== JOIN CTF AS NORMAL USER ====================
 	// Create normal user
 	t.Log("Creating user")
 	username, password, err := CreateRandomUser(client)
@@ -79,6 +89,7 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// ==================== CHALLENGE TESTING ====================
 	// Create a challenge under the newly-created CTF
 	challengeName := "Sample Challenge"
 	challengeDescription := "A sample challenge description"
@@ -115,7 +126,7 @@ func TestCTFEndToEnd(t *testing.T) {
 		t.Logf("Challenge #%d: %+v", i+1, ch)
 	}
 
-	//Get challenge with id param and output it
+	// Get challenge with id param and output it
 	t.Log("Retrieving challenge with id")
 
 	id := challenges[0].ChallengeID
@@ -127,6 +138,7 @@ func TestCTFEndToEnd(t *testing.T) {
 
 	t.Logf("Challenge id#%d: %+v", id, challenge)
 
+	// ==================== CTF RENAME ====================
 	// Rename CTF
 	t.Log("Renaming CTF")
 	new_name := RandomString(9)
@@ -146,9 +158,6 @@ func TestCTFEndToEnd(t *testing.T) {
 	}
 
 	// Test Get all CTFs
-
-	// Create non privileged user
-	// Have non privileged user join ctf
 	// List joined CTFs
 	// Get CTF info
 
