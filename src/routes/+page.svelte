@@ -71,9 +71,6 @@
         <span class="separator">|</span>
         <Button href="/pages/about" variant="ghost">About</Button>
         <span class="separator">|</span>
-        <Button href="/pages/event-room" variant="ghost">
-            Test Event Room
-        </Button>
     </div>
 
     <header>
