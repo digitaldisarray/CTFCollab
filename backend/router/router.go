@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/digitaldisarray/ctfcollab/auth"
 	"github.com/digitaldisarray/ctfcollab/handler"
+	"github.com/digitaldisarray/ctfcollab/websocket"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -62,6 +63,11 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	}
 	e.GET("/ctfs/:phrase/exists", handler.GetCTFExists)
+
+	e.GET("/ws", func(c echo.Context) error {
+		websocket.ServeWs(handler.WsHub, c.Response().Writer, c.Request())
+		return nil
+	})
 
 	// Challenge routes
 	{

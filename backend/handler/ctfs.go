@@ -8,6 +8,7 @@ import (
 	"github.com/digitaldisarray/ctfcollab/auth"
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
 	"github.com/digitaldisarray/ctfcollab/util"
+	"github.com/digitaldisarray/ctfcollab/websocket"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -93,19 +94,39 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	join.CtfID = int32(ctf_id)
 	join.UserID = int32(claims.Id)
 	h.Queries.JoinCTFUser(c.Request().Context(), *join)
+
+	newChallenge := map[string]any{
+		"id":      mnemonic,
+		"name":    ctf.Name,
+		"date":    ctf.StartDate,
+		"status":  "pending", //TODO: Need to add as param for ctf maybe?
+		"members": "0",       //TODO: Need to add as param for ctf maybe?
+	}
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "ctf_added",
+		Payload: newChallenge,
+	})
+
 	return c.JSON(http.StatusOK, echo.Map{"phrase": mnemonic})
 }
 
 func (h *Handler) DeleteCTF(c echo.Context) error {
-	err := h.Queries.DeleteCTFByPhrase(c.Request().Context(), c.Param("phrase"))
+	phrase := c.Param("phrase")
+	err := h.Queries.DeleteCTFByPhrase(c.Request().Context(), phrase)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "ctf_deleted",
+		Payload: map[string]string{"id": phrase},
+	})
 
 	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) UpdateCTF(c echo.Context) error {
+	phrase := c.Param("phrase")
 	ctf := new(db.UpdateCTFParams)
 	if err := c.Bind(ctf); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -119,6 +140,11 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "ctf_updated",
+		Payload: map[string]string{"id": phrase},
+	})
 
 	return c.NoContent(http.StatusOK)
 }
