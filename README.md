@@ -49,7 +49,7 @@ docker compose down -v
 For frontend development, it helps to not run the frontend in docker so it auto updated with each change to the source code.
 ```bash
 # Run just the backed in docker
-docker compose -f compose.backend_only.yaml up
+docker compose -f compose.backend_only.yaml up 
 
 # Run the frontend outside of docker (make sure to do npm install)
 npm run dev

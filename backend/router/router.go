@@ -78,6 +78,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		users.GET("/:username", handler.GetUser, auth.SelfOnly)
 		users.DELETE("/:username", handler.DeleteUser, auth.SelfOnly)
 		users.POST("/:username/password", handler.ChangePassword, auth.SelfOnly)
+		users.POST("/logout", handler.LogoutUser, auth.SelfOnly)
 	}
 
 	return e
