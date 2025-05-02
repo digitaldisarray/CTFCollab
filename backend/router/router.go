@@ -42,17 +42,21 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// CTF routes
 	{
-
 		ctfs := e.Group("/ctfs")
 		ctfs.Use(echojwt.WithConfig(config))
+
 		ctfs.GET("", handler.GetAllCTFs, auth.AdminOnly)
 		ctfs.POST("", handler.CreateCTF, auth.AdminOnly)
-		ctfs.GET("/joined", handler.GetJoinedCTFs)
-		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // can be changed I think
+		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // TODO: Search joined CTFs for regular users
+		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
+
+		ctfs.POST("/:phrase/join", handler.JoinCTF)
+		ctfs.POST("/:phrase/join-as-guest", handler.JoinCTFGuest)
+
+		ctfs.GET("/joined", handler.GetJoinedCTFs, auth.MemberOnly(handler.Queries))
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
-		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
-		ctfs.POST("/:phrase/join", handler.JoinCTF)
+
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.GET("/:phrase/challenge/:id", handler.GetChallenge, auth.MemberOnly(handler.Queries))
@@ -65,13 +69,16 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// Challenge routes
 	{
-		//e.PUT("/challenges/:id", )
+		// chals := e.Group("/challenges")
+		// chals.Use(echojwt.WithConfig(config))
+
+		// TODO: Move the /phrase/challenge requests here & make authenticated & ctf membership checked
 	}
 
 	// User routes
-	e.POST("/users/guest", handler.CreateGuest) // Accessible without JWT
-	e.POST("/users", handler.CreateUser)        // Accessible without JWT
-	e.POST("/users/login", handler.LoginUser)   // Accessible without JWT
+	// e.POST("/users/guest", handler.CreateGuest) // Accessible without JWT // I think now we should have the only way of creating a guest be joining a ctf
+	e.POST("/users", handler.CreateUser)      // Accessible without JWT
+	e.POST("/users/login", handler.LoginUser) // Accessible without JWT
 	{
 		users := e.Group("/users")
 		users.Use(echojwt.WithConfig(config))

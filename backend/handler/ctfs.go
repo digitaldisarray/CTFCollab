@@ -35,8 +35,8 @@ func (h *Handler) GetJoinedCTFs(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, ctfs)
 	} else {
-		// Look up CTFs that guest belongs to
-		ctfs, err := h.Queries.ListGuestsJoinedCTFs(c.Request().Context(), id)
+		// Look up CTF that guest belongs to
+		ctfs, err := h.Queries.ListGuestsJoinedCTF(c.Request().Context(), id)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
@@ -140,10 +140,7 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 		join.UserID = int32(claims.Id)
 		_, err = h.Queries.JoinCTFUser(c.Request().Context(), *join)
 	} else {
-		join := new(db.JoinCTFGuestParams)
-		join.CtfID = ctf.ID
-		join.GuestID = int32(claims.Id)
-		_, err = h.Queries.JoinCTFGuest(c.Request().Context(), *join)
+		return c.NoContent(http.StatusBadRequest) // Can't join CTF as guest w/ this endpoint
 	}
 
 	if err != nil {
@@ -151,6 +148,99 @@ func (h *Handler) JoinCTF(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *Handler) JoinCTFGuest(c echo.Context) error {
+	// Make sure CTF phrase is valid
+	phrase := c.Param("phrase")
+	ctf, err := h.Queries.GetCTFByPhrase(c.Request().Context(), phrase)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// Parse nickname from request body
+	type GuestParams struct {
+		Nickname string `json:"nickname"`
+	}
+	guestParams := new(GuestParams)
+	if err := c.Bind(guestParams); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid request body",
+		})
+	}
+
+	// Generate a nickname if not provided
+	if guestParams.Nickname == "" {
+		guestParams.Nickname = GenerateGuestNickname()
+	}
+
+	// Check if the nickname already exists for the specific CTF
+	_, err = h.Queries.GetGuestByNameAndCTF(c.Request().Context(), db.GetGuestByNameAndCTFParams{
+		Nickname: guestParams.Nickname,
+		CtfID:    ctf.ID,
+	})
+	if err == nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Nickname already taken for this CTF",
+		})
+	} else if err != sql.ErrNoRows {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// Create a new guest account
+	newGuest := db.CreateGuestParams{
+		Nickname: guestParams.Nickname,
+		CtfID:    ctf.ID,
+	}
+	result, err := h.Queries.CreateGuest(c.Request().Context(), newGuest)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// Make sure user was created
+	_, err = VerifyParseResult(result, 1)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// Fetch user from DB to get info
+	guest, err := h.Queries.GetGuestByNameAndCTF(c.Request().Context(), db.GetGuestByNameAndCTFParams{
+		Nickname: guestParams.Nickname,
+		CtfID:    ctf.ID,
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// Create JWT token for the guest
+	claims := &auth.CustomClaims{
+		Name:     guestParams.Nickname,
+		LoggedIn: false, // Guest accounts are not logged in
+		Id:       int(guest.ID),
+		IsAdmin:  false,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)), // Token valid for 72 hours
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	encodedToken, err := token.SignedString([]byte(h.JWTSecret))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to generate token",
+		})
+	}
+
+	// Return the token to the client
+	c.SetCookie(&http.Cookie{
+		Name:     "token",
+		Value:    encodedToken,
+		HttpOnly: true,
+		Secure:   false, // TODO: Change to true when not localhost
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+	})
+	return c.NoContent(http.StatusOK) // Might need c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 }
 
 // helper struct for SearchCTFs
