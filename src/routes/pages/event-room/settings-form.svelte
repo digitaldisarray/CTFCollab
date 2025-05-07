@@ -63,7 +63,6 @@
                     challenges.set(challengeData.map((challenge) => {
                         return {
                             name: challenge.challenge_name,
-                            active_members: 0, // TODO: need to add a members to backend or have some way to check it
                             status: "pending", // TODO: need to add a status to the backend maybe? or just remove
                             id: challenge.challenge_id.toString(),
                             hedgedoc_url: challenge.hedgedoc_url,
@@ -107,8 +106,7 @@
           let newChallenge: Challenge = {
             id: challengeData.id,
             hedgedoc_url: challengeData.hedgedoc_url,
-            active_members: 0,
-            status: "pending" as "pending" | "processing" | "success" | "failed",
+            status: "pending" as "pending" | "complete",
             name: name,
             description: challengeData.description
           };
@@ -149,18 +147,6 @@
           {/snippet}
         </Form.Control>
         <Form.Description>Describe the details of this challenge</Form.Description>
-        <Form.FieldErrors />
-    </Form.Field>
-
-    <!-- Flag Field -->
-    <Form.Field {form} name="challengeFlag">
-        <Form.Control>
-          {#snippet children({ props })}
-            <Form.Label>(Optional) Challenge Flag</Form.Label>
-            <Input {...props} bind:value={$formData.challengeFlag} />
-          {/snippet}
-        </Form.Control>
-        <Form.Description>The flag for this challenge</Form.Description>
         <Form.FieldErrors />
     </Form.Field>
   

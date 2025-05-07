@@ -124,3 +124,19 @@ func (q *Queries) UpdateChallenge(ctx context.Context, arg UpdateChallengeParams
 		arg.ID,
 	)
 }
+
+const updateChallengeFlag = `-- name: UpdateChallengeFlag :exec
+UPDATE challenges
+SET flag = ?
+WHERE id = ?
+`
+
+type UpdateChallengeFlagParams struct {
+	Flag string `json:"flag"`
+	ID   int32  `json:"id"`
+}
+
+func (q *Queries) UpdateChallengeFlag(ctx context.Context, arg UpdateChallengeFlagParams) error {
+	_, err := q.db.ExecContext(ctx, updateChallengeFlag, arg.Flag, arg.ID)
+	return err
+}

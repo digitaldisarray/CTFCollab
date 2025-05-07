@@ -4,10 +4,12 @@
 
     let challengeId: string = "";
     let hedgedocUrl: string = "";
+    let challenge: any = null; // Store the challenge data
 
     // Extract challenge ID and CTF phrase from query parameters
     $: challengeId = new URLSearchParams($page.url.search).get("challenge") || "";
     const ctfPhrase = new URLSearchParams($page.url.search).get("code");
+    
 
     const fetchChallenge = async () => {
         if (!ctfPhrase || !challengeId) {
@@ -34,6 +36,7 @@
             console.error("Error occurred", error);
         }
     };
+
 
     onMount(async() => {
         if (challengeId) {
@@ -83,5 +86,10 @@
     .my-iframe {
     width: 100%;
     height: 87vh;
+    }
+    footer {
+        margin-top: 40px;
+        font-size: 0.9rem;
+        color: #777;
     }
 </style>

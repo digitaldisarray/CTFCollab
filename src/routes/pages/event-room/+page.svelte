@@ -105,7 +105,7 @@
         <!-- Header -->
         <header>
           <h1 class="chal-name">{$currentCTF?.ctf_name}</h1>
-          <p>Manage your Challenge rooms.</p>
+          <p>Challenge Editors.</p>
         </header>
   
         <!-- Add Challenge Button -->
@@ -239,6 +239,9 @@
     
       </div>
   </div>
+  <footer>
+    <p>&copy; 2025 CTF-Collab. All rights reserved.</p>
+  </footer>
   
   <style>
     .logo-header {
@@ -301,5 +304,12 @@
     header p {
       font-size: 1.2rem;
       color: #666;
+    }
+
+    footer {
+        margin-top: 40px;
+        font-size: 0.9rem;
+        color: #777;
+        text-align: center
     }
   </style>
