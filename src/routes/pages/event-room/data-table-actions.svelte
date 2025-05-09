@@ -10,12 +10,13 @@
 
     
     const SubmitFlag = async () => {
-        const flagValue = prompt('Please enter the flag:');
-        if (!flagValue) return;
+        const flagValue = prompt('Please enter the flag:', flag); // prefill with current flag
+
+        if (flagValue === null) return; // user clicked cancel
 
         try {
             const response = await fetch(`http://localhost:1337/ctfs/${ctfPhrase}/challenges/${id}/submit`, {
-                method: 'PUT',  // Changed from POST to PUT
+                method: 'PUT',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
@@ -24,10 +25,9 @@
             });
 
             if (response.ok) {
-                // Update both the flag and status in the challenges store
                 challenges.update(current => 
                     current.map(ch => 
-                        ch.id === id ? { ...ch, flag: flagValue, status: "complete" } : ch
+                        ch.id === id ? { ...ch, flag: flagValue, status: flagValue ? "complete" : "pending" } : ch
                     )
                 );
                 alert('Challenge flag submitted successfully');
@@ -40,6 +40,7 @@
             alert('An error occurred while submitting the Challenge Flag.');
         }
     };
+
 
     const deleteChal = async () => {
         // A confirmation prompt to help prevent accidental deletions
