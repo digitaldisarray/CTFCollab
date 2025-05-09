@@ -82,6 +82,9 @@
     const handleClick = (event: Event, row: { original: TData }) => {
     console.log("Clicked row:", row.original);
 
+    console.log("Row.original inside handleClick:", row.original);
+    console.log("isChallenge returns:", isChallenge(row.original));
+
     if (isChallenge(row.original)) {
       let challenge: Challenge = row.original;
       console.log("Challenge ID:", challenge.id);
@@ -95,7 +98,7 @@
         return;
       }
 
-      if (challenge.id.trim()) {
+      if (challenge.id !== undefined && challenge.id !== null) {
         const url = `/pages/event-room/challenge?code=${encodeURIComponent(ctfCode)}&challenge=${challenge.id}`;
         console.log("Navigating to:", url);
         goto(url);
@@ -103,9 +106,10 @@
     }
 
     function isChallenge(data: any): data is Challenge {
-        return (data as Challenge).id !== undefined;
+      return (data as Challenge).id !== undefined && (data as Challenge).id !== null;
     }
   };
+
    </script>
 
     <div>

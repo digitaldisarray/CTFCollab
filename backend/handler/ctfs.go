@@ -95,7 +95,7 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	join.UserID = int32(claims.Id)
 	h.Queries.JoinCTFUser(c.Request().Context(), *join)
 
-	newChallenge := map[string]any{
+	newCTF := map[string]any{
 		"id":      mnemonic,
 		"name":    ctf.Name,
 		"date":    ctf.StartDate,
@@ -104,7 +104,7 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	}
 	h.WsHub.Broadcast(websocket.Message{
 		Type:    "ctf_added",
-		Payload: newChallenge,
+		Payload: newCTF,
 	})
 
 	return c.JSON(http.StatusOK, echo.Map{"phrase": mnemonic})

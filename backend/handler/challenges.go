@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
+	"github.com/digitaldisarray/ctfcollab/websocket"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,7 +27,7 @@ import (
 func (h *Handler) DeleteChallenge(c echo.Context) error {
 	challengeID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID")
 	}
 
 	ctx := context.Background()
@@ -34,6 +35,11 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "chal_deleted",
+		Payload: map[string]int{"id": challengeID},
+	})
 
 	return c.JSON(http.StatusOK, "Deleted")
 }
@@ -117,10 +123,32 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 
 	// Step 2: Insert the challenge into the database
 	ctx := context.Background()
-	_, err = h.Queries.CreateChallenge(ctx, *challenge)
+
+	res, err := h.Queries.CreateChallenge(ctx, *challenge)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	// Get chal id
+	insertedID, err := res.LastInsertId()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to get inserted challenge ID")
+	}
+
+	newChallenge := map[string]any{
+		"id":           insertedID,
+		"name":         challenge.Name,
+		"description":  challenge.Description,
+		"flag":         challenge.Flag,
+		"hedgedoc_url": challenge.HedgedocUrl,
+		"phrase":       challenge.Phrase,
+		"status":       "pending",
+	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "chal_added",
+		Payload: newChallenge,
+	})
 
 	// Return the created challenge with the HedgeDoc URL
 	return c.JSON(http.StatusOK, map[string]string{
