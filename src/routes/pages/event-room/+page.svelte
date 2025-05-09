@@ -32,7 +32,7 @@
       if (ws) {
         console.log("Cleaning up WebSocket connection.");
         manuallyClosed = true;
-        ws.close(1000, "Client component unmounting");
+        ws.close();
         ws = null;
       }
     });
@@ -64,7 +64,7 @@
             break;
           case 'chal_deleted':
             const deletedId = message.payload.id.toString();
-            challenges.update((current) => current.filter((ch) => ch.id !== deletedId));
+            challenges.update((current) => current.filter((ch) => ch.id.toString() !== deletedId));
             break;
           case 'chal_updated':
              const updatedChallenge = message.payload as Challenge;
