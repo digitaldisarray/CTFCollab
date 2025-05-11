@@ -19,7 +19,7 @@ export const handle: Handle = async ({ event, resolve }) => {
             event.locals.user = {
                 username: resp.name,
                 isAdmin: resp.isAdmin
-            };
+            } satisfies User;
         }
         
     } else {
@@ -27,4 +27,4 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     return resolve(event);
-}
+};

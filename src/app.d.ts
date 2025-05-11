@@ -1,10 +1,11 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
-type User = {
-	username: String,
-	isAdmin: Boolean,
-}
+
 declare global {
+	type User = {
+		username: string,
+		isAdmin: Boolean,
+	}
 	namespace App {
 		// interface Error {}
 		interface Locals{
