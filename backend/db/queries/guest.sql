@@ -1,22 +1,23 @@
 -- name: CreateGuest :execresult
 INSERT INTO guests (
-    nickname
+    nickname,
+    ctf_id
 ) VALUES (
-    ?
+    ?, ?
 );
 
 -- name: MarkGuestSeen :execresult
 UPDATE guests
 SET last_seen = CURRENT_TIMESTAMP
-WHERE nickname = ?;
+WHERE id = ?;
 
 -- name: GetGuestByID :one
 SELECT * FROM guests
 WHERE id = ? LIMIT 1;
 
--- name: GetGuestByName :one
+-- name: GetGuestByNameAndCTF :one
 SELECT * FROM guests
-WHERE nickname = ? LIMIT 1;
+WHERE nickname = ? AND ctf_id = ? LIMIT 1;
 
 -- name: PruneOldSessions :execresult
 DELETE FROM guests

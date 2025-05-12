@@ -3,7 +3,10 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { goto } from '$app/navigation';
 
-  
+    export let data: {
+        user: User | null;
+    };
+    
     let roomcode = '';
     let errorMessage = '';
     let showNicknamePopup = false;
@@ -67,13 +70,13 @@
     </div>
     
     <div class="absolute right-4 top-4 md:right-8 md:top-8">
-        <Button href="/pages/signin" variant="ghost">Login</Button>
+        {#if data.user}
+            <Button href="/pages/admin-page" variant="ghost">Dashboard</Button>
+        {:else}
+            <Button href="/pages/signin" variant="ghost">Login</Button>
+        {/if}
         <span class="separator">|</span>
         <Button href="/pages/about" variant="ghost">About</Button>
-        <span class="separator">|</span>
-        <Button href="/pages/event-room" variant="ghost">
-            Test Event Room
-        </Button>
     </div>
 
     <header>
@@ -89,9 +92,9 @@
                             <Input bind:value={nickname} placeholder="Your nickname..." />
                             <div class="popup-buttons">
                                 <Button type="submit">Join Room</Button>
-                                <div on:click={closePopup}>
+                                <button type="button" on:click={closePopup}>
                                     <Button variant="outline">Cancel</Button>
-                                </div>
+                                </button>
                             </div>
                         </form>
                     </div>

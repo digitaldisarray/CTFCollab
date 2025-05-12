@@ -4,7 +4,9 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import { ctfData } from './columns';
 
-    let { id }: { id: string } = $props();
+    let { id }: { id: string} = $props();
+    let showDetails = $state(false)
+    let description = $state("")
 
     const deleteCTF = async () => {
         // A confirmation prompt to help prevent accidental deletions
@@ -30,7 +32,47 @@
             alert('An error occurred while deleting the CTF room.');
         }
     };
+
+    const viewDetails = async () => {
+       fetch(`http://localhost:1337/ctfs/${id}`, {
+        credentials: 'include',
+    })
+        .then(response => response.json())
+        .then(data => {
+            description = data.description
+        if(description === "")
+            alert("No description provided")
+        else{
+            showDetails = !showDetails
+            console.log(description)
+        }
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+        }
+    const closeDetails = async (e) => {
+        e.stopPropagation() //Makes it so you can click on the button instead of the event
+        showDetails = false
+    }
 </script>
+
+<style>
+    .detailsBox{
+        z-index: 99;
+        position: absolute;
+        border: solid 1px;
+        right: 10px;
+        padding: 3px;
+        border-radius: 4px;
+    }
+    .close{
+        position: relative;
+        right: 0;
+        top: 0;
+
+    }
+</style>
    
    <DropdownMenu.Root>
     <DropdownMenu.Trigger>
@@ -55,9 +97,16 @@
      </DropdownMenu.Group>
      <DropdownMenu.Separator />
      <DropdownMenu.Item>View Active Members</DropdownMenu.Item>
-     <DropdownMenu.Item>View CTF details</DropdownMenu.Item>
+     <DropdownMenu.Item onclick={viewDetails}>View CTF details</DropdownMenu.Item>
      <DropdownMenu.Item onclick={deleteCTF}>
         Delete CTF Room
     </DropdownMenu.Item>
     </DropdownMenu.Content>
    </DropdownMenu.Root>
+{#if showDetails}
+    <div class="detailsBox">
+        <h2>
+            {description} <button class="close" onclick={closeDetails}>×</button>
+        </h2>
+    </div>
+{/if}

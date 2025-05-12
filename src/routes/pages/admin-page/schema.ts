@@ -13,3 +13,10 @@ export const formSchema = z.object({
 });
  
 export type FormSchema = typeof formSchema;
+
+export const changePasswordForm = z.object({
+  oldPassword: z.string().min(2).max(50),
+  newPassword: z.string().min(2).max(50),
+})
+
+export type ChangePasswordForm = typeof changePasswordForm;

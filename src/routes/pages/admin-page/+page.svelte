@@ -4,16 +4,18 @@
   import type { PageData } from "./$types.js";
   import SettingsForm from "./settings-form.svelte";
   import DataTable from "./data-table.svelte";
+  import AccountButton from "./account-button.svelte";
   import { columns, type Challenge, type CTF } from "./columns.js";
   import { ctfData, formatData } from "./columns.js";
   import { getLocalTimeZone, today } from "@internationalized/date";
   import { Calendar } from "$lib/components/ui/calendar/index.js";
   import { goto } from "$app/navigation";
   import { onDestroy, onMount } from 'svelte';
+  import { changePasswordForm } from "./schema.js";
 
   
   let { data: pageData }: { data: PageData } = $props();
-
+ 
   // svelte-ignore non_reactive_update
   let value = [today(getLocalTimeZone())];
 
@@ -178,6 +180,8 @@
     </div>
     
   </div>
+  <AccountButton data={pageData}/>
+
 </div>
 
 

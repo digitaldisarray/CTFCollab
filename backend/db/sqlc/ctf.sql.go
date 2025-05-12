@@ -125,29 +125,33 @@ func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTF
 }
 
 const isGuestMemberOfCTF = `-- name: IsGuestMemberOfCTF :one
-SELECT COUNT(*) > 0 AS is_member
-FROM guest_ctfs
-JOIN ctfs ON guest_ctfs.ctf_id = ctfs.id
-WHERE guest_ctfs.guest_id = ? AND ctfs.phrase = ?
+SELECT EXISTS (
+    SELECT 1
+    FROM guests
+    JOIN ctfs ON guests.ctf_id = ctfs.id
+    WHERE guests.id = ? AND ctfs.phrase = ?
+) AS is_member
 `
 
 type IsGuestMemberOfCTFParams struct {
-	GuestID int32  `json:"guest_id"`
-	Phrase  string `json:"phrase"`
+	ID     int32  `json:"id"`
+	Phrase string `json:"phrase"`
 }
 
 func (q *Queries) IsGuestMemberOfCTF(ctx context.Context, arg IsGuestMemberOfCTFParams) (bool, error) {
-	row := q.db.QueryRowContext(ctx, isGuestMemberOfCTF, arg.GuestID, arg.Phrase)
+	row := q.db.QueryRowContext(ctx, isGuestMemberOfCTF, arg.ID, arg.Phrase)
 	var is_member bool
 	err := row.Scan(&is_member)
 	return is_member, err
 }
 
 const isUserMemberOfCTF = `-- name: IsUserMemberOfCTF :one
-SELECT COUNT(*) > 0 AS is_member
-FROM user_ctfs
-JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
-WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?
+SELECT EXISTS (
+    SELECT 1
+    FROM user_ctfs
+    JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
+    WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?
+) AS is_member
 `
 
 type IsUserMemberOfCTFParams struct {
@@ -160,23 +164,6 @@ func (q *Queries) IsUserMemberOfCTF(ctx context.Context, arg IsUserMemberOfCTFPa
 	var is_member bool
 	err := row.Scan(&is_member)
 	return is_member, err
-}
-
-const joinCTFGuest = `-- name: JoinCTFGuest :execresult
-INSERT INTO guest_ctfs (
-    guest_id, ctf_id
-) VALUES (
-    ?, ?
-)
-`
-
-type JoinCTFGuestParams struct {
-	GuestID int32 `json:"guest_id"`
-	CtfID   int32 `json:"ctf_id"`
-}
-
-func (q *Queries) JoinCTFGuest(ctx context.Context, arg JoinCTFGuestParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, joinCTFGuest, arg.GuestID, arg.CtfID)
 }
 
 const joinCTFUser = `-- name: JoinCTFUser :execresult
@@ -232,51 +219,24 @@ func (q *Queries) ListAllCTFs(ctx context.Context) ([]Ctf, error) {
 	return items, nil
 }
 
-const listGuestsJoinedCTFs = `-- name: ListGuestsJoinedCTFs :many
-SELECT 
-    ctfs.name AS ctf_name,
-    ctfs.description AS ctf_description,
-    ctfs.start_date,
-    ctfs.end_date,
-    ctfs.author_id AS ctf_author_id,
-    ctfs.phrase
-FROM 
-    ctfs
-JOIN 
-    guest_ctfs ON ctfs.id = guest_ctfs.ctf_id
-WHERE 
-    guest_ctfs.guest_id = ?
+const listGuestsJoinedCTF = `-- name: ListGuestsJoinedCTF :many
+SELECT ctf_id FROM guests
+WHERE id = ?
 `
 
-type ListGuestsJoinedCTFsRow struct {
-	CtfName        string    `json:"ctf_name"`
-	CtfDescription string    `json:"ctf_description"`
-	StartDate      time.Time `json:"start_date"`
-	EndDate        time.Time `json:"end_date"`
-	CtfAuthorID    int32     `json:"ctf_author_id"`
-	Phrase         string    `json:"phrase"`
-}
-
-func (q *Queries) ListGuestsJoinedCTFs(ctx context.Context, guestID int32) ([]ListGuestsJoinedCTFsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listGuestsJoinedCTFs, guestID)
+func (q *Queries) ListGuestsJoinedCTF(ctx context.Context, id int32) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, listGuestsJoinedCTF, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListGuestsJoinedCTFsRow
+	var items []int32
 	for rows.Next() {
-		var i ListGuestsJoinedCTFsRow
-		if err := rows.Scan(
-			&i.CtfName,
-			&i.CtfDescription,
-			&i.StartDate,
-			&i.EndDate,
-			&i.CtfAuthorID,
-			&i.Phrase,
-		); err != nil {
+		var ctf_id int32
+		if err := rows.Scan(&ctf_id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, ctf_id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

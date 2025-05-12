@@ -34,12 +34,7 @@ type Guest struct {
 	Nickname  string       `json:"nickname"`
 	LastSeen  sql.NullTime `json:"last_seen"`
 	CreatedAt sql.NullTime `json:"created_at"`
-}
-
-type GuestCtf struct {
-	GuestID  int32        `json:"guest_id"`
-	CtfID    int32        `json:"ctf_id"`
-	JoinedAt sql.NullTime `json:"joined_at"`
+	CtfID     int32        `json:"ctf_id"`
 }
 
 type User struct {
