@@ -15,7 +15,69 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/challenges/{id}": {
+        "/ctfs": {
+            "get": {
+                "description": "Gets every CTF a user belongs to",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Get All CTFs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "araray"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new CTF, creator is a participant of the new CTF",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Create CTF",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/challenges/{id}": {
             "delete": {
                 "description": "Deletes a Challenge by ID from the database, requires admin privileges",
                 "consumes": [
@@ -39,7 +101,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Challenge successfully deleted",
+                        "description": "Deleted",
                         "schema": {
                             "type": "string"
                         }
@@ -59,9 +121,38 @@ const docTemplate = `{
                 }
             }
         },
-        "/user": {
+        "/ctfs/joined": {
+            "get": {
+                "description": "Gets all CTFs a user is joined to based on their JWT token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Get Joined CTFs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.ListUsersJoinedCTFsRow"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/search": {
             "post": {
-                "description": "Creates a new user in the database with a hashed password using the Argon2id algorithm",
+                "description": "Searches for CTFs by name, description, and optional start/end date ranges",
                 "consumes": [
                     "application/json"
                 ],
@@ -69,30 +160,31 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "ctfs"
                 ],
-                "summary": "Create a new user",
+                "summary": "Search CTFs",
                 "parameters": [
                     {
-                        "description": "Create User",
-                        "name": "user",
+                        "description": "Search filters",
+                        "name": "search",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/db.CreateUserParams"
+                            "$ref": "#/definitions/handler.OuterSearchParams"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "user_id: ID of the created user",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Ctf"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Invalid input",
+                        "description": "Bad request",
                         "schema": {
                             "type": "string"
                         }
@@ -101,6 +193,384 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}": {
+            "get": {
+                "description": "Gets a CTF whose phrase matches the given phrase",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Get CTF",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Ctf"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the information of an existing CTF",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Update CTF",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CTF updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the CTF that matches the provided phrase",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Delete CTF",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CTF deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}/challenge/{id}": {
+            "get": {
+                "description": "Gets a single challenge based on the CTF's phrase and challenge ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Get Challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Challenge ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid challenge ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}/challenges": {
+            "get": {
+                "description": "Gets all challenges belonging to a CTF. Takes a CTF phrase.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Get Challenges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handler.Challenge"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a challenge bound to a specified CTF phrase.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Post Challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreatedChallenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}/exists": {
+            "get": {
+                "description": "Checks whether a CTF exists with the given phrase",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Check CTF Existence",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CTF Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exists",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "CTF not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}/join": {
+            "post": {
+                "description": "Joins a logged-in user to a CTF by phrase",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Join CTF (Logged-in user)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Joined successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ctfs/{phrase}/join-as-guest": {
+            "post": {
+                "description": "Joins a guest user to a CTF based on nickname and returns a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ctfs"
+                ],
+                "summary": "Join CTF (Guest)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phrase",
+                        "name": "phrase",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nickname",
+                        "name": "nickname",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handler.GuestParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Guest joined and token issued",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request or nickname taken",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -126,15 +596,18 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/db.CreateUserParams"
+                            "$ref": "#/definitions/handler.UserAuthParams"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Logged in user information",
+                        "description": "JWT token response",
                         "schema": {
-                            "$ref": "#/definitions/db.CreateUserParams"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
@@ -152,9 +625,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/password": {
+        "/users": {
             "post": {
-                "description": "Hashes and updates the password for an existing user, requires admin privileges or account owner",
+                "description": "Creates a new user in the database with a hashed password using the Argon2id algorithm",
                 "consumes": [
                     "application/json"
                 ],
@@ -164,33 +637,53 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "Update password",
+                "summary": "Create a new user",
                 "parameters": [
                     {
-                        "description": "Password Update Request",
-                        "name": "req",
+                        "description": "Create User",
+                        "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/db.ChangePasswordParams"
+                            "$ref": "#/definitions/db.CreateUserParams"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Password updated successfully"
+                        "description": "User successfully created",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     "400": {
-                        "description": "Invalid input or password criteria not met",
+                        "description": "User already exists",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal server error during password update",
+                        "description": "Internal server error",
                         "schema": {
                             "type": "string"
                         }
+                    }
+                }
+            }
+        },
+        "/users/logout": {
+            "post": {
+                "description": "Sets a logged-in users JWT token to expire yesterday",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "Logged out."
                     }
                 }
             }
@@ -232,16 +725,104 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{username}": {
+            "get": {
+                "description": "Fetches a user by their username",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.User"
+                        }
+                    },
+                    "400": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{username}/password": {
+            "post": {
+                "description": "Hashes and updates the password for an existing user, requires admin privileges or account owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password Update Request",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/db.ChangePasswordParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input or password criteria not met",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during password update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
         "db.ChangePasswordParams": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
                 "password_hash": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -250,6 +831,146 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "password_hash": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.Ctf": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phrase": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.ListUsersJoinedCTFsRow": {
+            "type": "object",
+            "properties": {
+                "ctf_author_id": {
+                    "type": "integer"
+                },
+                "ctf_description": {
+                    "type": "string"
+                },
+                "ctf_name": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "phrase": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.User": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "password_hash": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.Challenge": {
+            "type": "object",
+            "properties": {
+                "challenge_created_at": {
+                    "type": "object",
+                    "properties": {
+                        "Time": {
+                            "type": "string"
+                        },
+                        "Valid": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "challenge_description": {
+                    "type": "string"
+                },
+                "challenge_id": {
+                    "type": "integer"
+                },
+                "challenge_name": {
+                    "type": "string"
+                },
+                "flag": {
+                    "type": "string"
+                },
+                "hedgedoc_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.CreatedChallenge": {
+            "type": "object",
+            "properties": {
+                "challenge_name": {
+                    "type": "string"
+                },
+                "hedgedoc_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.GuestParams": {
+            "type": "object",
+            "properties": {
+                "nickname": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.OuterSearchParams": {
+            "type": "object",
+            "properties": {
+                "description": {},
+                "end_date": {
+                    "type": "string"
+                },
+                "name": {},
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UserAuthParams": {
+            "type": "object",
+            "properties": {
+                "password": {
                     "type": "string"
                 },
                 "username": {

@@ -28,10 +28,10 @@ type ChangePasswordParams struct {
 // @Accept json
 // @Produce json
 // @Param user body db.CreateUserParams true "Create User"
-// @Success 200 {object} map[string]interface{} "user_id: ID of the created user"
-// @Failure 400 {string} string "Invalid input"
+// @Success 200 {string} string "User successfully created"
+// @Failure 400 {string} string "User already exists"
 // @Failure 500 {string} string "Internal server error"
-// @Router /user [post]
+// @Router /users [post]
 func (h *Handler) CreateUser(c echo.Context) error {
 	// Parse request
 	user := new(UserAuthParams)
@@ -72,6 +72,15 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// GetUser fetches a user by username
+// @Summary Get user
+// @Description Fetches a user by their username
+// @Tags users
+// @Produce json
+// @Param username path string true "Username"
+// @Success 200 {object} db.User
+// @Failure 400 {string} string "User not found"
+// @Router /users/{username} [get]
 func (h *Handler) GetUser(c echo.Context) error {
 	username := c.Param("username")
 
@@ -92,8 +101,8 @@ func (h *Handler) GetUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body db.CreateUserParams true "Login Credentials"
-// @Success 200 {object} db.CreateUserParams "Logged in user information"
+// @Param user body handler.UserAuthParams true "Login Credentials"
+// @Success 200 {object} map[string]string "JWT token response"
 // @Failure 400 {string} string "Invalid login credentials"
 // @Failure 500 {string} string "Internal server error"
 // @Router /user/login [post]
@@ -159,11 +168,12 @@ func (h *Handler) LoginUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Param username path string true "Username"
 // @Param req body db.ChangePasswordParams true "Password Update Request"
-// @Success 200 "Password updated successfully"
+// @Success 200 {string} string "Password updated successfully"
 // @Failure 400 {string} string "Invalid input or password criteria not met"
 // @Failure 500 {string} string "Internal server error during password update"
-// @Router /users/password [post]
+// @Router /users/{username}/password [post]
 func (h *Handler) ChangePassword(c echo.Context) error {
 	var req ChangePasswordParams
 	if err := c.Bind(&req); err != nil {
@@ -266,6 +276,13 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 // 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 // }
 
+// LogoutUser logs a user out, nulling their jwt token
+// @Summary Logout user
+// @Description Sets a logged-in users JWT token to expire yesterday
+// @Tags users
+// @Produce json
+// @Success 200 "Logged out."
+// @Router /users/logout [post]
 func (h *Handler) LogoutUser(c echo.Context) error {
 	c.SetCookie(&http.Cookie{
 		Name:     "token",
