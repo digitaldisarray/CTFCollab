@@ -12,8 +12,6 @@ WHERE
     and (sqlc.arg(description) IS NULL OR ctfs.description LIKE CONCAT('%', sqlc.arg(description), '%'))
 ORDER BY start_date;
 
-
-
 -- name: GetCTFByPhrase :one
 SELECT * FROM ctfs
 WHERE phrase = ? LIMIT 1;
@@ -45,13 +43,6 @@ INSERT INTO user_ctfs (
     ?, ?
 );
 
--- name: JoinCTFGuest :execresult
-INSERT INTO guest_ctfs (
-    guest_id, ctf_id
-) VALUES (
-    ?, ?
-);
-
 -- name: ListUsersJoinedCTFs :many
 SELECT 
     ctfs.name AS ctf_name,
@@ -67,21 +58,9 @@ JOIN
 WHERE 
     user_ctfs.user_id = ?;
 
--- name: ListGuestsJoinedCTFs :many
-SELECT 
-    ctfs.name AS ctf_name,
-    ctfs.description AS ctf_description,
-    ctfs.start_date,
-    ctfs.end_date,
-    ctfs.author_id AS ctf_author_id,
-    ctfs.phrase
-FROM 
-    ctfs
-JOIN 
-    guest_ctfs ON ctfs.id = guest_ctfs.ctf_id
-WHERE 
-    guest_ctfs.guest_id = ?;
-
+-- name: ListGuestsJoinedCTF :many
+SELECT ctf_id FROM guests
+WHERE id = ?;
 
 -- name: GetCTFChallenges :many
 SELECT 
@@ -99,13 +78,17 @@ WHERE
     ctfs.phrase = ?;
 
 -- name: IsUserMemberOfCTF :one
-SELECT COUNT(*) > 0 AS is_member
-FROM user_ctfs
-JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
-WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?;
+SELECT EXISTS (
+    SELECT 1
+    FROM user_ctfs
+    JOIN ctfs ON user_ctfs.ctf_id = ctfs.id
+    WHERE user_ctfs.user_id = ? AND ctfs.phrase = ?
+) AS is_member;
 
 -- name: IsGuestMemberOfCTF :one
-SELECT COUNT(*) > 0 AS is_member
-FROM guest_ctfs
-JOIN ctfs ON guest_ctfs.ctf_id = ctfs.id
-WHERE guest_ctfs.guest_id = ? AND ctfs.phrase = ?;
+SELECT EXISTS (
+    SELECT 1
+    FROM guests
+    JOIN ctfs ON guests.ctf_id = ctfs.id
+    WHERE guests.id = ? AND ctfs.phrase = ?
+) AS is_member;

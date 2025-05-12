@@ -4,16 +4,17 @@
     import { Label } from "$lib/components/ui/label";
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    let email = '';
+    let username = '';
     let password = '';
+    let errorMessage = '';
 
     const login = async(e: Event) => {
-        
-        e.preventDefault()
+        e.preventDefault();
+        errorMessage = ''; // Clear previous error
         const loginData = {
-            "username": email, 
+            "username": username, 
             "password": password
-        }
+        };
         try {
 
             const response = await fetch('http://localhost:1337/users/login', {
@@ -26,12 +27,13 @@
                 body: JSON.stringify(loginData),
             });
             
-            if(response.ok){
-                goto('/pages/admin-page')
+            if (response.ok) {
+                goto('/pages/admin-page');
             } else {
-                console.log("Failure")
+                errorMessage = 'Invalid username or password.';
             }
         } catch (error) {
+            errorMessage = 'An error occurred while trying to log in. Please try again later.';
             console.error("Error occured", error);
         }
     }
@@ -40,23 +42,24 @@
 
 <div class="login-container">
     <header>
-        <h1>Login as Administrator</h1>
-        <p>Enter your email below to access existing admin account</p>
-        
-        <div class="form-container">
-            <form class="flex flex-col w-full max-w-sm items-center space-y-2">
-
-                <Input type="email" bind:value={email} placeholder="me@example.com..." />
-                <Input type="password" bind:value={password} placeholder="Enter your password" />
-                <Button href="src\routes\admin-account.svelte" type="submit" onclick={login}>Log In</Button>
-            </form>
-            <p></p>
-        </div>
-        
-        
     </header>
 
     <main>
+        <h1>Log in as administrator</h1>
+        <p>Enter credentials below to access an existing admin account</p>
+        
+        <!-- Display error message if it exists -->
+        {#if errorMessage}
+            <p class="error-message">{errorMessage}</p>
+        {/if}
+
+        <div class="form-container">
+            <form class="flex flex-col w-full max-w-sm items-center space-y-2" on:submit={login}>
+                <Input type="username" bind:value={username} placeholder="Username" />
+                <Input type="password" bind:value={password} placeholder="Password" />
+                <Button type="submit">Log In</Button>
+            </form>
+        </div>
     </main>
 
     <footer>
@@ -75,19 +78,15 @@
         padding: 20px;
     }
 
-    header h1 {
+    main h1 {
         font-size: 2.5rem;
         color: #333;
         margin-bottom: 10px;
     }
 
-    header p {
+    main p {
         font-size: 1.2rem;
         color: #dc4405;
-    }
-
-    main {
-        margin-top: 20px;
     }
 
     footer {
@@ -95,10 +94,17 @@
         font-size: 0.9rem;
         color: #777;
     }
+
     .form-container {
         display: flex;
         justify-content: center; /* Center the form horizontally */
         width: 100%;
         margin-top: 20px;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 0.9rem;
+        margin-top: 10px;
     }
 </style>

@@ -7,26 +7,40 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	db "github.com/digitaldisarray/ctfcollab/db/sqlc"
+	"github.com/digitaldisarray/ctfcollab/websocket"
 	"github.com/labstack/echo/v4"
 )
 
-// DeleteUser removes a challenge from the database
+type Challenge struct {
+	ChallengeID          int    `json:"challenge_id"`
+	ChallengeName        string `json:"challenge_name"`
+	ChallengeDescription string `json:"challenge_description"`
+	Flag                 string `json:"flag"`
+	ChallengeCreatedAt   struct {
+		Time  time.Time `json:"Time"`
+		Valid bool      `json:"Valid"`
+	} `json:"challenge_created_at"`
+	HedgedocURL string `json:"hedgedoc_url"`
+}
+
+// DeleteChallenge removes a challenge from the database
 // @Summary Delete Challenge
 // @Description Deletes a Challenge by ID from the database, requires admin privileges
 // @Tags challenges
 // @Accept json
 // @Produce json
 // @Param id path int true "Challenge ID"
-// @Success 200 {string} string "Challenge successfully deleted"
+// @Success 200 {string} string "Deleted"
 // @Failure 400 {string} string "Invalid Challenge ID"
 // @Failure 500 {string} string "Internal server error"
-// @Router /challenges/{id} [delete]
+// @Router /ctfs/challenges/{id} [delete]
 func (h *Handler) DeleteChallenge(c echo.Context) error {
 	challengeID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID")
 	}
 
 	ctx := context.Background()
@@ -34,6 +48,11 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "chal_deleted",
+		Payload: map[string]int{"id": challengeID},
+	})
 
 	return c.JSON(http.StatusOK, "Deleted")
 }
@@ -113,6 +132,16 @@ func createHedgeDocNote() (string, error) {
 	return location, nil
 }
 
+// GetChallenges gets a list of all challenges belonging to a CTF
+// @Summary Get Challenges
+// @Description Gets all challenges belonging to a CTF. Takes a CTF phrase.
+// @Tags challenges
+// @Accept json
+// @Produce json
+// @Param phrase path string true "Phrase"
+// @Success 200 {array} Challenge
+// @Failure 500 {string} string "Internal server error"
+// @Router /ctfs/{phrase}/challenges [get]
 func (h *Handler) GetChallenges(c echo.Context) error {
 	ctx := context.Background()
 	challenges, err := h.Queries.GetCTFChallenges(ctx, c.Param("phrase"))
@@ -123,6 +152,17 @@ func (h *Handler) GetChallenges(c echo.Context) error {
 	return c.JSON(http.StatusOK, challenges)
 }
 
+// GetChallenge gets a single challenge.
+// @Summary Get Challenge
+// @Description Gets a single challenge based on the CTF's phrase and challenge ID.
+// @Tags challenges
+// @Accept json
+// @Produce json
+// @Param phrase path string true "Phrase"
+// @Param id path string true "Challenge ID"
+// @Success 200 {object} Challenge
+// @Failure 400 {string} string "Invalid challenge ID"
+// @Router /ctfs/{phrase}/challenge/{id} [get]
 func (h *Handler) GetChallenge(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -139,6 +179,22 @@ func (h *Handler) GetChallenge(c echo.Context) error {
 	return c.JSON(http.StatusOK, challenge)
 }
 
+type CreatedChallenge struct {
+	ChallengeName string `json:"challenge_name"`
+	HedgedocURL   string `json:"hedgedoc_url"`
+}
+
+// CreateChallenge creates a challenge.
+// @Summary Post Challenge
+// @Description Creates a challenge bound to a specified CTF phrase.
+// @Tags challenges
+// @Accept json
+// @Produce json
+// @Param phrase path string true "Phrase"
+// @Success 200 {object} CreatedChallenge
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /ctfs/{phrase}/challenges [post]
 func (h *Handler) CreateChallenge(c echo.Context) error {
 	challenge := new(db.CreateChallengeParams)
 	if err := c.Bind(challenge); err != nil {
@@ -157,10 +213,32 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 
 	// Step 2: Insert the challenge into the database
 	ctx := context.Background()
-	_, err = h.Queries.CreateChallenge(ctx, *challenge)
+
+	res, err := h.Queries.CreateChallenge(ctx, *challenge)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	// Get chal id
+	insertedID, err := res.LastInsertId()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to get inserted challenge ID")
+	}
+
+	newChallenge := map[string]any{
+		"id":           insertedID,
+		"name":         challenge.Name,
+		"description":  challenge.Description,
+		"flag":         challenge.Flag,
+		"hedgedoc_url": challenge.HedgedocUrl,
+		"phrase":       challenge.Phrase,
+		"status":       "pending",
+	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type:    "chal_added",
+		Payload: newChallenge,
+	})
 
 	// Return the created challenge with the HedgeDoc URL
 	return c.JSON(http.StatusOK, map[string]string{

@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/digitaldisarray/ctfcollab/auth"
 	"github.com/digitaldisarray/ctfcollab/handler"
+	"github.com/digitaldisarray/ctfcollab/websocket"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -42,17 +43,21 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// CTF routes
 	{
-
 		ctfs := e.Group("/ctfs")
 		ctfs.Use(echojwt.WithConfig(config))
+
 		ctfs.GET("", handler.GetAllCTFs, auth.AdminOnly)
 		ctfs.POST("", handler.CreateCTF, auth.AdminOnly)
-		ctfs.GET("/joined", handler.GetJoinedCTFs)
-		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // can be changed I think
+		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // TODO: Search joined CTFs for regular users
+		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
+
+		ctfs.POST("/:phrase/join", handler.JoinCTF)
+		ctfs.POST("/:phrase/join-as-guest", handler.JoinCTFGuest)
+
+		ctfs.GET("/joined", handler.GetJoinedCTFs, auth.AdminOnly) // Changed to admin only cause getting errors loading ctfs in admin dashboard
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
-		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
-		ctfs.POST("/:phrase/join", handler.JoinCTF)
+
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.GET("/:phrase/challenge/:id", handler.GetChallenge, auth.MemberOnly(handler.Queries))
@@ -64,21 +69,30 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	}
 	e.GET("/ctfs/:phrase/exists", handler.GetCTFExists)
 
+	e.GET("/ws", func(c echo.Context) error {
+		websocket.ServeWs(handler.WsHub, c.Response().Writer, c.Request())
+		return nil
+	})
+
 	// Challenge routes
 	{
-		//e.PUT("/challenges/:id", )
+		// chals := e.Group("/challenges")
+		// chals.Use(echojwt.WithConfig(config))
+
+		// TODO: Move the /phrase/challenge requests here & make authenticated & ctf membership checked
 	}
 
 	// User routes
-	e.POST("/users/guest", handler.CreateGuest) // Accessible without JWT
-	e.POST("/users", handler.CreateUser)        // Accessible without JWT
-	e.POST("/users/login", handler.LoginUser)   // Accessible without JWT
+	// e.POST("/users/guest", handler.CreateGuest) // Accessible without JWT // I think now we should have the only way of creating a guest be joining a ctf
+	e.POST("/users", handler.CreateUser)      // Accessible without JWT
+	e.POST("/users/login", handler.LoginUser) // Accessible without JWT
 	{
 		users := e.Group("/users")
 		users.Use(echojwt.WithConfig(config))
 		users.GET("/:username", handler.GetUser, auth.SelfOnly)
 		users.DELETE("/:username", handler.DeleteUser, auth.SelfOnly)
 		users.POST("/:username/password", handler.ChangePassword, auth.SelfOnly)
+		users.POST("/logout", handler.LogoutUser, auth.SelfOnly)
 	}
 
 	return e

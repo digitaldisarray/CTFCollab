@@ -1,9 +1,9 @@
 definitions:
   db.ChangePasswordParams:
     properties:
-      id:
-        type: integer
       password_hash:
+        type: string
+      username:
         type: string
     type: object
   db.CreateUserParams:
@@ -13,10 +13,394 @@ definitions:
       username:
         type: string
     type: object
+  db.Ctf:
+    properties:
+      author_id:
+        type: integer
+      description:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phrase:
+        type: string
+      start_date:
+        type: string
+    type: object
+  db.ListUsersJoinedCTFsRow:
+    properties:
+      ctf_author_id:
+        type: integer
+      ctf_description:
+        type: string
+      ctf_name:
+        type: string
+      end_date:
+        type: string
+      phrase:
+        type: string
+      start_date:
+        type: string
+    type: object
+  db.User:
+    properties:
+      id:
+        type: integer
+      is_admin:
+        type: boolean
+      password_hash:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.Challenge:
+    properties:
+      challenge_created_at:
+        properties:
+          Time:
+            type: string
+          Valid:
+            type: boolean
+        type: object
+      challenge_description:
+        type: string
+      challenge_id:
+        type: integer
+      challenge_name:
+        type: string
+      flag:
+        type: string
+      hedgedoc_url:
+        type: string
+    type: object
+  handler.CreatedChallenge:
+    properties:
+      challenge_name:
+        type: string
+      hedgedoc_url:
+        type: string
+    type: object
+  handler.GuestParams:
+    properties:
+      nickname:
+        type: string
+    type: object
+  handler.OuterSearchParams:
+    properties:
+      description: {}
+      end_date:
+        type: string
+      name: {}
+      start_date:
+        type: string
+    type: object
+  handler.UserAuthParams:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
-  /challenges/{id}:
+  /ctfs:
+    get:
+      description: Gets every CTF a user belongs to
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: araray
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get All CTFs
+      tags:
+      - ctfs
+    post:
+      consumes:
+      - application/json
+      description: Creates a new CTF, creator is a participant of the new CTF
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create CTF
+      tags:
+      - ctfs
+  /ctfs/{phrase}:
+    delete:
+      description: Deletes the CTF that matches the provided phrase
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CTF deleted successfully
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete CTF
+      tags:
+      - ctfs
+    get:
+      description: Gets a CTF whose phrase matches the given phrase
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Ctf'
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get CTF
+      tags:
+      - ctfs
+    put:
+      consumes:
+      - application/json
+      description: Updates the information of an existing CTF
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CTF updated successfully
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Update CTF
+      tags:
+      - ctfs
+  /ctfs/{phrase}/challenge/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Gets a single challenge based on the CTF's phrase and challenge
+        ID.
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      - description: Challenge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Challenge'
+        "400":
+          description: Invalid challenge ID
+          schema:
+            type: string
+      summary: Get Challenge
+      tags:
+      - challenges
+  /ctfs/{phrase}/challenges:
+    get:
+      consumes:
+      - application/json
+      description: Gets all challenges belonging to a CTF. Takes a CTF phrase.
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.Challenge'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get Challenges
+      tags:
+      - challenges
+    post:
+      consumes:
+      - application/json
+      description: Creates a challenge bound to a specified CTF phrase.
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.CreatedChallenge'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Post Challenge
+      tags:
+      - challenges
+  /ctfs/{phrase}/exists:
+    get:
+      description: Checks whether a CTF exists with the given phrase
+      parameters:
+      - description: CTF Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Exists
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "404":
+          description: CTF not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check CTF Existence
+      tags:
+      - ctfs
+  /ctfs/{phrase}/join:
+    post:
+      description: Joins a logged-in user to a CTF by phrase
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Joined successfully
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Join CTF (Logged-in user)
+      tags:
+      - ctfs
+  /ctfs/{phrase}/join-as-guest:
+    post:
+      consumes:
+      - application/json
+      description: Joins a guest user to a CTF based on nickname and returns a JWT
+        token
+      parameters:
+      - description: Phrase
+        in: path
+        name: phrase
+        required: true
+        type: string
+      - description: Nickname
+        in: body
+        name: nickname
+        schema:
+          $ref: '#/definitions/handler.GuestParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Guest joined and token issued
+          schema:
+            type: string
+        "400":
+          description: Bad request or nickname taken
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Join CTF (Guest)
+      tags:
+      - ctfs
+  /ctfs/challenges/{id}:
     delete:
       consumes:
       - application/json
@@ -31,7 +415,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Challenge successfully deleted
+          description: Deleted
           schema:
             type: string
         "400":
@@ -45,7 +429,91 @@ paths:
       summary: Delete Challenge
       tags:
       - challenges
-  /user:
+  /ctfs/joined:
+    get:
+      description: Gets all CTFs a user is joined to based on their JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.ListUsersJoinedCTFsRow'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get Joined CTFs
+      tags:
+      - ctfs
+  /ctfs/search:
+    post:
+      consumes:
+      - application/json
+      description: Searches for CTFs by name, description, and optional start/end
+        date ranges
+      parameters:
+      - description: Search filters
+        in: body
+        name: search
+        schema:
+          $ref: '#/definitions/handler.OuterSearchParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ctf'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Search CTFs
+      tags:
+      - ctfs
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by comparing the submitted password to the
+        hashed password stored in the database
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UserAuthParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid login credentials
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: User login
+      tags:
+      - users
+  /users:
     post:
       consumes:
       - application/json
@@ -62,12 +530,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'user_id: ID of the created user'
+          description: User successfully created
           schema:
-            additionalProperties: true
-            type: object
+            type: string
         "400":
-          description: Invalid input
+          description: User already exists
           schema:
             type: string
         "500":
@@ -75,37 +542,6 @@ paths:
           schema:
             type: string
       summary: Create a new user
-      tags:
-      - users
-  /user/login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticates a user by comparing the submitted password to the
-        hashed password stored in the database
-      parameters:
-      - description: Login Credentials
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/db.CreateUserParams'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Logged in user information
-          schema:
-            $ref: '#/definitions/db.CreateUserParams'
-        "400":
-          description: Invalid login credentials
-          schema:
-            type: string
-        "500":
-          description: Internal server error
-          schema:
-            type: string
-      summary: User login
       tags:
       - users
   /users/{id}:
@@ -134,13 +570,41 @@ paths:
       summary: Delete user
       tags:
       - users
-  /users/password:
+  /users/{username}:
+    get:
+      description: Fetches a user by their username
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.User'
+        "400":
+          description: User not found
+          schema:
+            type: string
+      summary: Get user
+      tags:
+      - users
+  /users/{username}/password:
     post:
       consumes:
       - application/json
       description: Hashes and updates the password for an existing user, requires
         admin privileges or account owner
       parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
       - description: Password Update Request
         in: body
         name: req
@@ -152,6 +616,8 @@ paths:
       responses:
         "200":
           description: Password updated successfully
+          schema:
+            type: string
         "400":
           description: Invalid input or password criteria not met
           schema:
@@ -161,6 +627,17 @@ paths:
           schema:
             type: string
       summary: Update password
+      tags:
+      - users
+  /users/logout:
+    post:
+      description: Sets a logged-in users JWT token to expire yesterday
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out.
+      summary: Logout user
       tags:
       - users
 swagger: "2.0"

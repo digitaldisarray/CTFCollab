@@ -91,15 +91,15 @@ func MemberOnly(h *db.Queries) echo.MiddlewareFunc {
 				})
 			} else {
 				isMember, err = h.IsGuestMemberOfCTF(context.Background(), db.IsGuestMemberOfCTFParams{
-					GuestID: int32(user.Id),
-					Phrase:  c.Param("phrase"),
+					ID:     int32(user.Id),
+					Phrase: c.Param("phrase"),
 				})
 			}
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to check membership")
 			}
 			if !isMember {
-				return echo.NewHTTPError(http.StatusForbidden, "Access forbidden")
+				return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 			}
 
 			return next(c)

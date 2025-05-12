@@ -28,10 +28,10 @@ type ChangePasswordParams struct {
 // @Accept json
 // @Produce json
 // @Param user body db.CreateUserParams true "Create User"
-// @Success 200 {object} map[string]interface{} "user_id: ID of the created user"
-// @Failure 400 {string} string "Invalid input"
+// @Success 200 {string} string "User successfully created"
+// @Failure 400 {string} string "User already exists"
 // @Failure 500 {string} string "Internal server error"
-// @Router /user [post]
+// @Router /users [post]
 func (h *Handler) CreateUser(c echo.Context) error {
 	// Parse request
 	user := new(UserAuthParams)
@@ -72,6 +72,15 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// GetUser fetches a user by username
+// @Summary Get user
+// @Description Fetches a user by their username
+// @Tags users
+// @Produce json
+// @Param username path string true "Username"
+// @Success 200 {object} db.User
+// @Failure 400 {string} string "User not found"
+// @Router /users/{username} [get]
 func (h *Handler) GetUser(c echo.Context) error {
 	username := c.Param("username")
 
@@ -92,8 +101,8 @@ func (h *Handler) GetUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body db.CreateUserParams true "Login Credentials"
-// @Success 200 {object} db.CreateUserParams "Logged in user information"
+// @Param user body handler.UserAuthParams true "Login Credentials"
+// @Success 200 {object} map[string]string "JWT token response"
 // @Failure 400 {string} string "Invalid login credentials"
 // @Failure 500 {string} string "Internal server error"
 // @Router /user/login [post]
@@ -148,6 +157,7 @@ func (h *Handler) LoginUser(c echo.Context) error {
 		Secure:   false, // TODO: Change to true when not localhost
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
+		MaxAge:   3600,
 	})
 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
 }
@@ -158,11 +168,12 @@ func (h *Handler) LoginUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Param username path string true "Username"
 // @Param req body db.ChangePasswordParams true "Password Update Request"
-// @Success 200 "Password updated successfully"
+// @Success 200 {string} string "Password updated successfully"
 // @Failure 400 {string} string "Invalid input or password criteria not met"
 // @Failure 500 {string} string "Internal server error during password update"
-// @Router /users/password [post]
+// @Router /users/{username}/password [post]
 func (h *Handler) ChangePassword(c echo.Context) error {
 	var req ChangePasswordParams
 	if err := c.Bind(&req); err != nil {
@@ -226,53 +237,62 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *Handler) BecomeAdmin(c echo.Context) error {
-	var req db.SetAdminStatusParams
-	req.IsAdmin = true
-	req.Username = c.Param("username")
+// Currently, the only way to create a guest is by joining a CTF
+// func (h *Handler) CreateGuest(c echo.Context) error {
+// 	// Parse request body json
+// 	type GuestParams struct {
+// 		Nickname string `json:"nickname"`
+// 	}
+// 	guest := new(GuestParams)
+// 	if err := c.Bind(guest); err != nil {
+// 		return c.JSON(http.StatusBadRequest, err.Error())
+// 	}
 
-	_, err := h.Queries.SetAdminStatus(c.Request().Context(), req)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to set admin status")
-	}
+// 	// Check if nickname exists in guest database
+// 	_, err := h.Queries.GetGuestByName(c.Request().Context(), guest.Nickname)
+// 	if err == nil {
+// 		return c.JSON(http.StatusBadRequest, "Guest already exists")
+// 	}
 
-	return c.NoContent(http.StatusOK)
-}
+// 	// Create JWT token for the guest
+// 	claims := &auth.CustomClaims{
+// 		Name:     guest.Nickname,
+// 		LoggedIn: false, // Guest so false!
+// 		IsAdmin:  false,
+// 		RegisteredClaims: jwt.RegisteredClaims{
+// 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+// 		},
+// 	}
 
-func (h *Handler) CreateGuest(c echo.Context) error {
-	// Parse request body json
-	type GuestParams struct {
-		Nickname string `json:"nickname"`
-	}
-	guest := new(GuestParams)
-	if err := c.Bind(guest); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+// 	// Create token with claims
+// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	// Check if nickname exists in guest database
-	_, err := h.Queries.GetGuestByName(c.Request().Context(), guest.Nickname)
-	if err == nil {
-		return c.JSON(http.StatusBadRequest, "Guest already exists")
-	}
+// 	// Generate encoded token and send it as response.
+// 	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Create JWT token for the guest
-	claims := &auth.CustomClaims{
-		Name:     guest.Nickname,
-		LoggedIn: false, // Guest so false!
-		IsAdmin:  false,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-		},
-	}
+// 	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
+// }
 
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+// LogoutUser logs a user out, nulling their jwt token
+// @Summary Logout user
+// @Description Sets a logged-in users JWT token to expire yesterday
+// @Tags users
+// @Produce json
+// @Success 200 "Logged out."
+// @Router /users/logout [post]
+func (h *Handler) LogoutUser(c echo.Context) error {
+	c.SetCookie(&http.Cookie{
+		Name:     "token",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   false, // TODO: Change to true when not localhost
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+		MaxAge:   -1,
+	})
 
-	// Generate encoded token and send it as response.
-	encoded_token, err := token.SignedString([]byte(h.JWTSecret))
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, echo.Map{"token": encoded_token})
+	return c.JSON(http.StatusOK, "Logged out.")
 }

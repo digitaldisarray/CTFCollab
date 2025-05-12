@@ -217,6 +217,43 @@ func JoinCTF(token, phrase string, client *resty.Client) error {
 	return nil
 }
 
+// JoinCTFAsGuest sends a request to join a CTF as a guest.
+// It takes the CTF phrase, a nickname, and a Resty client as input.
+// Returns the token as a string or an error if the request fails.
+func JoinCTFAsGuest(phrase, nickname string, client *resty.Client) (string, error) {
+	// Define the request payload
+	payload := map[string]string{
+		"nickname": nickname,
+	}
+
+	if nickname == "" {
+		payload = nil
+	}
+
+	// Make the POST request to the endpoint
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(payload).
+		Post(fmt.Sprintf("http://localhost:1337/ctfs/%s/join-as-guest", phrase))
+	if err != nil {
+		return "", fmt.Errorf("failed to make request: %w", err)
+	}
+
+	// Check if the response status code is not 200 OK
+	if resp.StatusCode() != 200 {
+		return "", fmt.Errorf("failed to join CTF as guest: %s", resp.String())
+	}
+
+	// Extract the token from the response cookies
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "token" {
+			return cookie.Value, nil
+		}
+	}
+
+	return "", fmt.Errorf("token not found in response cookies")
+}
+
 type ChallengeResponse struct {
 	ChallengeName string `json:"challenge_name"`
 	HedgeDocURL   string `json:"hedgedoc_url"`

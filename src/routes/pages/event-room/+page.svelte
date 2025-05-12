@@ -14,18 +14,92 @@
     import SettingsForm from "./settings-form.svelte";
     import {currentCTF, challenges} from "./columns.js"
     import { type CTF  } from "../admin-page/columns.js" //
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
 
     let { data: pageData }: { data: PageData } = $props();
 
     let roomcode = '';
 
     onMount(() => {
-        roomcode = $page.url.searchParams.get('code') || "";
-        getCurrentCTF();
-        getChallenges();
-        
+      connectWebSocket();
+      roomcode = $page.url.searchParams.get('code') || "";
+      getCurrentCTF();
+      getChallenges();
     });
+    
+    let manuallyClosed = false;
+    onDestroy(() => {
+      if (ws) {
+        console.log("Cleaning up WebSocket connection.");
+        manuallyClosed = true;
+        ws.close();
+        ws = null;
+      }
+    });
+
+  let ws: WebSocket | null = null;
+  let error = $state<string | null>(null);
+
+  function connectWebSocket() {
+    const wsUrl = "ws://localhost:1337/ws"; // if backend runs elsewhere in the future, change
+
+    console.log(`Attempting to connect WebSocket to: ${wsUrl}`);
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("WebSocket connection established");
+      error = null;
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log("WebSocket message received:", message);
+
+        // Handle different message types from the server
+        switch (message.type) {
+          case 'chal_added':
+             const newChallenge = message.payload as Challenge;
+             challenges.update((current) => [...current, newChallenge]);
+            break;
+          case 'chal_deleted':
+            const deletedId = message.payload.id.toString();
+            challenges.update((current) => current.filter((ch) => ch.id.toString() !== deletedId));
+            break;
+          case 'chal_updated':
+             const updatedChallenge = message.payload as Challenge;
+             challenges.update((current) =>
+               current.map((challenge) =>
+                 challenge.id === updatedChallenge.id ? { ...challenge, ...updatedChallenge } : challenge
+               )
+             );
+             break;
+          // Add cases for challenge updates if needed
+          default:
+            console.warn("Received unknown WebSocket message type:", message.type);
+        }
+      } catch (e) {
+        console.error("Failed to parse WebSocket message or update store:", e);
+      }
+    };
+
+    ws.onerror = (event) => {
+      console.error("WebSocket error:", event);
+      error = "WebSocket connection error. Trying to reconnect...";
+      setTimeout(connectWebSocket, 5000);
+    };
+
+    ws.onclose = (event) => {
+      console.log("WebSocket connection closed:", event.reason, `Code: ${event.code}`);
+      ws = null;
+      if (!manuallyClosed && !event.wasClean) {
+        error = "WebSocket connection closed unexpectedly. Trying to reconnect...";
+        setTimeout(connectWebSocket, 5000);
+      } else {
+        error = "WebSocket connection closed.";
+      }
+    };
+  }
 
     const getCurrentCTF = async () => {
       try {
@@ -141,7 +215,7 @@
             <div class="flex items-center justify-between space-x-4">
               <div class="flex items-center space-x-4">
                 <Avatar.Root>
-                  <Avatar.Image src="/avatars/01.png" alt="Sofia Davis" />
+                  <Avatar.Image src="" alt="Sofia Davis" />
                   <Avatar.Fallback>SD</Avatar.Fallback>
                 </Avatar.Root>
                 <div>
@@ -190,7 +264,7 @@
             <div class="flex items-center justify-between space-x-4">
               <div class="flex items-center space-x-4">
                 <Avatar.Root>
-                  <Avatar.Image src="/avatars/02.png" alt="Jackson Lee" />
+                  <Avatar.Image src="" alt="Jackson Lee" />
                   <Avatar.Fallback>JL</Avatar.Fallback>
                 </Avatar.Root>
                 <div>

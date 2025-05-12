@@ -43,7 +43,6 @@
 
     onMount(() => {
       roomcode = get(page).url.searchParams.get('code') || "";
-      getChallenges();
     });
 
     const getChallenges = async () => {
@@ -106,16 +105,16 @@
         });
         if (response.ok) {
           const challengeData = await response.json();
+          
           let newChallenge: Challenge = {
             id: challengeData.id,
             hedgedoc_url: challengeData.hedgedoc_url,
             status: "pending" as "pending" | "complete",
-            name: name,
+            active_members: 0,
+            name: challengeData.name,
             description: challengeData.description
           };
 
-          challenges.update((c) => [...c, newChallenge]);
-          await getChallenges();
         } else {
           // Read and log error details
           const errorData = await response.json();

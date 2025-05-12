@@ -12,18 +12,24 @@ import (
 
 const createGuest = `-- name: CreateGuest :execresult
 INSERT INTO guests (
-    nickname
+    nickname,
+    ctf_id
 ) VALUES (
-    ?
+    ?, ?
 )
 `
 
-func (q *Queries) CreateGuest(ctx context.Context, nickname string) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createGuest, nickname)
+type CreateGuestParams struct {
+	Nickname string `json:"nickname"`
+	CtfID    int32  `json:"ctf_id"`
+}
+
+func (q *Queries) CreateGuest(ctx context.Context, arg CreateGuestParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createGuest, arg.Nickname, arg.CtfID)
 }
 
 const getGuestByID = `-- name: GetGuestByID :one
-SELECT id, nickname, last_seen, created_at FROM guests
+SELECT id, nickname, last_seen, created_at, ctf_id FROM guests
 WHERE id = ? LIMIT 1
 `
 
@@ -35,23 +41,30 @@ func (q *Queries) GetGuestByID(ctx context.Context, id int32) (Guest, error) {
 		&i.Nickname,
 		&i.LastSeen,
 		&i.CreatedAt,
+		&i.CtfID,
 	)
 	return i, err
 }
 
-const getGuestByName = `-- name: GetGuestByName :one
-SELECT id, nickname, last_seen, created_at FROM guests
-WHERE nickname = ? LIMIT 1
+const getGuestByNameAndCTF = `-- name: GetGuestByNameAndCTF :one
+SELECT id, nickname, last_seen, created_at, ctf_id FROM guests
+WHERE nickname = ? AND ctf_id = ? LIMIT 1
 `
 
-func (q *Queries) GetGuestByName(ctx context.Context, nickname string) (Guest, error) {
-	row := q.db.QueryRowContext(ctx, getGuestByName, nickname)
+type GetGuestByNameAndCTFParams struct {
+	Nickname string `json:"nickname"`
+	CtfID    int32  `json:"ctf_id"`
+}
+
+func (q *Queries) GetGuestByNameAndCTF(ctx context.Context, arg GetGuestByNameAndCTFParams) (Guest, error) {
+	row := q.db.QueryRowContext(ctx, getGuestByNameAndCTF, arg.Nickname, arg.CtfID)
 	var i Guest
 	err := row.Scan(
 		&i.ID,
 		&i.Nickname,
 		&i.LastSeen,
 		&i.CreatedAt,
+		&i.CtfID,
 	)
 	return i, err
 }
@@ -59,11 +72,11 @@ func (q *Queries) GetGuestByName(ctx context.Context, nickname string) (Guest, e
 const markGuestSeen = `-- name: MarkGuestSeen :execresult
 UPDATE guests
 SET last_seen = CURRENT_TIMESTAMP
-WHERE nickname = ?
+WHERE id = ?
 `
 
-func (q *Queries) MarkGuestSeen(ctx context.Context, nickname string) (sql.Result, error) {
-	return q.db.ExecContext(ctx, markGuestSeen, nickname)
+func (q *Queries) MarkGuestSeen(ctx context.Context, id int32) (sql.Result, error) {
+	return q.db.ExecContext(ctx, markGuestSeen, id)
 }
 
 const pruneOldSessions = `-- name: PruneOldSessions :execresult

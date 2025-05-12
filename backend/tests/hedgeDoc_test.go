@@ -13,7 +13,7 @@ func TestCreateHedgeDocNote(t *testing.T) {
 		t.Fatalf("Failed to create HedgeDoc note: %v", err)
 	}
 
-	fmt.Println("HedgeDoc Note Created! Note ID:", hurl)
+	t.Log("HedgeDoc Note Created! Note ID:", hurl)
 }
 
 func createHedgeDocNote() (string, error) {
