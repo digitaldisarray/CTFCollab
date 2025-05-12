@@ -87,7 +87,6 @@
           name: name
         };
         console.log(newCTF)
-        ctfData.update((ctf)=>[...ctf, newCTF])
         
       } else {
         console.error("Failed to submit form");

@@ -43,42 +43,7 @@
 
     onMount(() => {
       roomcode = get(page).url.searchParams.get('code') || "";
-      getChallenges();
     });
-
-    const getChallenges = async () => {
-        try {
-            challenges.set([]);
-            const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/challenges`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                  },
-              credentials: 'include'
-            });
-
-            if (response.ok) {
-                let challengeData = await response.json();
-                if(Array.isArray(challengeData) && challengeData.length > 0){
-                    challenges.set(challengeData.map((challenge) => {
-                        return {
-                            name: challenge.challenge_name,
-                            active_members: 0, // TODO: need to add a members to backend or have some way to check it
-                            status: "pending", // TODO: need to add a status to the backend maybe? or just remove
-                            id: challenge.challenge_id.toString(),
-                            hedgedoc_url: challenge.hedgedoc_url,
-                            description: challenge.challenge_description
-                        }
-                    })
-                  )
-                }
-            } else {
-                console.error("Failed to fetch challenges");
-            }
-        } catch (error) {
-            console.error("Error occured", error);
-        }
-    }
 
     const handleSubmit = async (e: Event) => {
       e.preventDefault();
@@ -104,17 +69,16 @@
         });
         if (response.ok) {
           const challengeData = await response.json();
+          
           let newChallenge: Challenge = {
             id: challengeData.id,
             hedgedoc_url: challengeData.hedgedoc_url,
             active_members: 0,
-            status: "pending" as "pending" | "processing" | "success" | "failed",
-            name: name,
+            status: challengeData.status,
+            name: challengeData.name,
             description: challengeData.description
           };
 
-          challenges.update((c) => [...c, newChallenge]);
-          await getChallenges();
         } else {
           // Read and log error details
           const errorData = await response.json();
