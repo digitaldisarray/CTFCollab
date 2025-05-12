@@ -17,6 +17,7 @@ import {type CTF } from "../admin-page/columns.js"
 export type Challenge = {
     id: string;
     hedgedoc_url: string;
+    active_members: number;
     status: "pending" | "complete";
     name: string;
     description: string;
@@ -37,6 +38,7 @@ export function formatData(ctfch: Array<CTFChallenge>): Challenge[]{
       return {
         id: c.id.toString(),
         hedgedoc_url: c.hedgedoc_url,
+        active_members: 0,
         status: "pending" as "pending" | "complete",
         name: c.name,
         description: c.description
@@ -81,35 +83,35 @@ export const columns: ColumnDef<Challenge>[] = [
             }),
       
     },
-    // {
-    //     accessorKey: "active_members",
-    //     header: () => {
-    //       const active_membersHeaderSnippet = createRawSnippet(() => ({
-    //         render: () => `<div class="text-right">Active Members</div>`,
-    //       }));
-    //       return renderSnippet(active_membersHeaderSnippet, "");
-    //     },
+    {
+        accessorKey: "active_members",
+        header: () => {
+          const active_membersHeaderSnippet = createRawSnippet(() => ({
+            render: () => `<div class="text-right">Active Members</div>`,
+          }));
+          return renderSnippet(active_membersHeaderSnippet, "");
+        },
         
-    //     cell: ({ row }) => {
-    //       const formatter = new Intl.NumberFormat("en-US", {
-    //         style: "decimal",
-    //       });
+        cell: ({ row }) => {
+          const formatter = new Intl.NumberFormat("en-US", {
+            style: "decimal",
+          });
      
-    //       const active_membersCellSnippet = createRawSnippet<[string]>((getAmount) => {
-    //         const active_members = getAmount();
-    //         return {
-    //           render: () => `<div class="text-right font-medium">${active_members}</div>`,
-    //         };
-    //       });
+          const active_membersCellSnippet = createRawSnippet<[string]>((getAmount) => {
+            const active_members = getAmount();
+            return {
+              render: () => `<div class="text-right font-medium">${active_members}</div>`,
+            };
+          });
      
-    //       return renderSnippet(
-    //         active_membersCellSnippet,
-    //         formatter.format(parseFloat(row.getValue("active_members")))
-    //       );
+          return renderSnippet(
+            active_membersCellSnippet,
+            formatter.format(parseFloat(row.getValue("active_members")))
+          );
           
           
-    //     },
-    //   },
+        },
+      },
       {
         id: "actions",
         cell: ({ row }) => {

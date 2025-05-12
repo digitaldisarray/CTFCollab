@@ -25,11 +25,6 @@
             });
 
             if (response.ok) {
-                challenges.update(current => 
-                    current.map(ch => 
-                        ch.id === id ? { ...ch, flag: flagValue, status: flagValue ? "complete" : "pending" } : ch
-                    )
-                );
                 alert('Challenge flag submitted successfully');
             } else {
                 console.error('Challenge flag submission request failed:', response);
@@ -55,7 +50,6 @@
             });
 
             if (response.ok) {
-                challenges.update((current) => current.filter((ch) => ch.id !== id));
                 alert('Challenge deleted successfully');
 
             } else {
@@ -78,7 +72,7 @@
             
         }
     }
-    const closeDetails = async (e) => {
+    const closeDetails = async (e: { stopPropagation: () => void; }) => {
         e.stopPropagation()
         showDetails = false
     }
