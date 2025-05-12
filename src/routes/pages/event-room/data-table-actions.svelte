@@ -6,7 +6,41 @@
     import { challenges } from './columns';
 
     const ctfPhrase = new URLSearchParams($page.url.search).get("code");
-    let { id, description }: { id: string; description: string } = $props();
+    let { id, description, flag }: { id: string; description: string, flag: string} = $props();
+
+    
+    const SubmitFlag = async () => {
+        const flagValue = prompt('Please enter the flag:', flag); // prefill with current flag
+
+        if (flagValue === null) return; // user clicked cancel
+
+        try {
+            const response = await fetch(`http://localhost:1337/ctfs/${ctfPhrase}/challenges/${id}/submit`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ flag: flagValue }),
+            });
+
+            if (response.ok) {
+                challenges.update(current => 
+                    current.map(ch => 
+                        ch.id === id ? { ...ch, flag: flagValue, status: flagValue ? "complete" : "pending" } : ch
+                    )
+                );
+                alert('Challenge flag submitted successfully');
+            } else {
+                console.error('Challenge flag submission request failed:', response);
+                alert('Failed to submit the Challenge flag.');
+            }
+        } catch (error) {
+            console.error('Error submitting Challenge Flag:', error);
+            alert('An error occurred while submitting the Challenge Flag.');
+        }
+    };
+
     let showDetails = $state(false)
 
     const deleteChal = async () => {
@@ -88,10 +122,14 @@
       </DropdownMenu.Item>
      </DropdownMenu.Group>
      <DropdownMenu.Separator />
+     <DropdownMenu.Item onclick={() => navigator.clipboard.writeText(flag)}>Copy Challenge Flag</DropdownMenu.Item>
      <DropdownMenu.Item>View Active Members</DropdownMenu.Item>
      <DropdownMenu.Item onclick={viewDetails}>View Challenge details</DropdownMenu.Item>
      <DropdownMenu.Item onclick={deleteChal}>
         Delete Challenge
+    </DropdownMenu.Item>
+    <DropdownMenu.Item onclick={SubmitFlag}>
+        Submit Flag
     </DropdownMenu.Item>
     </DropdownMenu.Content>
    </DropdownMenu.Root>

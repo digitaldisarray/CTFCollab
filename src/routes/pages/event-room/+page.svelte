@@ -143,13 +143,15 @@
                 let challengeData = await response.json();
                 if(Array.isArray(challengeData) && challengeData.length > 0){
                     challenges.set(challengeData.map((challenge) => {
+                      const isComplete = !!challenge.flag;
                         return {
                             name: challenge.challenge_name,
                             active_members: 0, // TODO: need to add a members to backend or have some way to check it
-                            status: "pending", // TODO: need to add a status to the backend maybe? or just remove
+                            status: isComplete ? "complete" : "pending", // TODO: need to add a status to the backend maybe? or just remove
                             id: challenge.challenge_id.toString(),
                             hedgedoc_url: challenge.hedgedoc_url,
-                            description: challenge.challenge_description
+                            description: challenge.challenge_description,
+                            flag: challenge.flag
                         }
                     })
                   )
@@ -179,7 +181,7 @@
         <!-- Header -->
         <header>
           <h1 class="chal-name">{$currentCTF?.ctf_name}</h1>
-          <p>Manage your Challenge rooms.</p>
+          <p>Challenge Editors.</p>
         </header>
   
         <!-- Add Challenge Button -->
@@ -313,6 +315,9 @@
     
       </div>
   </div>
+  <footer>
+    <p>&copy; 2025 CTF-Collab. All rights reserved.</p>
+  </footer>
   
   <style>
     .logo-header {
@@ -375,5 +380,12 @@
     header p {
       font-size: 1.2rem;
       color: #666;
+    }
+
+    footer {
+        margin-top: 40px;
+        font-size: 0.9rem;
+        color: #777;
+        text-align: center
     }
   </style>

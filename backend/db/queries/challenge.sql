@@ -36,3 +36,8 @@ SET
     description = COALESCE(sqlc.narg('description'), description),
     flag = COALESCE(sqlc.narg('flag'), flag)
 WHERE id = ?;
+
+-- name: UpdateChallengeFlag :exec
+UPDATE challenges
+SET flag = ?
+WHERE id = ?

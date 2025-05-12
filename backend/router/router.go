@@ -62,6 +62,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.GET("/:phrase/challenge/:id", handler.GetChallenge, auth.MemberOnly(handler.Queries))
 		ctfs.DELETE("/:phrase/challenges/:id", handler.DeleteChallenge, auth.MemberOnly(handler.Queries)) // session has to belong to ctf
+		ctfs.PUT("/:phrase/challenges/:id/submit", handler.SubmitFlag, auth.MemberOnly(handler.Queries))
 		// TODO: Route to get participants for a CTF, accessible to CTF members
 		// TODO: Route to get participants for a challenge, accessible to CTF members
 

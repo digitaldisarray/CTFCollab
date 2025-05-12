@@ -57,6 +57,46 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Deleted")
 }
 
+// SubmitFlag handles flag submission
+// @Summary Submit Flag for Challenge
+// @Description Submits a flag for a challenge
+// @Tags challenges
+// @Accept json
+// @Produce json
+// @Param phrase path string true "CTF Phrase"
+// @Param id path int true "Challenge ID"
+// @Param flag body struct{Flag string `json:"flag"`} true "Flag submission"
+// @Success 200 {string} string "Flag submitted successfully"
+// @Failure 400 {string} string "Invalid input"
+// @Failure 404 {string} string "Challenge not found"
+// @Router /ctfs/{phrase}/challenges/{id}/submit [put]
+func (h *Handler) SubmitFlag(c echo.Context) error {
+    challengeID, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        return echo.NewHTTPError(http.StatusBadRequest, "Invalid challenge ID")
+    }
+
+    var body struct {
+        Flag string `json:"flag"`
+    }
+    if err := c.Bind(&body); err != nil {
+        return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+    }
+
+    ctx := context.Background()
+    
+    // Update the challenge's flag in the database
+    err = h.Queries.UpdateChallengeFlag(ctx, db.UpdateChallengeFlagParams{
+        ID: int32(challengeID),
+        Flag:       body.Flag,
+    })
+    if err != nil {
+        return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update challenge flag")
+    }
+
+    return c.JSON(http.StatusOK, "Flag submitted successfully!")
+}
+
 func createHedgeDocNote() (string, error) {
 	hedgeDocURL := os.Getenv("HEDGEDOC_URL")
 	if hedgeDocURL == "" {

@@ -17,10 +17,10 @@ import {type CTF } from "../admin-page/columns.js"
 export type Challenge = {
     id: string;
     hedgedoc_url: string;
-    active_members: number;
-    status: "pending" | "processing" | "success" | "failed";
+    status: "pending" | "complete";
     name: string;
     description: string;
+    flag?: string; //optional, only used for the admin page
 };
 
 export type CTFChallenge = {
@@ -37,8 +37,7 @@ export function formatData(ctfch: Array<CTFChallenge>): Challenge[]{
       return {
         id: c.id.toString(),
         hedgedoc_url: c.hedgedoc_url,
-        active_members: 0,
-        status: "pending" as "pending" | "processing" | "success" | "failed",
+        status: "pending" as "pending" | "complete",
         name: c.name,
         description: c.description
       }
@@ -55,14 +54,24 @@ export const columns: ColumnDef<Challenge>[] = [
     {
         accessorKey: "status",
         header: "Status",
-          cell: ({ row }) =>
-            renderComponent(Checkbox, {
-              checked: row.getIsSelected(),
-              onCheckedChange: (value) => row.toggleSelected(!!value),
-              "aria-label": "Select row",
-            }),
-          enableSorting: false,
-          enableHiding: false,
+        cell: ({ row }) => {
+            const status = row.getValue("status") as Challenge["status"];
+            const statusColor = {
+                pending: "text-yellow-500",
+                complete: "text-green-500"
+            }[status];
+            
+            const statusSnippet = createRawSnippet<[string]>((getStatus) => {
+                const status = getStatus();
+                return {
+                    render: () => `<div class="font-medium ${statusColor}">${status}</div>`,
+                };
+            });
+            
+            return renderSnippet(statusSnippet, status);
+        },
+        enableSorting: false,
+        enableHiding: false
     },
     {
         accessorKey: "name",
@@ -72,42 +81,43 @@ export const columns: ColumnDef<Challenge>[] = [
             }),
       
     },
-    {
-        accessorKey: "active_members",
-        header: () => {
-          const active_membersHeaderSnippet = createRawSnippet(() => ({
-            render: () => `<div class="text-right">Active Members</div>`,
-          }));
-          return renderSnippet(active_membersHeaderSnippet, "");
-        },
+    // {
+    //     accessorKey: "active_members",
+    //     header: () => {
+    //       const active_membersHeaderSnippet = createRawSnippet(() => ({
+    //         render: () => `<div class="text-right">Active Members</div>`,
+    //       }));
+    //       return renderSnippet(active_membersHeaderSnippet, "");
+    //     },
         
-        cell: ({ row }) => {
-          const formatter = new Intl.NumberFormat("en-US", {
-            style: "decimal",
-          });
+    //     cell: ({ row }) => {
+    //       const formatter = new Intl.NumberFormat("en-US", {
+    //         style: "decimal",
+    //       });
      
-          const active_membersCellSnippet = createRawSnippet<[string]>((getAmount) => {
-            const active_members = getAmount();
-            return {
-              render: () => `<div class="text-right font-medium">${active_members}</div>`,
-            };
-          });
+    //       const active_membersCellSnippet = createRawSnippet<[string]>((getAmount) => {
+    //         const active_members = getAmount();
+    //         return {
+    //           render: () => `<div class="text-right font-medium">${active_members}</div>`,
+    //         };
+    //       });
      
-          return renderSnippet(
-            active_membersCellSnippet,
-            formatter.format(parseFloat(row.getValue("active_members")))
-          );
+    //       return renderSnippet(
+    //         active_membersCellSnippet,
+    //         formatter.format(parseFloat(row.getValue("active_members")))
+    //       );
           
           
-        },
-      },
+    //     },
+    //   },
       {
         id: "actions",
         cell: ({ row }) => {
           // You can pass whatever you need from `row.original` to the component
           return renderComponent(DataTableActions, { 
             id: row.original.id,
-            description: row.original.description
+            description: row.original.description,
+            flag: row.original.flag ?? ""
           });
         },
       },
