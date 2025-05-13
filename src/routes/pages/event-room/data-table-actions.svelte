@@ -25,7 +25,7 @@
             });
 
             if (response.ok) {
-                alert('Challenge flag submitted successfully');
+                console.log('Challenge flag submitted successfully');
             } else {
                 console.error('Challenge flag submission request failed:', response);
                 alert('Failed to submit the Challenge flag.');
@@ -50,7 +50,7 @@
             });
 
             if (response.ok) {
-                alert('Challenge deleted successfully');
+                console.log('Challenge deleted successfully');
 
             } else {
                 console.error('Delete request failed:', response);
