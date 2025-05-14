@@ -59,21 +59,23 @@
         // Handle different message types from the server
         switch (message.type) {
           case 'chal_added':
-             const newChallenge = message.payload as Challenge;
-             challenges.update((current) => [...current, newChallenge]);
+            const newChallenge = message.payload as Challenge;
+            challenges.update((current) => [...current, newChallenge]);
             break;
           case 'chal_deleted':
             const deletedId = message.payload.id.toString();
             challenges.update((current) => current.filter((ch) => ch.id.toString() !== deletedId));
             break;
-          case 'chal_updated':
-             const updatedChallenge = message.payload as Challenge;
-             challenges.update((current) =>
-               current.map((challenge) =>
-                 challenge.id === updatedChallenge.id ? { ...challenge, ...updatedChallenge } : challenge
-               )
-             );
-             break;
+          case 'chal_flag_updated':
+            const { id, flag } = message.payload;
+            challenges.update(current =>
+                current.map(ch =>
+                    ch.id.toString() === id.toString()
+                        ? { ...ch, flag, status: flag ? 'complete' : 'pending' }
+                        : ch
+                )
+            );
+            break;
           // Add cases for challenge updates if needed
           default:
             console.warn("Received unknown WebSocket message type:", message.type);
