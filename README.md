@@ -45,7 +45,7 @@ Development of CTFNote is ongoing. Use at your own risk.
 
 ## UI  
 
-![UI flow graph](https://github.com/digitaldisarray/CTFCollab/src/common/images/CTFNote-UI.png)
+![UI flow graph](https://github.com/digitaldisarray/CTFCollab/tree/main/src/common/images/CTFNote-UI.png "CTFNote UI")
 
 
 ## Running in docker
