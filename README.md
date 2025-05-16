@@ -10,21 +10,42 @@ The goal of this project is to provide an open source, developer friendly, picku
 - Developer-Friendly Codebase: We prioritize code organization and helpful comments to make the project accessible to new contributors.
 
 # Team Members and Roles
-Kevin Rossel: Resident CTF’er. Backend and database schema. Guided UI/UX
-Teo Liam Ippolito: UX Designer and Frontend Development Lead
-Brayden Aldrich: Frontend and backend development, connecting the two together
-Danny T Nguyen: Implemented frontend features
-Maximiliano Maldonado: Backend development, worked on the database, API and implementing frontend
-Sory Diagouraga: Backend development and API documentation.
+- Kevin Rossel: Resident CTF’er. Backend and database schema. Guided UI/UX
+- Teo Liam Ippolito: UX Designer and Frontend Development Lead
+- Brayden Aldrich: Frontend, backend, and API development
+- Danny T Nguyen: Implemented frontend features
+- Maximiliano Maldonado: Backend development, worked on the database, API and implementing frontend
+- Sory Diagouraga: Backend development and API documentation.
 
+## Status   
+Development of CTFNote is ongoing. Use at your own risk.  
 
+# Table of contents
+- [CTFCollab](#ctfcollab)
+- [Project Values](#project-values)
+- [Team Members and Roles](#team-members-and-roles)
+  - [Status](#status)
+- [Table of contents](#table-of-contents)
+  - [Features](#features)
+  - [UI](#ui)
+  - [Running in docker](#running-in-docker)
+  - [Running for frontend development](#running-for-frontend-development)
+  - [Running locally](#running-locally)
+    - [Just the frontend](#just-the-frontend)
+    - [Just the backend](#just-the-backend)
+  - [Running the backend test suite](#running-the-backend-test-suite)
 
-## Table of contents
-- [Running in docker](#running-in-docker)
-- [Running for frontend development](#running-for-frontend-development)
-- [Running locally](#running-locally)
-- [Running backend test suite](#running-the-backend-test-suite)
+## Features
+- Self-hostable  
+- Live document editing  
+- Challenge tracking  
+- CTF tracking  
+- CTF member tracking  
+- Free and open source  
 
+## UI  
+
+![UI flow graph](https://github.com/digitaldisarray/CTFCollab/src/common/images/CTFNote-UI.png)
 
 
 ## Running in docker
@@ -76,7 +97,7 @@ npm run dev
 ## Running locally
 
 ### Just the frontend
-If for whatever reason you want to run the frontend outside of docker, first run `npm install` (or `pnpm install` or `yarn`) in the repository directory. Then to run the frontend, use one of these commnds:
+If for whatever reason you want to run the frontend outside of docker, first run `npm install` (or `pnpm install` or `yarn`) in the repository directory. Then to run the frontend, use one of these commands:
 
 ```bash
 npm run dev
