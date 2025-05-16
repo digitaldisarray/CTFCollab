@@ -1,5 +1,22 @@
 # CTFCollab
-Collaborative tool for CTF (capture the flag) teams to keep track of and collaborate on challenges during competitions
+Collaborative tool for CTF (capture the flag) teams to keep track of and collaborate on challenges during competitions. 
+
+# Project Values
+The goal of this project is to provide an open source, developer friendly, pickup and go solution to collaberative development while solving cybersecurity puzzles in CTF competitions.
+
+- Pick up and go: Our website is meant to be as simple as possible. Users don’t need accounts, they just enter a PIN and get access to an instance similar to Kahoot.
+- Open source: We value transparency and community. By choosing to make our software open source we are enabling others to contribute to and audit the code.
+- Industry-Standard Tech Stack: Built with Go (backend), SvelteKit (frontend), and MySQL (database), our stack prioritizes performance, scalability, and developer familiarity. 
+- Developer-Friendly Codebase: We prioritize code organization and helpful comments to make the project accessible to new contributors.
+
+# Team Members and Roles
+Kevin Rossel: Resident CTF’er. Backend and database schema. Guided UI/UX
+Teo Liam Ippolito: UX Designer and Frontend Development Lead
+Brayden Aldrich: Frontend and backend development, connecting the two together
+Danny T Nguyen: Implemented frontend features
+Maximiliano Maldonado: Backend development, worked on the database, API and implementing frontend
+Sory Diagouraga: Backend development and API documentation.
+
 
 
 ## Table of contents
