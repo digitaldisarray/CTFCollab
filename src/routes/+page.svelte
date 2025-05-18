@@ -11,55 +11,79 @@
     let errorMessage = '';
     let showNicknamePopup = false;
     let nickname = '';
+    let nicknameError = ''; // <-- for popup errors
   
     const handleSubmit = async (e: Event) => {
-      e.preventDefault();
-      errorMessage = '';
-  
-      if (!roomcode.trim()) {
-        // Set an error if it's blank:
-        errorMessage = "Please enter a room code.";
-        return;
-      }
-  
-      try {
-        const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/exists`);
-        
-        if (!response.ok) {
-          // If the server returns 404 Not Found, or something else causes error:
-          if (response.status === 404) {
-            errorMessage = "No room found with that code.";
-          } else {
-            errorMessage = `Something went wrong: ${response.statusText}`;
-          }
-          return;
+        e.preventDefault();
+        errorMessage = '';
+
+        // Check if blank room code
+        if (!roomcode.trim()) {
+            errorMessage = "Please enter a room code.";
+            return;
         }
-  
-        // If 200 OK, parse response
-        const result = await response.json();
-  
-        // Check if the server’s response indicates the code is valid
-        if (result.exists) {
-          // Navigate to the event-room if it exists
-          showNicknamePopup = true;
-        } else {
-          errorMessage = "That room code doesn't exist.";
+
+        try {
+            const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/exists`);
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    errorMessage = "No room found with that code.";
+                } else {
+                    errorMessage = `Something went wrong: ${response.statusText}`;
+                }
+                return;
+            }
+
+            // Parse the response
+            const result = await response.json();
+
+            // Check if the server’s response indicates the code is valid
+            if (result.exists) {
+                // Ask for nickname if code was valid
+                showNicknamePopup = true;
+            } else {
+                errorMessage = "That room code doesn't exist.";
+            }
+        } catch (err) {
+            errorMessage = "Failed to contact server. Please try again.";
+            console.error(err);
         }
-      } catch (err) {
-        errorMessage = "Failed to contact server. Please try again.";
-        console.error(err);
-      }
-    }
-    const closePopup = () => {
-      showNicknamePopup = false;
-    }
-    const handleNicknameSubmit = () => {
-      if (nickname.trim()) {
-        goto(`/pages/event-room?code=${roomcode}&nickname=${encodeURIComponent(nickname)}`);
-      }
     }
 
-  </script>
+    const closePopup = () => {
+        showNicknamePopup = false;
+        nicknameError = '';
+        nickname = '';
+    };
+
+    const handleNicknameSubmit = async (e: Event) => {
+        e.preventDefault();
+        nicknameError = '';
+        if (!nickname.trim()) {
+            nicknameError = "Please enter a nickname.";
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:1337/ctfs/${roomcode}/join-as-guest`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ nickname }),
+            });
+            if (response.ok) {
+                goto(`/pages/event-room?code=${roomcode}&nickname=${encodeURIComponent(nickname)}`);
+            } else {
+                const data = await response.json();
+                nicknameError = data.error || "Failed to join as guest.";
+            }
+        } catch (err) {
+            nicknameError = "Failed to contact server. Please try again.";
+            console.error(err);
+        }
+    };
+</script>
 
 <div class="welcome-container">
     <div class="absolute left-4 top-4 md:left-8 md:top-7">
@@ -80,6 +104,9 @@
     </div>
 
     <header>
+    </header>
+
+    <main>
         <h1>Welcome to CTF-Collab!</h1>
         <p>To join an event, enter room code below or login with existing account</p>
         <div class="form-container" on:submit={handleSubmit}>
@@ -96,6 +123,9 @@
                                     <Button variant="outline">Cancel</Button>
                                 </button>
                             </div>
+                            {#if nicknameError}
+                                <div class="nickname-error">{nicknameError}</div>
+                            {/if}
                         </form>
                     </div>
                 </div>
@@ -111,9 +141,6 @@
         {#if errorMessage}
             <p2 class="mt-2 text-red-500">{errorMessage}</p2>
         {/if}
-    </header>
-
-    <main>
     </main>
 
     <footer>
@@ -144,13 +171,13 @@
         margin-left: 2px;
     }
 
-    header h1 {
+    main h1 {
         font-size: 2.5rem;
         color: #dc4405;
         margin-bottom: 10px;
     }
 
-    header p {
+    main p {
         font-size: 1.2rem;
         color: #666;
     }
@@ -171,6 +198,7 @@
         width: 100%;
         margin-top: 20px;
     }
+
     .popup-overlay {
         position: fixed;
         top: 0;
@@ -212,5 +240,12 @@
     
     .separator {
         color: #dc4405;
+    }
+
+    .nickname-error {
+        color: red;
+        margin-top: 1rem;
+        font-size: 0.95rem;
+        text-align: left;
     }
 </style>

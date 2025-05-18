@@ -43,6 +43,10 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 
 	// CTF routes
 	{
+		// No JWT needed
+
+		e.POST("ctfs/:phrase/join-as-guest", handler.JoinCTFGuest)
+
 		ctfs := e.Group("/ctfs")
 		ctfs.Use(echojwt.WithConfig(config))
 
@@ -50,10 +54,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.POST("", handler.CreateCTF, auth.AdminOnly)
 		ctfs.GET("/search", handler.SearchCTFs, auth.AdminOnly) // TODO: Search joined CTFs for regular users
 		ctfs.DELETE("/:phrase", handler.DeleteCTF, auth.AdminOnly)
-
 		ctfs.POST("/:phrase/join", handler.JoinCTF)
-		ctfs.POST("/:phrase/join-as-guest", handler.JoinCTFGuest)
-
 		ctfs.GET("/joined", handler.GetJoinedCTFs, auth.AdminOnly) // Changed to admin only cause getting errors loading ctfs in admin dashboard
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
