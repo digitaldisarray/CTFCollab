@@ -60,11 +60,13 @@
 <style>
     .detailsBox{
         z-index: 99;
-        position: absolute;
+        position: fixed;
         border: solid 1px;
-        right: 10px;
+        right: 50%;
         padding: 3px;
         border-radius: 4px;
+        overflow: hidden;
+        margin: 5px;
     }
     .close{
         position: relative;
