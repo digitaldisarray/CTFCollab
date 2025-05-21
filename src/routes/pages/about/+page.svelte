@@ -1,6 +1,3 @@
-<script lang="ts">
-    import { Button } from "$lib/components/ui/button";
-</script>
 <head>
 <title>CTF Collab</title>
 </head>
@@ -170,6 +167,7 @@
         <p1>&copy; 2025 CTF-Collab. All rights reserved.</p1>
     </footer>
 </body>
+<!-- Code adapted using Claude AI  -->
   
  
 
