@@ -143,3 +143,4 @@ docker compose down -v
 # Remove the database volume
 docker volume rm ctfcollab_db-data
 ```
+
