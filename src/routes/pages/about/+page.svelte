@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { Button } from "$lib/components/ui/button";
-    import { Input } from "$lib/components/ui/input/index.js";
     import { goto } from '$app/navigation';
 </script>
 
@@ -15,16 +13,6 @@
             <span class="ctf">CTF</span>
             <span class="collab">Collab</span>
         </a>
-    </div>
-
-    <div class="absolute right-4 top-4 md:right-8 md:top-8">
-        {#if data.user}
-            <Button href="/pages/admin-page" variant="ghost">Dashboard</Button>
-        {:else}
-            <Button href="/pages/signin" variant="ghost">Login</Button>
-        {/if}
-        <span class="separator">|</span>
-        <Button href="/pages/about" variant="ghost">About</Button>
     </div>
     
     <div class="about-container">
