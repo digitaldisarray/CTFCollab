@@ -34,7 +34,7 @@ Development of CTFNote is ongoing. Use at your own risk.
     - [Just the frontend](#just-the-frontend)
     - [Just the backend](#just-the-backend)
   - [Running the backend test suite](#running-the-backend-test-suite)
-  - [End User Documentation](# End-User Documentation)
+- [End User Documentation](#end-user-documentation)
 
 ## Features
 - Self-hostable  
@@ -203,7 +203,7 @@ docker volume rm ctfcollab_db-data
 - Share the **Join Phrase**
 - Recommend users pick unique nicknames
 - Provide a quick tour:
-  - Dashboard → CTF Page → Challenges → Notes
+  - Landing Page → CTF Page → Notes
 
 ### For Admins
 - Use admin token to create first account
