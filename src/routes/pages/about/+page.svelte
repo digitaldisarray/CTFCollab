@@ -63,12 +63,12 @@
     padding: 20px;
     }
 
-    logo {
+    .logo {
         font-size: 1.5rem;
         font-weight: bold;
     }
 
-    ctf {
+    .ctf {
         color: #dc4405;
     }
     .collab {
@@ -98,7 +98,6 @@
     justify-content: center;
     height: 100vh;
     text-align: center;
-    background-color: #f0f0f0;
     padding: 20px;
     }
 
@@ -139,7 +138,6 @@
     }
     
     body {
-        color: white;
         line-height: 1.6;
     }
 
