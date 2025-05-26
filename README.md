@@ -34,6 +34,7 @@ Development of CTFNote is ongoing. Use at your own risk.
     - [Just the frontend](#just-the-frontend)
     - [Just the backend](#just-the-backend)
   - [Running the backend test suite](#running-the-backend-test-suite)
+  - [End User Documentation](# End-User Documentation)
 
 ## Features
 - Self-hostable  
@@ -143,3 +144,94 @@ docker compose down -v
 # Remove the database volume
 docker volume rm ctfcollab_db-data
 ```
+
+# End-User Documentation
+
+## Getting Started
+
+### Admin Log In
+- Go to the website domain
+- Choose **Log In**
+- Provide:
+  - **Username**
+  - **Password**
+
+### Joining a CTF Event
+- Navigate to the **Landing Page**
+- Enter a valid **Join Phrase** provided by an Admin
+- If joining as a guest, select a **nickname**
+- Get to taking notes!
+
+---
+
+## User Guide
+
+### Landing Page
+- Join new events through the landing page by inputing a phrase provided by the Admin
+
+### CTF Page
+- View CTF info: name, description, flag
+
+### Shared Notes
+- Open a challenge to write or edit shared notes
+- Supports **Markdown formatting**
+- Collaboration is real-time and team-wide
+
+---
+
+## Admin Guide
+
+### Creating a New CTF
+1. Go to **Admin Panel → Create CTF**
+2. Fill in:
+   - Name, Description
+   - Start/End Time
+   - Description
+
+### Adding a Challenge
+- Navigate to your CTF
+- Click **Add Challenge**
+- Input:
+  - Name
+  - Description
+
+---
+
+## Onboarding Process
+
+### For New Users
+- Share the **Join Phrase**
+- Recommend users pick unique nicknames
+- Provide a quick tour:
+  - Dashboard → CTF Page → Challenges → Notes
+
+### For Admins
+- Use admin token to create first account
+- Set up your CTFs in the Admin Panel
+- Share join phrases with users or teams
+
+---
+
+## Troubleshooting
+
+| Issue                             | Solution                                                              |
+|----------------------------------|-----------------------------------------------------------------------|
+| Invalid Join Phrase              | Double-check spelling or confirm with event organizer                |
+| Nickname already taken           | Choose a different nickname unique to the current CTF                |
+| Page won't load                  | Check your internet connection, refresh, or clear your browser cache |
+| Can't add notes or challenges    | Ensure you’re logged in and have appropriate permissions              |
+| 500 Internal Server Error        | Check console logs (if self-hosted) or contact Admin                |
+
+---
+
+## FAQ
+
+### Can I join without an account?
+Yes, guests can join using a nickname and the join phrase.
+
+### How do I become an admin?
+Admins are set manually or by using a special token during registration.
+
+### Can I leave and rejoin a CTF?
+Yes, as long as the CTF is still active and your nickname hasn't been taken.
+
