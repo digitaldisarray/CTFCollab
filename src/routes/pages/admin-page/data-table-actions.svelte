@@ -21,7 +21,7 @@
 
             if (response.ok) {
                 ctfData.update((ctfs) => ctfs.filter((ctf) => ctf.id !== id));
-                alert('CTF room deleted successfully');
+                console.log('CTF room deleted successfully');
 
             } else {
                 console.error('Delete request failed:', response);
@@ -51,7 +51,7 @@
             console.error('Error fetching data:', error);
         });
         }
-    const closeDetails = async (e) => {
+    const closeDetails = async (e: { stopPropagation: () => void; }) => {
         e.stopPropagation() //Makes it so you can click on the button instead of the event
         showDetails = false
     }

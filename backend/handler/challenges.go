@@ -71,30 +71,38 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 // @Failure 404 {string} string "Challenge not found"
 // @Router /ctfs/{phrase}/challenges/{id}/submit [put]
 func (h *Handler) SubmitFlag(c echo.Context) error {
-    challengeID, err := strconv.Atoi(c.Param("id"))
-    if err != nil {
-        return echo.NewHTTPError(http.StatusBadRequest, "Invalid challenge ID")
-    }
+	challengeID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid challenge ID")
+	}
 
-    var body struct {
-        Flag string `json:"flag"`
-    }
-    if err := c.Bind(&body); err != nil {
-        return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
-    }
+	var body struct {
+		Flag string `json:"flag"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
 
-    ctx := context.Background()
-    
-    // Update the challenge's flag in the database
-    err = h.Queries.UpdateChallengeFlag(ctx, db.UpdateChallengeFlagParams{
-        ID: int32(challengeID),
-        Flag:       body.Flag,
-    })
-    if err != nil {
-        return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update challenge flag")
-    }
+	ctx := context.Background()
 
-    return c.JSON(http.StatusOK, "Flag submitted successfully!")
+	// Update the challenge's flag in the database
+	err = h.Queries.UpdateChallengeFlag(ctx, db.UpdateChallengeFlagParams{
+		ID:   int32(challengeID),
+		Flag: body.Flag,
+	})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update challenge flag")
+	}
+
+	h.WsHub.Broadcast(websocket.Message{
+		Type: "chal_flag_updated",
+		Payload: map[string]interface{}{
+			"id":   challengeID,
+			"flag": body.Flag,
+		},
+	})
+
+	return c.JSON(http.StatusOK, "Flag submitted successfully!")
 }
 
 func createHedgeDocNote() (string, error) {
@@ -226,13 +234,14 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 	}
 
 	newChallenge := map[string]any{
-		"id":           insertedID,
-		"name":         challenge.Name,
-		"description":  challenge.Description,
-		"flag":         challenge.Flag,
-		"hedgedoc_url": challenge.HedgedocUrl,
-		"phrase":       challenge.Phrase,
-		"status":       "pending",
+		"id":             insertedID,
+		"name":           challenge.Name,
+		"description":    challenge.Description,
+		"flag":           challenge.Flag,
+		"hedgedoc_url":   challenge.HedgedocUrl,
+		"phrase":         challenge.Phrase,
+		"status":         "pending",
+		"active_members": 0,
 	}
 
 	h.WsHub.Broadcast(websocket.Message{

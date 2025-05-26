@@ -198,11 +198,6 @@
     background-position: right 0.75rem center;
     background-size: 1rem 1rem;
     }
-    footer {
-        margin-top: 40px;
-        font-size: 0.9rem;
-        color: #777;
-    }
 
     .challenge-select:hover {
     border-color: #000000;
