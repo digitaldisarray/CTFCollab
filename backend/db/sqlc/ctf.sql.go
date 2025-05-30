@@ -124,6 +124,76 @@ func (q *Queries) GetCTFChallenges(ctx context.Context, phrase string) ([]GetCTF
 	return items, nil
 }
 
+const getParticipantsByCTF = `-- name: GetParticipantsByCTF :many
+SELECT
+    cp.id,
+    cp.ctf_id,
+    cp.user_id,
+    cp.guest_id,
+    u.username,
+    g.nickname
+FROM ctf_participants cp
+LEFT JOIN users u ON cp.user_id = u.id
+LEFT JOIN guests g ON cp.guest_id = g.id
+WHERE cp.ctf_id = ?
+`
+
+type GetParticipantsByCTFRow struct {
+	ID       int32          `json:"id"`
+	CtfID    int32          `json:"ctf_id"`
+	UserID   sql.NullInt32  `json:"user_id"`
+	GuestID  sql.NullInt32  `json:"guest_id"`
+	Username sql.NullString `json:"username"`
+	Nickname sql.NullString `json:"nickname"`
+}
+
+func (q *Queries) GetParticipantsByCTF(ctx context.Context, ctfID int32) ([]GetParticipantsByCTFRow, error) {
+	rows, err := q.db.QueryContext(ctx, getParticipantsByCTF, ctfID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetParticipantsByCTFRow
+	for rows.Next() {
+		var i GetParticipantsByCTFRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CtfID,
+			&i.UserID,
+			&i.GuestID,
+			&i.Username,
+			&i.Nickname,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const insertParticipant = `-- name: InsertParticipant :exec
+INSERT INTO ctf_participants (ctf_id, user_id, guest_id)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE joined_at = CURRENT_TIMESTAMP
+`
+
+type InsertParticipantParams struct {
+	CtfID   int32         `json:"ctf_id"`
+	UserID  sql.NullInt32 `json:"user_id"`
+	GuestID sql.NullInt32 `json:"guest_id"`
+}
+
+func (q *Queries) InsertParticipant(ctx context.Context, arg InsertParticipantParams) error {
+	_, err := q.db.ExecContext(ctx, insertParticipant, arg.CtfID, arg.UserID, arg.GuestID)
+	return err
+}
+
 const isGuestMemberOfCTF = `-- name: IsGuestMemberOfCTF :one
 SELECT EXISTS (
     SELECT 1
@@ -300,6 +370,36 @@ func (q *Queries) ListUsersJoinedCTFs(ctx context.Context, userID int32) ([]List
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeParticipantByGuest = `-- name: RemoveParticipantByGuest :exec
+DELETE FROM ctf_participants
+WHERE ctf_id = ? AND guest_id = ?
+`
+
+type RemoveParticipantByGuestParams struct {
+	CtfID   int32         `json:"ctf_id"`
+	GuestID sql.NullInt32 `json:"guest_id"`
+}
+
+func (q *Queries) RemoveParticipantByGuest(ctx context.Context, arg RemoveParticipantByGuestParams) error {
+	_, err := q.db.ExecContext(ctx, removeParticipantByGuest, arg.CtfID, arg.GuestID)
+	return err
+}
+
+const removeParticipantByUser = `-- name: RemoveParticipantByUser :exec
+DELETE FROM ctf_participants
+WHERE ctf_id = ? AND user_id = ?
+`
+
+type RemoveParticipantByUserParams struct {
+	CtfID  int32         `json:"ctf_id"`
+	UserID sql.NullInt32 `json:"user_id"`
+}
+
+func (q *Queries) RemoveParticipantByUser(ctx context.Context, arg RemoveParticipantByUserParams) error {
+	_, err := q.db.ExecContext(ctx, removeParticipantByUser, arg.CtfID, arg.UserID)
+	return err
 }
 
 const searchCTFs = `-- name: SearchCTFs :many

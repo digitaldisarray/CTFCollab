@@ -50,6 +50,22 @@ CREATE TABLE IF NOT EXISTS challenges (
     FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS ctf_participants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ctf_id INT NOT NULL,
+    user_id INT DEFAULT NULL,
+    guest_id INT DEFAULT NULL,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_user_per_ctf (ctf_id, user_id),
+    UNIQUE KEY unique_guest_per_ctf (ctf_id, guest_id),
+    CONSTRAINT chk_only_one_id CHECK (
+        (user_id IS NULL AND guest_id IS NOT NULL) OR
+        (user_id IS NOT NULL AND guest_id IS NULL)
+    ),
+    FOREIGN KEY (ctf_id) REFERENCES ctfs(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE CASCADE
+);
 -- -- Tags Table: Stores the different tags/categories users can assign to challenges
 -- CREATE TABLE IF NOT EXISTS tags (
 --     id INT AUTO_INCREMENT PRIMARY KEY,

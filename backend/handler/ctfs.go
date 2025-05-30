@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -459,4 +460,150 @@ func (h *Handler) GetCTFExists(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]bool{
 		"exists": true,
 	})
+}
+
+func (h *Handler) GetParticipants(c echo.Context) error {
+	ctx := c.Request().Context()
+	phrase := c.Param("phrase")
+
+	// Get CTF ID from phrase first to ensure it exists
+	ctf, err := h.Queries.GetCTFByPhrase(ctx, phrase)
+	if err == sql.ErrNoRows {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "CTF not found"})
+	} else if err != nil {
+		log.Printf("Error getting CTF by phrase '%s': %v", phrase, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve CTF"})
+	}
+
+	// Now fetch participants using the CTF ID
+	participants, err := h.Queries.GetParticipantsByCTF(ctx, ctf.ID)
+	if err != nil {
+		log.Printf("Error getting participants for CTF ID %d: %v", ctf.ID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve participants"})
+	}
+
+	// We need to return a slice even if it's empty, not null
+	if participants == nil {
+		participants = []db.GetParticipantsByCTFRow{}
+	}
+
+	return c.JSON(http.StatusOK, participants)
+}
+
+func (h *Handler) AddParticipant(c echo.Context) error {
+	ctx := c.Request().Context()
+	phrase := c.Param("phrase")
+
+	ctf, err := h.Queries.GetCTFByPhrase(ctx, phrase)
+	if err == sql.ErrNoRows {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "CTF not found"})
+	} else if err != nil {
+		log.Printf("Error getting CTF by phrase '%s': %v", phrase, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve CTF"})
+	}
+
+	userToken, ok := c.Get("user").(*jwt.Token)
+	if !ok || userToken == nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User token not found"})
+	}
+
+	claims, ok := userToken.Claims.(*auth.CustomClaims)
+	if !ok || claims == nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token claims"})
+	}
+
+	userID := 0
+	guestID := 0
+	if claims.LoggedIn {
+		userID = claims.Id
+	} else {
+		guestID = claims.Id
+	}
+
+	if userID == 0 && guestID == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "No user or guest ID found in token"})
+	}
+
+	params := db.InsertParticipantParams{
+		CtfID:   ctf.ID,
+		UserID:  sql.NullInt32{Int32: int32(userID), Valid: userID != 0},
+		GuestID: sql.NullInt32{Int32: int32(guestID), Valid: guestID != 0},
+	}
+
+	// Since we use ON DUPLICATE KEY UPDATE, we don't expect a 1062 error.
+	// We just check if *any* other error occurred.
+	err = h.Queries.InsertParticipant(ctx, params)
+
+	if err != nil {
+		// Log the unexpected error and return 500
+		log.Printf("Error inserting/updating participant (CTFID: %d, UserID: %d, GuestID: %d): %v", ctf.ID, userID, guestID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to add participant"})
+	}
+
+	// Broadcast that the list needs updating
+	log.Printf("Participant added/updated (CTF %d). Broadcasting update.", ctf.ID)
+	h.WsHub.Broadcast(websocket.Message{
+		Type: "participants_updated", // CHANGED!
+		Payload: map[string]interface{}{
+			"ctf_id": ctf.ID,
+		},
+	})
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *Handler) RemoveParticipant(c echo.Context) error {
+	ctx := c.Request().Context()
+	phrase := c.Param("phrase")
+
+	ctf, err := h.Queries.GetCTFByPhrase(ctx, phrase)
+	if err == sql.ErrNoRows {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "CTF not found"})
+	} else if err != nil {
+		log.Printf("Error getting CTF by phrase '%s': %v", phrase, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve CTF"})
+	}
+
+	userToken, ok := c.Get("user").(*jwt.Token)
+	if !ok || userToken == nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User token not found"})
+	}
+
+	claims, ok := userToken.Claims.(*auth.CustomClaims)
+	if !ok || claims == nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token claims"})
+	}
+
+	userID := 0
+	guestID := 0
+
+	if claims.LoggedIn {
+		userID = claims.Id
+		err = h.Queries.RemoveParticipantByUser(ctx, db.RemoveParticipantByUserParams{
+			CtfID:  ctf.ID,
+			UserID: sql.NullInt32{Int32: int32(userID), Valid: true},
+		})
+	} else {
+		guestID = claims.Id
+		err = h.Queries.RemoveParticipantByGuest(ctx, db.RemoveParticipantByGuestParams{
+			CtfID:   ctf.ID,
+			GuestID: sql.NullInt32{Int32: int32(guestID), Valid: true},
+		})
+	}
+
+	if err != nil {
+		log.Printf("Error removing participant (CTFID: %d, UserID: %d, GuestID: %d): %v", ctf.ID, userID, guestID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to remove participant"})
+	}
+
+	// Broadcast that the list needs updating
+	log.Printf("Participant removed (CTF %d). Broadcasting update.", ctf.ID)
+	h.WsHub.Broadcast(websocket.Message{
+		Type: "participants_updated", // CHANGED!
+		Payload: map[string]interface{}{
+			"ctf_id": ctf.ID,
+		},
+	})
+
+	return c.NoContent(http.StatusOK)
 }

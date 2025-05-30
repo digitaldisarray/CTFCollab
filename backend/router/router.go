@@ -58,6 +58,10 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.GET("/joined", handler.GetJoinedCTFs, auth.AdminOnly) // Changed to admin only cause getting errors loading ctfs in admin dashboard
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
+		ctfs.GET("/:phrase/participants", handler.GetParticipants, auth.MemberOnly(handler.Queries))
+		ctfs.POST("/:phrase/add-participant", handler.AddParticipant, auth.MemberOnly(handler.Queries))
+		ctfs.DELETE("/:phrase/remove-participant", handler.RemoveParticipant, auth.MemberOnly(handler.Queries))
+		ctfs.POST("/:phrase/remove-participant", handler.RemoveParticipant, auth.MemberOnly(handler.Queries)) // for sendBeacon
 
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))

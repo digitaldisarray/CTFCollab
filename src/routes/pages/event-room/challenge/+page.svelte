@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { page } from "$app/stores";
-    import { currentCTF, challenges } from "./columns";
+    import { challenges, currentCTF } from "../columns";
+    import { connectWebSocket, closeWebSocket } from "$lib/websocket";
+    import { derived } from "svelte/store";
   
     let challengeId: string = "";
     let hedgedocUrl: string = "";
@@ -18,12 +20,17 @@
       if (roomcode) {
         getCurrentCTF();
         getAllChallenges();
+        connectWebSocket("localhost:1337", roomcode);
       }
   
       // Once we have the challengeId, fetch the specific challenge data (to get hedgedocUrl).
       if (challengeId && roomcode) {
         fetchChallenge(challengeId, roomcode);
       }
+    });
+
+    onDestroy(() => {
+      closeWebSocket(); // <- ✅ clean up
     });
   
     // Fetch the CTF details (event name, etc.)
@@ -112,6 +119,15 @@
       const selectedId = (event.currentTarget as HTMLSelectElement).value;
       window.location.href = `/pages/event-room/challenge?code=${roomcode}&challenge=${selectedId}`;
     }
+
+    const selectedChallenge = derived(challenges, ($challenges) =>
+      $challenges.find((c) => c.id === challengeId)
+    );
+
+    $: if ($selectedChallenge) {
+      hedgedocUrl = $selectedChallenge.hedgedoc_url;
+    }
+
   </script>
   
   <header class="logo-header">

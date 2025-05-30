@@ -3,5 +3,6 @@ DROP TABLE IF EXISTS guests;
 DROP TABLE IF EXISTS ctfs;
 DROP TABLE IF EXISTS user_ctfs;
 DROP TABLE IF EXISTS challenges;
+DROP TABLE IF EXISTS ctf_participants;
 -- DROP TABLE IF EXISTS tags;
 -- DROP TABLE IF EXISTS challenge_tags;
