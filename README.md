@@ -18,7 +18,7 @@ The goal of this project is to provide an open source, developer friendly, picku
 - Sory Diagouraga: Backend development and API documentation.
 
 ## Status   
-Development of CTFNote is ongoing. Use at your own risk.  
+Development of CTFNote is ongoing. We can't provide guarantees of its stability in a production environmnet. Use at your own risk.  
 
 # Table of contents
 - [CTFCollab](#ctfcollab)
@@ -46,7 +46,7 @@ Development of CTFNote is ongoing. Use at your own risk.
 
 ## UI  
 
-![UI flow graph](https://github.com/digitaldisarray/CTFCollab/tree/main/src/common/images/CTFNote-UI.png "CTFNote UI")
+![UI flow graph](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/CTFNote-UI.png?raw=true)
 
 
 ## Running in docker
@@ -87,7 +87,7 @@ docker compose down -v
 ## Running for frontend development
 For frontend development, it helps to not run the frontend in docker so it auto updated with each change to the source code.
 ```bash
-# Run just the backed in docker
+# Run just the backend in docker
 docker compose -f compose.backend_only.yaml up --build
 
 # Run the frontend outside of docker (make sure to do npm install)
@@ -234,4 +234,108 @@ Admins are set manually or by using a special token during registration.
 
 ### Can I leave and rejoin a CTF?
 Yes, as long as the CTF is still active and your nickname hasn't been taken.
+
+# Technical documentation
+
+## Accessing Swagger API documentation
+
+The quickest way to access Swagger API documentation is running the backend only.
+
+```bash
+docker compose -f compose.backend_only.yaml up --build
+```
+
+Then, navigate to [http://localhost:1337/swagger/index.html#/](http://localhost:1337/swagger/index.html#/) in your browser
+
+
+## Database schema
+The database schema can be viewed in the file `backend/db/migrations/1_init_schema.up.sql`
+
+## Project roadmap/timeline
+#### Q3 2024
+- Initial project creation
+- Schema, UI plans, backend plans
+- Create basic codebase
+- Dockerized deployment
+- Public GitHub repository
+
+#### Q4 2024
+- User authentication improvements
+- Enhanced permissions and role management
+- Improved UI/UX and responsiveness
+- Admin panel
+- Real time document editing
+
+#### Q1 2025
+- Real-time updates to UI
+- Additional UI improvement & mist features
+- Guest accounts for joining CTFs quickly
+
+## Implemented features
+- Website UI to view CTFs and challenges
+- Join CTFs with code
+- Real time document editing
+- Real time CTF listing updates
+- Admin panel for managing CTFs
+- Guest account access
+- Admin accounts, regular accounts
+- Swagger API documentation
+- Database migrations
+- Backend test suite
+
+## Future enhancements
+- Further UI improvements (new features & visual enhancements)
+- Scalability improvements for large events
+- Ongoing maintenance and support
+- More test cases for backend
+- End to end tests for frontend
+
+## Issue Template
+
+**Title:**  
+_A clear and concise title describing the issue or feature request._
+
+**Description:**  
+_Describe the bug, enhancement, or question. Include relevant details and context._
+
+**Steps to Reproduce (for bugs):**  
+1.  
+2.  
+3.  
+
+**Expected Behavior:**  
+_What did you expect to happen?_
+
+**Actual Behavior:**  
+_What actually happened?_
+
+**Screenshots/Logs:**  
+_If applicable, add screenshots or logs to help explain your problem._
+
+**Environment:**  
+- OS:
+- Browser (if frontend):
+- Go version (if backend):
+- MySQL version:
+
+**Additional Context:**  
+_Any other information or context._
+
+
+
+## Contributing guidelines/Maintenence guidelines
+- Fork the repository and create a new branch for your changes.
+- For backend changes, use Go and follow existing code style. Run `go fmt` before submitting.
+- For frontend changes, use Svelte and keep components modular.
+- For database changes, update migration files in `backend/db/migrations/`.
+- Test your changes locally before opening a pull request.
+- If applicable, write tests for your feature
+- Write clear commit messages and describe your changes in the PR.
+- Be respectful and constructive in code reviews and discussions.
+- If unsure, open an issue to discuss your idea before starting work.
+
+## Architecture diagram
+
+We opted for a simple architecture for our project.   
+![architecture diagram](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/architecture_diagram.svg?raw=true)
 
