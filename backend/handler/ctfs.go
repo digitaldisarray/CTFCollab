@@ -137,7 +137,8 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 		"status":  "pending", //TODO: Need to add as param for ctf maybe?
 		"members": "0",       //TODO: Need to add as param for ctf maybe?
 	}
-	h.WsHub.Broadcast(websocket.Message{
+	adminRoomID := "admin_dashboard_updates"
+	h.WsHub.BroadcastToRoom(adminRoomID, websocket.Message{
 		Type:    "ctf_added",
 		Payload: newCTF,
 	})
@@ -161,7 +162,7 @@ func (h *Handler) DeleteCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	h.WsHub.Broadcast(websocket.Message{
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
 		Type:    "ctf_deleted",
 		Payload: map[string]string{"id": phrase},
 	})
@@ -196,7 +197,7 @@ func (h *Handler) UpdateCTF(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	h.WsHub.Broadcast(websocket.Message{
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
 		Type:    "ctf_updated",
 		Payload: map[string]string{"id": phrase},
 	})
@@ -541,9 +542,9 @@ func (h *Handler) AddParticipant(c echo.Context) error {
 	}
 
 	// Broadcast that the list needs updating
-	log.Printf("Participant added/updated (CTF %d). Broadcasting update.", ctf.ID)
-	h.WsHub.Broadcast(websocket.Message{
-		Type: "participants_updated", // CHANGED!
+	log.Printf("Participant added/updated (CTF %d, Room %s). Broadcasting update to room.", ctf.ID, phrase)
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
+		Type: "participants_updated",
 		Payload: map[string]interface{}{
 			"ctf_id": ctf.ID,
 		},
@@ -597,9 +598,9 @@ func (h *Handler) RemoveParticipant(c echo.Context) error {
 	}
 
 	// Broadcast that the list needs updating
-	log.Printf("Participant removed (CTF %d). Broadcasting update.", ctf.ID)
-	h.WsHub.Broadcast(websocket.Message{
-		Type: "participants_updated", // CHANGED!
+	log.Printf("Participant removed (CTF %d, Room %s). Broadcasting update to room.", ctf.ID, phrase)
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
+		Type: "participants_updated",
 		Payload: map[string]interface{}{
 			"ctf_id": ctf.ID,
 		},

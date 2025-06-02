@@ -12,7 +12,7 @@
   import { goto } from "$app/navigation";
   import { onDestroy, onMount } from 'svelte';
   import { changePasswordForm } from "./schema.js";
-
+  import { browser } from "$app/environment";
   
   let { data: pageData }: { data: PageData } = $props();
  
@@ -35,6 +35,19 @@
     ws.onopen = () => {
       console.log("WebSocket connection established");
       error = null;
+      if (ws) { // Ensure ws is still valid
+        const adminRoomId = "admin_dashboard_updates"; // Your predefined admin room name
+        const joinAdminMessage = {
+          type: "join_room", // Using the same message type as before
+          payload: {
+            room_id: adminRoomId
+          }
+        };
+        ws.send(JSON.stringify(joinAdminMessage));
+        console.log(`Admin: Sent join_room message for room: ${adminRoomId}`);
+      } else {
+          console.error("Admin: WebSocket is not open, cannot send join_room message.");
+      }
     };
 
     ws.onmessage = (event) => {
@@ -60,6 +73,9 @@
                )
              );
              break;
+          case 'participants_updated':
+            console.log("Admin dashboard received participants_updated, ignoring");
+            break;
           // Add cases for challenge updates if needed
           default:
             console.warn("Received unknown WebSocket message type:", message.type);
@@ -147,17 +163,17 @@
 
 <div class="page-container">
   <div class="container">
-    <!-- Header -->
     <header>
       <h1 class="admin-header">Administrator Dashboard</h1>
       <p>Manage your CTF event rooms.</p>
     </header>
 
-    <!-- DataTable -->
-    <DataTable data={$ctfData} {columns} />
+    {#if browser}
+      <DataTable data={$ctfData} {columns} />
+    {/if}
+
   </div>
   <div class="container">
-    <!-- Header -->
     <header>
       <h1>Calendar</h1>
       <p>View upcoming CTF events.</p>

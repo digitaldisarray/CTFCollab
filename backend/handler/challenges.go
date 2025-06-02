@@ -38,6 +38,7 @@ type Challenge struct {
 // @Failure 500 {string} string "Internal server error"
 // @Router /ctfs/challenges/{id} [delete]
 func (h *Handler) DeleteChallenge(c echo.Context) error {
+	phrase := c.Param("phrase")
 	challengeID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID")
@@ -49,7 +50,7 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	h.WsHub.Broadcast(websocket.Message{
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
 		Type:    "chal_deleted",
 		Payload: map[string]int{"id": challengeID},
 	})
@@ -71,6 +72,7 @@ func (h *Handler) DeleteChallenge(c echo.Context) error {
 // @Failure 404 {string} string "Challenge not found"
 // @Router /ctfs/{phrase}/challenges/{id}/submit [put]
 func (h *Handler) SubmitFlag(c echo.Context) error {
+	phrase := c.Param("phrase")
 	challengeID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid challenge ID")
@@ -94,7 +96,7 @@ func (h *Handler) SubmitFlag(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update challenge flag")
 	}
 
-	h.WsHub.Broadcast(websocket.Message{
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
 		Type: "chal_flag_updated",
 		Payload: map[string]interface{}{
 			"id":   challengeID,
@@ -204,6 +206,7 @@ type CreatedChallenge struct {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /ctfs/{phrase}/challenges [post]
 func (h *Handler) CreateChallenge(c echo.Context) error {
+	phrase := c.Param("phrase")
 	challenge := new(db.CreateChallengeParams)
 	if err := c.Bind(challenge); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -244,7 +247,7 @@ func (h *Handler) CreateChallenge(c echo.Context) error {
 		"active_members": 0,
 	}
 
-	h.WsHub.Broadcast(websocket.Message{
+	h.WsHub.BroadcastToRoom(phrase, websocket.Message{
 		Type:    "chal_added",
 		Payload: newChallenge,
 	})

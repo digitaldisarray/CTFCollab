@@ -28,19 +28,28 @@
 
     let { data: pageData }: { data: PageData } = $props();
 
-    let roomcode = $page.url.searchParams.get('code') || "";
+    let roomcode = "";
+    let participantKey = "";
 
     const backendUrl = "http://localhost:1337";
 
-
-    const tabKey = 'ctfcollab-tabs-open';
-    const participantKey = `ctfcollab-${roomcode}-active-tabs`;
-
     // Increment tab count
     function incrementTabCount() {
-      const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
+      const alreadyIncremented = sessionStorage.getItem(`${participantKey}-tabIncremented`);
+      if (alreadyIncremented) {
+        console.log("Tab already incremented — skipping");
+        return;
+      }
+
+      const currentVal = localStorage.getItem(participantKey);
+      const count = parseInt(currentVal || '0', 10);
+      console.log(`Incrementing tab count for ${participantKey}. Current before: ${currentVal}, Parsed: ${count}`);
+      console.trace();
       localStorage.setItem(participantKey, String(count + 1));
+      sessionStorage.setItem(`${participantKey}-tabIncremented`, "true");
     }
+
+
 
     // Decrement tab count
     function decrementTabCount() {
@@ -48,9 +57,33 @@
       const newCount = Math.max(count - 1, 0);
       localStorage.setItem(participantKey, String(newCount));
     }
+
+    let initializedForThisInstance = false;
+    let tabIncremented = false;
+
+
     onMount(() => {
-      incrementTabCount();
-      console.log("incrementing tab count");
+      roomcode = $page.url.searchParams.get('code') || "";
+      participantKey = `ctfcollab-${roomcode}-active-tabs`;
+
+      if (!tabIncremented) {
+        incrementTabCount();
+        tabIncremented = true;
+
+        const currentTotalTabs = parseInt(localStorage.getItem(participantKey) || '0', 10);
+        if (currentTotalTabs === 1) {
+          console.log("First tab for this room globally, calling add-participant");
+          fetch(`${backendUrl}/ctfs/${roomcode}/add-participant`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            credentials: "include"
+          });
+        }
+      }
+      const currentVal = localStorage.getItem(participantKey);
+      const count = parseInt(currentVal || '0', 10);
+      console.log(`Incrementing tab count for ${participantKey}. Current before: ${currentVal}, Parsed: ${count}`);
+
 
       const handleUnload = () => {
         decrementTabCount();
@@ -65,25 +98,23 @@
       };
 
       connectWebSocket();
-      fetch(`${backendUrl}/ctfs/${roomcode}/add-participant`, {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json', },
-        credentials: "include"
-      });
-
       getCurrentCTF();
       getChallenges();
       getParticipants();
 
       // navigates away from the page or closes the browser
       window.addEventListener("beforeunload", handleUnload);
-      return () => window.removeEventListener("beforeunload", handleUnload);
+      return () => {
+        window.removeEventListener("beforeunload", handleUnload);
+        initializedForThisInstance = false;
+      };
       
     });
     
     let manuallyClosed = false;
     onDestroy(() => {
       if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        sessionStorage.removeItem(`${participantKey}-tabIncremented`);
         decrementTabCount();
         console.log("decrementing tab count");
 
@@ -116,12 +147,25 @@
     ws.onopen = () => {
       console.log("WebSocket connection established");
       error = null;
+      if (ws && roomcode) {
+        const joinMessage = {
+          type: "join_room",
+          payload: {
+            room_id: roomcode
+          }
+        };
+        ws.send(JSON.stringify(joinMessage));
+        console.log(`Sent join_room message for room: ${roomcode}`);
+      } else {
+        console.error("WebSocket is not open or roomcode is missing, cannot send join_room.")
+      }
     };
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         console.log("WebSocket message received:", message);
+        console.log("Received message type:", JSON.stringify(message.type));
 
         // Handle different message types from the server
         switch (message.type) {

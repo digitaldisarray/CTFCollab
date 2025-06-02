@@ -1,4 +1,4 @@
-import { challenges, type Challenge } from "../routes/pages/event-room/columns"; // adjust as needed
+import { challenges, type Challenge } from "../routes/pages/event-room/columns";
 
 let ws: WebSocket | null = null;
 let manuallyClosed = false;
