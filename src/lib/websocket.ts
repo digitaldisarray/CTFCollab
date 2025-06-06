@@ -1,60 +1,92 @@
-import { challenges, type Challenge } from "../routes/pages/event-room/columns";
+import { writable } from "svelte/store";
+import { challenges, type Challenge } from "../routes/pages/event-room/columns"; // adjust as needed
 
-let ws: WebSocket | null = null;
 let manuallyClosed = false;
 
-export function connectWebSocket(backendUrl: string, roomcode: string) {
-  const wsUrl = `ws://${backendUrl}/ws`;
+let ws: WebSocket | null = null;
+export let error = writable<string | null>(null);
 
-  ws = new WebSocket(wsUrl);
+  export function connectWebSocket(roomcode: string) {
+    const wsUrl = "ws://localhost:1337/ws"; // if backend runs elsewhere in the future, change
 
-  ws.onopen = () => console.log("WebSocket connected");
+    console.log(`Attempting to connect WebSocket to: ${wsUrl}`);
+    ws = new WebSocket(wsUrl);
 
-  ws.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data);
-
-      switch (message.type) {
-        case "chal_added":
-          challenges.update((current) => [...current, message.payload]);
-          break;
-        case "chal_deleted":
-          challenges.update((current) =>
-            current.filter((c) => c.id !== message.payload.id.toString())
-          );
-          break;
-        case "chal_flag_updated":
-          const { id, flag } = message.payload;
-          challenges.update((current) =>
-            current.map((ch) =>
-              ch.id === id.toString()
-                ? { ...ch, flag, status: flag ? "complete" : "pending" }
-                : ch
-            )
-          );
-          break;
-        default:
-          console.warn("Unknown WebSocket message type:", message.type);
+    ws.onopen = () => {
+      console.log("WebSocket connection established");
+      error.set(null);
+      if (ws && roomcode) {
+        const joinMessage = {
+          type: "join_room",
+          payload: {
+            room_id: roomcode
+          }
+        };
+        ws.send(JSON.stringify(joinMessage));
+        console.log(`Sent join_room message for room: ${roomcode}`);
+      } else {
+        console.error("WebSocket is not open or roomcode is missing, cannot send join_room.")
       }
-    } catch (err) {
-      console.error("WebSocket message parse error:", err);
-    }
-  };
+    };
 
-  ws.onclose = (e) => {
-    if (!manuallyClosed) {
-      console.warn("WebSocket closed unexpectedly. Reconnecting...");
-      setTimeout(() => connectWebSocket(backendUrl, roomcode), 5000);
-    }
-  };
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log("WebSocket message received:", message);
+        console.log("Received message type:", JSON.stringify(message.type));
 
-  ws.onerror = () => {
-    console.error("WebSocket error occurred.");
-  };
-}
+        // Handle different message types from the server
+        switch (message.type) {
+          case 'chal_added':
+            const newChallenge = message.payload as Challenge;
+            challenges.update((current) => [...current, newChallenge]);
+            break;
+          case 'chal_deleted':
+            const deletedId = message.payload.id.toString();
+            challenges.update((current) => current.filter((ch) => ch.id.toString() !== deletedId));
+            break;
+          case 'chal_flag_updated':
+            const { id, flag } = message.payload;
+            challenges.update(current =>
+                current.map(ch =>
+                    ch.id.toString() === id.toString()
+                        ? { ...ch, flag, status: flag ? 'complete' : 'pending' }
+                        : ch
+                )
+            );
+            break;
+          case 'participants_updated':
+            console.log("Participants list changed, re-fetching...");
+            break;
+          // Add cases for challenge updates if needed
+          default:
+            console.warn("Received unknown WebSocket message type:", message.type);
+        }
+      } catch (e) {
+        console.error("Failed to parse WebSocket message or update store:", e);
+      }
+    };
 
-export function closeWebSocket() {
-  manuallyClosed = true;
-  ws?.close();
-  ws = null;
+    ws.onerror = (event) => {
+      console.error("WebSocket error:", event);
+      error.set("WebSocket connection error. Trying to reconnect...");
+      setTimeout(connectWebSocket, 5000);
+    };
+
+    ws.onclose = (event) => {
+      console.log("WebSocket connection closed:", event.reason, `Code: ${event.code}`);
+      ws = null;
+      if (!manuallyClosed && !event.wasClean) {
+        error.set("WebSocket connection closed unexpecteldy. Trying to reconnect...");
+        setTimeout(connectWebSocket, 5000);
+      } else {
+        error.set("WebSocket connection closed.");
+
+      }
+    };
+  }
+  export function closeWebSocket() {
+    manuallyClosed = true;
+    ws?.close();
+    ws = null;
 }

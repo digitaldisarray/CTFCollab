@@ -1,21 +1,5 @@
 <script lang="ts">
-    import CalendarIcon from "lucide-svelte/icons/calendar";
-    import {
-      CalendarDate,
-      DateFormatter,
-      type DateValue,
-      getLocalTimeZone,
-      parseDate,
-      today,
-    } from "@internationalized/date";
-    import { browser } from "$app/environment";
     import { page } from "$app/stores";
-    import { cn } from "$lib/utils.js";
-  
-    import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-    import { Calendar } from "$lib/components/ui/calendar/index.js";
-  
-    import * as Popover from "$lib/components/ui/popover/index.js";
     import * as Form from "$lib/components/ui/form/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { formSchema, type FormSchema } from "./schema";

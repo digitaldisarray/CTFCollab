@@ -96,7 +96,6 @@
       </DropdownMenu.Item>
      </DropdownMenu.Group>
      <DropdownMenu.Separator />
-     <DropdownMenu.Item>View Active Members</DropdownMenu.Item>
      <DropdownMenu.Item onclick={viewDetails}>View CTF details</DropdownMenu.Item>
      <DropdownMenu.Item onclick={deleteCTF}>
         Delete CTF Room

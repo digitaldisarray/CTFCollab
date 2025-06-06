@@ -4,23 +4,27 @@
     import { challenges, currentCTF } from "../columns";
     import { connectWebSocket, closeWebSocket } from "$lib/websocket";
     import { derived } from "svelte/store";
+    import { incrementTabCount } from '$lib/tabtrack';
   
     let challengeId: string = "";
     let hedgedocUrl: string = "";
     let roomcode: string = "";
+    let participantKey: string = "";
   
     onMount(() => {
       // Get the roomcode / event phrase
       roomcode = $page.url.searchParams.get("code") || "";
+      participantKey = `ctfcollab-${roomcode}-active-tabs`;
+      incrementTabCount(participantKey)
   
       // Get the challenge ID
       challengeId = $page.url.searchParams.get("challenge") || "";
   
-      // If they exist, fetch the current CTF data & the full challenge list.
+      // If they ex +ist, fetch the current CTF data & the full challenge list.
       if (roomcode) {
         getCurrentCTF();
         getAllChallenges();
-        connectWebSocket("localhost:1337", roomcode);
+        connectWebSocket(roomcode);
       }
   
       // Once we have the challengeId, fetch the specific challenge data (to get hedgedocUrl).
@@ -30,7 +34,7 @@
     });
 
     onDestroy(() => {
-      closeWebSocket(); // <- ✅ clean up
+      closeWebSocket();
     });
   
     // Fetch the CTF details (event name, etc.)

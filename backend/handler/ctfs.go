@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -133,7 +134,7 @@ func (h *Handler) CreateCTF(c echo.Context) error {
 	newCTF := map[string]any{
 		"id":      mnemonic,
 		"name":    ctf.Name,
-		"date":    ctf.StartDate,
+		"date":    fmt.Sprintf("%s - %s", ctf.StartDate.Format("2006-01-02"), ctf.EndDate.Format("2006-01-02")),
 		"status":  "pending", //TODO: Need to add as param for ctf maybe?
 		"members": "0",       //TODO: Need to add as param for ctf maybe?
 	}

@@ -13,18 +13,10 @@
     import {currentCTF, challenges} from "./columns.js"
     import { type CTF  } from "../admin-page/columns.js" //
     import { onMount, onDestroy } from "svelte";
-    import { writable } from "svelte/store";
-
-    export type Participant = {
-      id: number;
-      ctf_id: number;
-      user_id: { Int32: number, Valid: boolean };
-      guest_id: { Int32: number, Valid: boolean };
-      username: { String: string, Valid: boolean };
-      nickname: { String: string, Valid: boolean };
-    };
-
-    export const participants = writable<Participant[]>([]);
+    import { get, writable } from "svelte/store";
+    import { browser } from "$app/environment";
+    import { participants, type Participant } from "$lib/participants";
+  import { afterNavigate } from "$app/navigation";
 
     let { data: pageData }: { data: PageData } = $props();
 
@@ -34,7 +26,8 @@
     const backendUrl = "http://localhost:1337";
 
     // Increment tab count
-    function incrementTabCount() {
+    export function incrementTabCount() {
+      if (!browser) return;
       const alreadyIncremented = sessionStorage.getItem(`${participantKey}-tabIncremented`);
       if (alreadyIncremented) {
         console.log("Tab already incremented — skipping");
@@ -49,10 +42,9 @@
       sessionStorage.setItem(`${participantKey}-tabIncremented`, "true");
     }
 
-
-
     // Decrement tab count
-    function decrementTabCount() {
+    export function decrementTabCount() {
+      if (!browser) return;
       const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
       const newCount = Math.max(count - 1, 0);
       localStorage.setItem(participantKey, String(newCount));
@@ -61,79 +53,72 @@
     let initializedForThisInstance = false;
     let tabIncremented = false;
 
+      onMount(() => {
+        if (browser) {
+          roomcode = $page.url.searchParams.get('code') || "";
+          participantKey = `ctfcollab-${roomcode}-active-tabs`;
 
-    onMount(() => {
-      roomcode = $page.url.searchParams.get('code') || "";
-      participantKey = `ctfcollab-${roomcode}-active-tabs`;
+          setTimeout(() => {
+            if (!tabIncremented) {
+              incrementTabCount();
+              tabIncremented = true;
 
-      if (!tabIncremented) {
-        incrementTabCount();
-        tabIncremented = true;
+              fetch(`${backendUrl}/ctfs/${roomcode}/add-participant`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                credentials: "include"
+              });
+            }
+            const currentVal = localStorage.getItem(participantKey);
+            const count = parseInt(currentVal || '0', 10);
+            console.log(`Incrementing tab count for ${participantKey}. Current before: ${currentVal}, Parsed: ${count}`);
+          }, 700); // timeout to avoid double-mount
 
-        const currentTotalTabs = parseInt(localStorage.getItem(participantKey) || '0', 10);
-        if (currentTotalTabs === 1) {
-          console.log("First tab for this room globally, calling add-participant");
-          fetch(`${backendUrl}/ctfs/${roomcode}/add-participant`, {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json' },
-            credentials: "include"
-          });
+          function handleUnload() {
+            sessionStorage.removeItem(`${participantKey}-tabIncremented`);
+            decrementTabCount();
+            console.log("decrementing tab count");
+
+            const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
+            if (navigator.sendBeacon && count <= 0) {
+              const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
+              const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+              navigator.sendBeacon(url, blob);
+              console.log("Sent remove-participant beacon via pagehide");
+            }
+          }
+
+          connectWebSocket();
+          getCurrentCTF();
+          getChallenges();
+          getParticipants();
+
+          // navigates away from the page or closes the browser
+        window.addEventListener("beforeunload", handleUnload);
+        return () => window.removeEventListener("beforeunload", handleUnload);
+
         }
-      }
-      const currentVal = localStorage.getItem(participantKey);
-      const count = parseInt(currentVal || '0', 10);
-      console.log(`Incrementing tab count for ${participantKey}. Current before: ${currentVal}, Parsed: ${count}`);
-
-
-      const handleUnload = () => {
-        decrementTabCount();
-        console.log("decrementing tab count");
-
-        const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
-        if (count <= 0) {
-          const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
-          const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
-          navigator.sendBeacon(url, blob);
-        }
-      };
-
-      connectWebSocket();
-      getCurrentCTF();
-      getChallenges();
-      getParticipants();
-
-      // navigates away from the page or closes the browser
-      window.addEventListener("beforeunload", handleUnload);
-      return () => {
-        window.removeEventListener("beforeunload", handleUnload);
-        initializedForThisInstance = false;
-      };
-      
-    });
+      });
     
-    let manuallyClosed = false;
-    onDestroy(() => {
-      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-        sessionStorage.removeItem(`${participantKey}-tabIncremented`);
-        decrementTabCount();
-        console.log("decrementing tab count");
+  let manuallyClosed = false;
+  onDestroy(() => {
+  if (browser) {
+    decrementTabCount();
+    const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
+    if (count <= 0 && !manuallyClosed) {
+      const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
+      const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
+    }
+  }
 
-        const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
-        if (count <= 0) {
-          const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
-          const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
-          navigator.sendBeacon(url, blob);
-        }
-      }
-
-      if (ws) {
-        console.log("Cleaning up WebSocket connection.");
-        manuallyClosed = true;
-        ws.close();
-        ws = null;
-      }
-    });
-
+  if (ws) {
+    console.log("Cleaning up WebSocket connection.");
+    manuallyClosed = true;
+    ws.close();
+    ws = null;
+  }
+});
 
   let ws: WebSocket | null = null;
   let error = $state<string | null>(null);
@@ -207,6 +192,9 @@
     };
 
     ws.onclose = (event) => {
+      const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
+      const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
       console.log("WebSocket connection closed:", event.reason, `Code: ${event.code}`);
       ws = null;
       if (!manuallyClosed && !event.wasClean) {
