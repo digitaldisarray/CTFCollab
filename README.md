@@ -175,7 +175,7 @@ docker volume rm ctfcollab_db-data
 ### CTF Page
 - View CTF info: name, description, flag
 
-![CTF Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images.png/ctf?raw=true)
+![CTF Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/ctf.png?raw=true)
 
 ### Shared Notes
 - Open a challenge to write or edit shared notes
