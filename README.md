@@ -14,7 +14,7 @@ The goal of this project is to provide an open source, developer friendly, picku
 - Teo Liam Ippolito: UX Designer and Frontend Development Lead
 - Brayden Aldrich: Frontend, backend, and API development
 - Danny T Nguyen: Implemented frontend features
-- Maximiliano Maldonado: Backend development, worked on the database, API and implementing frontend
+- Maximiliano Maldonado: Backend Development Lead, Database Design, API Development, and Implementing Frontend
 - Sory Diagouraga: Backend development and API documentation.
 
 ## Status   
@@ -35,6 +35,7 @@ Development of CTFNote is ongoing. We can't provide guarantees of its stability 
     - [Just the backend](#just-the-backend)
   - [Running the backend test suite](#running-the-backend-test-suite)
 - [End User Documentation](#end-user-documentation)
+- [Technical Documentation](#technical-documentation)
 
 ## Features
 - Self-hostable  
@@ -169,13 +170,19 @@ docker volume rm ctfcollab_db-data
 ### Landing Page
 - Join new events through the landing page by inputing a phrase provided by the Admin
 
+![Landing Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/landing.png?raw=true)
+
 ### CTF Page
 - View CTF info: name, description, flag
+
+![CTF Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images.png/ctf?raw=true)
 
 ### Shared Notes
 - Open a challenge to write or edit shared notes
 - Supports **Markdown formatting**
 - Collaboration is real-time and team-wide
+
+![Notes Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/notes.png?raw=true)
 
 ---
 
@@ -188,12 +195,16 @@ docker volume rm ctfcollab_db-data
    - Start/End Time
    - Description
 
+![Admin Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/admin.png?raw=true)
+
 ### Adding a Challenge
 - Navigate to your CTF
 - Click **Add Challenge**
 - Input:
   - Name
   - Description
+
+![CTF Page](https://github.com/digitaldisarray/CTFCollab/blob/main/src/common/images/ctf.png?raw=true)
 
 ---
 
