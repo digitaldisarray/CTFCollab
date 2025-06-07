@@ -8,6 +8,8 @@ import DataTableNameButton from "./data-name-button.svelte";
 import DataTableStatusButton from "./data-status-button.svelte";
 import DataTableDateButton from "./data-date-button.svelte";
 import { writable } from "svelte/store";
+import { get } from "svelte/store";
+import { participants } from "$lib/participants";
 
 /**
  *CURRENT USE: 
@@ -37,39 +39,63 @@ export type CTF = {
 }
 
 export const ctfData = writable<Challenge[]>([]) // so the CTF list is rememeber across states
+const memberCount = get(participants).length;
 
 // format CTF's to challenges
-export function formatData(ctf: Array<CTF>): Challenge[]{
-  let newData = ctf.map((c) => {
-      const today = new Date();
-      let ctfDate = new Date(c.start_date);
-      let status: "completed" | "pending" | "in progress" = "pending";
-      
-      if(ctfDate < today){  
-        status = "completed"
-      } else if (ctfDate.toDateString() === today.toDateString()){
-        status = "in progress"
-      }
-      
-      return {
-        id: String(c.phrase),
-        name: c.ctf_name,
-        date: ctfDate.toISOString(),
-        status: status as "completed" | "pending" | "in progress" | "canceled",
-        members: 0,
-      }
+export function formatData(ctf: Array<CTF>): Challenge[] {
+  return ctf.map((c) => {
+    const today = new Date();
+    const ctfDate = new Date(c.start_date);
+    let status: Challenge["status"] = "pending";
+
+    if (ctfDate < today) {
+      status = "completed";
+    } else if (ctfDate.toDateString() === today.toDateString()) {
+      status = "in progress";
+    }
+
+    return {
+      id: String(c.phrase),
+      name: c.ctf_name,
+      date: `${formatDateOnly(c.start_date)} - ${formatDateOnly(c.end_date)}`,
+      status,
+      members: memberCount,
+    };
   });
-  return newData;
 }
+
+export function formatDateOnly(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toISOString().split("T")[0]; // "2025-06-17"
+}
+
 
 export const columns: ColumnDef<Challenge>[] = [
 
     {
-        accessorKey: "status",
-        header: ({ column }) =>
-          renderComponent(DataTableStatusButton, {
-            onclick: () => column.toggleSorting(column.getIsSorted() === "asc"),
-          }),
+      accessorKey: "status",
+      header: ({ column }) =>
+        renderComponent(DataTableStatusButton, {
+          onclick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+        }),
+      cell: ({ row }) => {
+        const status = row.getValue("status") as Challenge["status"];
+        const statusColor = {
+          pending: "text-yellow-500",
+          "in progress": "text-orange-500",
+          completed: "text-green-500",
+          canceled: "text-red-500",
+        }[status];
+
+        const statusSnippet = createRawSnippet<[string]>((getStatus) => {
+          const status = getStatus();
+          return {
+            render: () => `<div class="font-medium ${statusColor}">${status}</div>`,
+          };
+        });
+
+        return renderSnippet(statusSnippet, status);
+      },
     },
     {
         accessorKey: "name",
@@ -86,7 +112,7 @@ export const columns: ColumnDef<Challenge>[] = [
             onclick: () => column.toggleSorting(column.getIsSorted() === "asc"),
           }),
    
-  },
+    },
     {
         accessorKey: "members",
         header: () => {
@@ -124,51 +150,3 @@ export const columns: ColumnDef<Challenge>[] = [
         },
       },
     ];
-
-
-
-
-// export const data: Challenge[] = [
-//     {
-//       id: "1",
-//       members: 2,
-//       status: "pending",
-//       date: "2023-10-01",
-//       name: "Event 3",
-//     },
-//     {
-//       id: "2",
-//       members: 1,
-//       status: "completed",
-//       date: "2023-10-01",
-//       name: "Event 1",
-//     },
-//     {
-//         id: "3",
-//         members: 3,
-//         status: "completed",
-//         date: "2023-10-01",
-//         name: "Event 2",
-//     },
-//     {
-//       id: "4",
-//       members: 2,
-//       status: "completed",
-//       date: "2023-10-01",
-//       name: "Event 5",
-//     },
-//     {
-//       id: "5",
-//       members: 1,
-//       status: "in progress",
-//       date: "2023-10-01",
-//       name: "Event 6",
-//     },
-//     {
-//         id: "6",
-//         members: 3,
-//         status: "pending",
-//         date: "2023-10-01",
-//         name: "Event 4",
-//     },
-// ];

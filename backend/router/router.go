@@ -18,7 +18,7 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 	e.Use(middleware.Logger())
 	//e.Use(middleware.CORS()) // Dev env only?
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "http://localhost:5173"}, // Your Svelte dev server
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:4173"}, // Your Svelte dev server
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
@@ -58,6 +58,10 @@ func SetupRouter(handler *handler.Handler) *echo.Echo {
 		ctfs.GET("/joined", handler.GetJoinedCTFs, auth.AdminOnly) // Changed to admin only cause getting errors loading ctfs in admin dashboard
 		ctfs.GET("/:phrase", handler.GetCTF, auth.MemberOnly(handler.Queries))
 		ctfs.PUT("/:phrase", handler.UpdateCTF, auth.MemberOnly(handler.Queries))
+		ctfs.GET("/:phrase/participants", handler.GetParticipants, auth.MemberOnly(handler.Queries))
+		ctfs.POST("/:phrase/add-participant", handler.AddParticipant, auth.MemberOnly(handler.Queries))
+		ctfs.DELETE("/:phrase/remove-participant", handler.RemoveParticipant, auth.MemberOnly(handler.Queries))
+		ctfs.POST("/:phrase/remove-participant", handler.RemoveParticipant, auth.MemberOnly(handler.Queries)) // for sendBeacon
 
 		ctfs.GET("/:phrase/challenges", handler.GetChallenges, auth.MemberOnly(handler.Queries))
 		ctfs.POST("/:phrase/challenges", handler.CreateChallenge, auth.MemberOnly(handler.Queries))

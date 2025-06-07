@@ -111,19 +111,15 @@
     <DropdownMenu.Content>
      <DropdownMenu.Group>
       <DropdownMenu.GroupHeading>Actions</DropdownMenu.GroupHeading>
-      <DropdownMenu.Item onclick={() => navigator.clipboard.writeText(id)}>
-       Copy Challenge ID
-      </DropdownMenu.Item>
+      <DropdownMenu.Item onclick={SubmitFlag}>
+        Submit Flag
+    </DropdownMenu.Item>
      </DropdownMenu.Group>
      <DropdownMenu.Separator />
      <DropdownMenu.Item onclick={() => navigator.clipboard.writeText(flag)}>Copy Challenge Flag</DropdownMenu.Item>
-     <DropdownMenu.Item>View Active Members</DropdownMenu.Item>
      <DropdownMenu.Item onclick={viewDetails}>View Challenge details</DropdownMenu.Item>
      <DropdownMenu.Item onclick={deleteChal}>
         Delete Challenge
-    </DropdownMenu.Item>
-    <DropdownMenu.Item onclick={SubmitFlag}>
-        Submit Flag
     </DropdownMenu.Item>
     </DropdownMenu.Content>
    </DropdownMenu.Root>

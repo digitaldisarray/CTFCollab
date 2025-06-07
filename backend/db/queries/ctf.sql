@@ -92,3 +92,29 @@ SELECT EXISTS (
     JOIN ctfs ON guests.ctf_id = ctfs.id
     WHERE guests.id = ? AND ctfs.phrase = ?
 ) AS is_member;
+
+-- name: InsertParticipant :exec
+INSERT INTO ctf_participants (ctf_id, user_id, guest_id)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE joined_at = CURRENT_TIMESTAMP;
+
+-- name: RemoveParticipantByUser :exec
+DELETE FROM ctf_participants
+WHERE ctf_id = ? AND user_id = ?;
+
+-- name: RemoveParticipantByGuest :exec
+DELETE FROM ctf_participants
+WHERE ctf_id = ? AND guest_id = ?;
+
+-- name: GetParticipantsByCTF :many
+SELECT
+    cp.id,
+    cp.ctf_id,
+    cp.user_id,
+    cp.guest_id,
+    u.username,
+    g.nickname
+FROM ctf_participants cp
+LEFT JOIN users u ON cp.user_id = u.id
+LEFT JOIN guests g ON cp.guest_id = g.id
+WHERE cp.ctf_id = ?;

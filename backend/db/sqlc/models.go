@@ -29,6 +29,14 @@ type Ctf struct {
 	AuthorID    int32     `json:"author_id"`
 }
 
+type CtfParticipant struct {
+	ID       int32         `json:"id"`
+	CtfID    int32         `json:"ctf_id"`
+	UserID   sql.NullInt32 `json:"user_id"`
+	GuestID  sql.NullInt32 `json:"guest_id"`
+	JoinedAt sql.NullTime  `json:"joined_at"`
+}
+
 type Guest struct {
 	ID        int32        `json:"id"`
 	Nickname  string       `json:"nickname"`

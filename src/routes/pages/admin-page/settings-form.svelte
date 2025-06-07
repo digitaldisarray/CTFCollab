@@ -8,8 +8,6 @@
       parseDate,
       today,
     } from "@internationalized/date";
-    import { browser } from "$app/environment";
-    import { page } from "$app/stores";
     import { cn } from "$lib/utils.js";
     import { writable } from "svelte/store";
     import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
@@ -18,16 +16,15 @@
     import * as Form from "$lib/components/ui/form/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { formSchema, type FormSchema } from "./schema";
-    import { ctfData, formatData, type Challenge } from "./columns.js";
+    import { type Challenge } from "./columns.js";
     import {
       type SuperValidated,
       type Infer,
       superForm,
     } from "sveltekit-superforms";
-    import { z } from "zod";
     import { zodClient } from "sveltekit-superforms/adapters";
-    import { id } from "date-fns/locale";
-  
+    import { formatDateOnly } from './columns.js';
+
     let { data }: { data: { form: SuperValidated<Infer<FormSchema>> } } = $props();
   
     const form = superForm(data.form, {
@@ -83,7 +80,10 @@
           id: data.phrase,
           members: 0,
           status: "pending",
-          date: start_date!!.toString(),
+          date:
+            start_date && end_date
+              ? `${formatDateOnly(start_date)} - ${formatDateOnly(end_date)}`
+              : "Date missing",
           name: name
         };
         console.log(newCTF)

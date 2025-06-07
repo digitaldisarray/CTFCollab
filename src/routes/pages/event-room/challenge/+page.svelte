@@ -1,29 +1,40 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { page } from "$app/stores";
-    import { currentCTF, challenges } from "./columns";
+    import { challenges, currentCTF } from "../columns";
+    import { connectWebSocket, closeWebSocket } from "$lib/websocket";
+    import { derived } from "svelte/store";
+    import { incrementTabCount } from '$lib/tabtrack';
   
     let challengeId: string = "";
     let hedgedocUrl: string = "";
     let roomcode: string = "";
+    let participantKey: string = "";
   
     onMount(() => {
       // Get the roomcode / event phrase
       roomcode = $page.url.searchParams.get("code") || "";
+      participantKey = `ctfcollab-${roomcode}-active-tabs`;
+      incrementTabCount(participantKey)
   
       // Get the challenge ID
       challengeId = $page.url.searchParams.get("challenge") || "";
   
-      // If they exist, fetch the current CTF data & the full challenge list.
+      // If they ex +ist, fetch the current CTF data & the full challenge list.
       if (roomcode) {
         getCurrentCTF();
         getAllChallenges();
+        connectWebSocket(roomcode);
       }
   
       // Once we have the challengeId, fetch the specific challenge data (to get hedgedocUrl).
       if (challengeId && roomcode) {
         fetchChallenge(challengeId, roomcode);
       }
+    });
+
+    onDestroy(() => {
+      closeWebSocket();
     });
   
     // Fetch the CTF details (event name, etc.)
@@ -112,6 +123,15 @@
       const selectedId = (event.currentTarget as HTMLSelectElement).value;
       window.location.href = `/pages/event-room/challenge?code=${roomcode}&challenge=${selectedId}`;
     }
+
+    const selectedChallenge = derived(challenges, ($challenges) =>
+      $challenges.find((c) => c.id === challengeId)
+    );
+
+    $: if ($selectedChallenge) {
+      hedgedocUrl = $selectedChallenge.hedgedoc_url;
+    }
+
   </script>
   
   <header class="logo-header">

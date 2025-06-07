@@ -4,8 +4,6 @@
     import * as Avatar from "$lib/components/ui/avatar/index.js";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Command from "$lib/components/ui/command/index.js";
-
-
     import { page } from '$app/stores'; 
     import * as Popover from "$lib/components/ui/popover/index.js";
     import { Input } from "$lib/components/ui/input/index.js"; // Add Input component
@@ -14,28 +12,113 @@
     import SettingsForm from "./settings-form.svelte";
     import {currentCTF, challenges} from "./columns.js"
     import { type CTF  } from "../admin-page/columns.js" //
-  import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy } from "svelte";
+    import { get, writable } from "svelte/store";
+    import { browser } from "$app/environment";
+    import { participants, type Participant } from "$lib/participants";
+  import { afterNavigate } from "$app/navigation";
 
     let { data: pageData }: { data: PageData } = $props();
 
-    let roomcode = '';
+    let roomcode = "";
+    let participantKey = "";
 
-    onMount(() => {
-      connectWebSocket();
-      roomcode = $page.url.searchParams.get('code') || "";
-      getCurrentCTF();
-      getChallenges();
-    });
-    
-    let manuallyClosed = false;
-    onDestroy(() => {
-      if (ws) {
-        console.log("Cleaning up WebSocket connection.");
-        manuallyClosed = true;
-        ws.close();
-        ws = null;
+    const backendUrl = "http://localhost:1337";
+
+    // Increment tab count
+    export function incrementTabCount() {
+      if (!browser) return;
+      const alreadyIncremented = sessionStorage.getItem(`${participantKey}-tabIncremented`);
+      if (alreadyIncremented) {
+        console.log("Tab already incremented — skipping");
+        return;
       }
-    });
+
+      const currentVal = localStorage.getItem(participantKey);
+      const count = parseInt(currentVal || '0', 10);
+      console.log(`Incrementing tab count for ${participantKey}. Current before: ${currentVal}, Parsed: ${count}`);
+      console.trace();
+      localStorage.setItem(participantKey, String(count + 1));
+      sessionStorage.setItem(`${participantKey}-tabIncremented`, "true");
+    }
+
+    // Decrement tab count
+    export function decrementTabCount() {
+      if (!browser) return;
+      const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
+      const newCount = Math.max(count - 1, 0);
+      localStorage.setItem(participantKey, String(newCount));
+    }
+
+    let initializedForThisInstance = false;
+    let tabIncremented = false;
+
+      onMount(() => {
+        if (browser) {
+          roomcode = $page.url.searchParams.get('code') || "";
+          participantKey = `ctfcollab-${roomcode}-active-tabs`;
+
+          setTimeout(() => {
+            if (!tabIncremented) {
+              incrementTabCount();
+              tabIncremented = true;
+
+              fetch(`${backendUrl}/ctfs/${roomcode}/add-participant`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                credentials: "include"
+              });
+            }
+            const currentVal = localStorage.getItem(participantKey);
+            const count = parseInt(currentVal || '0', 10);
+            console.log(`Incrementing tab count for ${participantKey}. Current before: ${currentVal}, Parsed: ${count}`);
+          }, 700); // timeout to avoid double-mount
+
+          function handleUnload() {
+            sessionStorage.removeItem(`${participantKey}-tabIncremented`);
+            decrementTabCount();
+            console.log("decrementing tab count");
+
+            const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
+            if (navigator.sendBeacon && count <= 0) {
+              const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
+              const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+              navigator.sendBeacon(url, blob);
+              console.log("Sent remove-participant beacon via pagehide");
+            }
+          }
+
+          connectWebSocket();
+          getCurrentCTF();
+          getChallenges();
+          getParticipants();
+
+          // navigates away from the page or closes the browser
+        window.addEventListener("beforeunload", handleUnload);
+        return () => window.removeEventListener("beforeunload", handleUnload);
+
+        }
+      });
+    
+  let manuallyClosed = false;
+  onDestroy(() => {
+  if (browser) {
+    decrementTabCount();
+    const count = parseInt(localStorage.getItem(participantKey) || '0', 10);
+    if (count <= 0 && !manuallyClosed) {
+      const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
+      const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
+    }
+  }
+
+  if (ws) {
+    console.log("Cleaning up WebSocket connection.");
+    manuallyClosed = true;
+    ws.close();
+    ws = null;
+  }
+});
 
   let ws: WebSocket | null = null;
   let error = $state<string | null>(null);
@@ -49,12 +132,25 @@
     ws.onopen = () => {
       console.log("WebSocket connection established");
       error = null;
+      if (ws && roomcode) {
+        const joinMessage = {
+          type: "join_room",
+          payload: {
+            room_id: roomcode
+          }
+        };
+        ws.send(JSON.stringify(joinMessage));
+        console.log(`Sent join_room message for room: ${roomcode}`);
+      } else {
+        console.error("WebSocket is not open or roomcode is missing, cannot send join_room.")
+      }
     };
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         console.log("WebSocket message received:", message);
+        console.log("Received message type:", JSON.stringify(message.type));
 
         // Handle different message types from the server
         switch (message.type) {
@@ -76,6 +172,10 @@
                 )
             );
             break;
+          case 'participants_updated':
+            console.log("Participants list changed, re-fetching...");
+            getParticipants(); // refetch participants when updated
+            break;
           // Add cases for challenge updates if needed
           default:
             console.warn("Received unknown WebSocket message type:", message.type);
@@ -92,6 +192,9 @@
     };
 
     ws.onclose = (event) => {
+      const url = `${backendUrl}/ctfs/${roomcode}/remove-participant`;
+      const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
       console.log("WebSocket connection closed:", event.reason, `Code: ${event.code}`);
       ws = null;
       if (!manuallyClosed && !event.wasClean) {
@@ -102,6 +205,28 @@
       }
     };
   }
+
+  // Function to fetch participants
+  const getParticipants = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/ctfs/${roomcode}/participants`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data: Participant[] = await res.json();
+        participants.set(data || []); // Set to empty array if null/undefined
+        console.log("Fetched Participants:", data);
+      } else {
+        console.error("Failed to fetch participants:", await res.text());
+        participants.set([]);
+      }
+    } catch (err) {
+      console.error("Error fetching participants:", err);
+      participants.set([]);
+    }
+  };
 
     const getCurrentCTF = async () => {
       try {
@@ -203,119 +328,44 @@
       <DataTable data={$challenges} {columns} />
     </div>
     <div class="container">
-        <!-- Header -->
-        <header>
-          <h1 class="chal-name">Team Members</h1>
-          <p>Invite team members to collaborate on challenges.</p>
-        </header>
-        <Card.Root>
-          <Card.Header>
-            <Card.Title>Team Members</Card.Title>
-            <Card.Description>Invite your team members to collaborate</Card.Description>
-          </Card.Header>
-          <Card.Content class="grid gap-6">
-            <div class="flex items-center justify-between space-x-4">
-              <div class="flex items-center space-x-4">
-                <Avatar.Root>
-                  <Avatar.Image src="" alt="Sofia Davis" />
-                  <Avatar.Fallback>SD</Avatar.Fallback>
-                </Avatar.Root>
-                <div>
-                  <p class="text-sm font-medium leading-none">Sofia Davis</p>
-                  <p class="text-muted-foreground text-sm">m@example.com</p>
-                </div>
-              </div>
-              <Popover.Root>
-                <Popover.Trigger>Owner</Popover.Trigger>
-                <Popover.Content class="p-0" align="end">
-                  <Command.Root>
-                    <Command.Input placeholder="Select new role..." />
-                    <Command.List>
-                      <Command.Empty>No roles found.</Command.Empty>
-                      <Command.Group>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Viewer</p>
-                          <p class="text-muted-foreground text-sm">
-                            Can view and comment.
-                          </p>
-                        </Command.Item>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Developer</p>
-                          <p class="text-muted-foreground text-sm">
-                            Can view, comment, and edit.
-                          </p>
-                        </Command.Item>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Billing</p>
-                          <p class="text-muted-foreground text-sm">
-                            Can view, comment and manage billing.
-                          </p>
-                        </Command.Item>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Owner</p>
-                          <p class="text-muted-foreground text-sm">
-                            Admin-level access to all resources.
-                          </p>
-                        </Command.Item>
-                      </Command.Group>
-                    </Command.List>
-                  </Command.Root>
-                </Popover.Content>
-              </Popover.Root>
+  <Card.Root>
+    <Card.Header>
+      <Card.Title>Team Members</Card.Title>
+      {#if $participants.length === 0}
+        <Card.Description>No members yet. Invite someone!</Card.Description>
+      {:else}
+        <Card.Description>Currently {$participants.length} member(s) online.</Card.Description>
+      {/if}
+    </Card.Header>
+    <Card.Content class="grid gap-6">
+      {#each $participants as participant (participant.id)}
+        <div class="flex items-center justify-between space-x-4">
+          <div class="flex items-center space-x-4">
+            <Avatar.Root>
+              <Avatar.Image src="" alt={participant.username.Valid ? participant.username.String : participant.nickname.String} />
+              <Avatar.Fallback>
+                {(participant.username.Valid
+                  ? participant.username.String.substring(0, 2)
+                  : participant.nickname.String.substring(0, 2)).toUpperCase()}
+              </Avatar.Fallback>
+            </Avatar.Root>
+            <div>
+              <p class="text-sm font-medium leading-none">
+                {participant.username.Valid ? participant.username.String : participant.nickname.String}
+              </p>
+              <p class="text-muted-foreground text-sm">
+                {participant.username.Valid ? "User" : "Guest"}
+              </p>
             </div>
-            <div class="flex items-center justify-between space-x-4">
-              <div class="flex items-center space-x-4">
-                <Avatar.Root>
-                  <Avatar.Image src="" alt="Jackson Lee" />
-                  <Avatar.Fallback>JL</Avatar.Fallback>
-                </Avatar.Root>
-                <div>
-                  <p class="text-sm font-medium leading-none">Jackson Lee</p>
-                  <p class="text-muted-foreground text-sm">p@example.com</p>
-                </div>
-              </div>
-              <Popover.Root>
-                <Popover.Trigger>Member</Popover.Trigger>
-                <Popover.Content class="p-0" align="end">
-                  <Command.Root>
-                    <Command.Input placeholder="Select new role..." />
-                    <Command.List>
-                      <Command.Empty>No roles found.</Command.Empty>
-                      <Command.Group>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Viewer</p>
-                          <p class="text-muted-foreground text-sm">
-                            Can view and comment.
-                          </p>
-                        </Command.Item>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Developer</p>
-                          <p class="text-muted-foreground text-sm">
-                            Can view, comment, and edit.
-                          </p>
-                        </Command.Item>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Billing</p>
-                          <p class="text-muted-foreground text-sm">
-                            Can view, comment and manage billing.
-                          </p>
-                        </Command.Item>
-                        <Command.Item class="flex flex-col items-start space-y-1 px-4 py-2">
-                          <p>Owner</p>
-                          <p class="text-muted-foreground text-sm">
-                            Admin-level access to all resources.
-                          </p>
-                        </Command.Item>
-                      </Command.Group>
-                    </Command.List>
-                  </Command.Root>
-                </Popover.Content>
-              </Popover.Root>
-            </div>
-          </Card.Content>
-        </Card.Root>
-    
-      </div>
+          </div>
+          <span class="text-sm text-muted-foreground">Member</span>
+        </div>
+      {:else}
+          <p class="text-sm text-muted-foreground">Waiting for participants to join...</p>
+      {/each}
+    </Card.Content>
+  </Card.Root>
+</div>
   </div>
   <footer>
     <p>&copy; 2025 CTF-Collab. All rights reserved.</p>
